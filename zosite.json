@@ -1,0 +1,15 @@
+{
+  "name": "todo",
+  "local_port": 57460,
+  "entrypoint": "bun run dev",
+  "publish": {
+    "label": "todo",
+    "type": "http",
+    "entrypoint": "bun run prod",
+    "published_port": 57863,
+    "env": {
+      "NODE_ENV": "production",
+      "ZO_CLIENT_IDENTITY_TOKEN": "none"
+    }
+  }
+}
