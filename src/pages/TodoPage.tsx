@@ -132,7 +132,7 @@ const EFFORT_OPTIONS: Task["effort"][] = ["low", "medium", "high"];
 const DECISION_LOAD_OPTIONS: Task["decisionLoad"][] = ["low", "medium", "high"];
 
 const BOARD_COLUMNS: { id: TaskStatus; title: string; icon: string; colorClass: string }[] = [
-  { id: "this-week", title: "This Week", icon: "bolt", colorClass: "col-orange" },
+  { id: "this-week", title: "This Week", icon: "bolt", colorClass: "col-purple" },
   { id: "this-month", title: "This Month", icon: "date_range", colorClass: "col-purple" },
   { id: "done", title: "Done", icon: "check_circle", colorClass: "col-green" },
 ];
@@ -1203,7 +1203,7 @@ export default function TodoPage() {
   return (
     <div className="todo-page">
       <header className="todo-header">
-        <h1>{formatHeadingDate()}</h1>
+        <h1><Icon name="eco" /> {formatHeadingDate()}</h1>
         <div className="header-actions">
           {viewTab === "board" && (
             <button
@@ -1318,38 +1318,39 @@ export default function TodoPage() {
                 ))
               )}
             </div>
-          </div>
-          {doneShoppingItems.length > 0 && (
-            <div className="shopping-done-section">
+            <div className="shopping-column">
               <div className="shopping-column-header done-header">
                 <Icon name="check_circle" className="column-icon" />
                 <h3>Done</h3>
                 <span className="column-count">{doneShoppingItems.length}</span>
               </div>
-              <div className="shopping-done-list">
-                {doneShoppingItems.map((item) => (
+              {doneShoppingItems.length === 0 ? (
+                <div className="column-empty">Nothing bought yet</div>
+              ) : (
+                doneShoppingItems.map((item) => (
                   <ShoppingDoneItem key={item.id} item={item} onUndone={toggleShoppingItem} onDelete={deleteShoppingItem} />
-                ))}
-              </div>
+                ))
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
 
       {viewTab === "groceries" && (
-        <div className="grocery-wrapper">
-          <div className="simple-list grocery-list">
-            {boughtGroceries.length > 0 && (
-              <button className="clear-bought-btn" onClick={clearBoughtGroceries}>
-                <Icon name="delete_sweep" /> Clear {boughtGroceries.length} bought
-              </button>
-            )}
+        <div className="grocery-board">
+          <div className="grocery-column">
+            <div className="grocery-column-header">
+              <Icon name="shopping_cart" className="column-icon" />
+              <h3>Groceries</h3>
+              <span className="column-count">{unboughtGroceries.length}</span>
+              {boughtGroceries.length > 0 && (
+                <button className="clear-bought-btn" onClick={clearBoughtGroceries}>
+                  <Icon name="delete_sweep" /> Clear {boughtGroceries.length} bought
+                </button>
+              )}
+            </div>
             {groceryItems.length === 0 ? (
-              <div className="future-empty">
-                <span className="future-empty-icon">🥬</span>
-                <p>Grocery list is empty</p>
-                <p className="future-empty-hint">Add groceries you need to pick up</p>
-              </div>
+              <div className="column-empty">Grocery list is empty</div>
             ) : (
               <>
                 {unboughtGroceries.map((item) => (

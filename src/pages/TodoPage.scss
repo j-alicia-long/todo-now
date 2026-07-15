@@ -45,6 +45,14 @@
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .material-symbols-outlined {
+      font-size: 1.4rem;
+      color: var(--success);
+    }
   }
 }
 
@@ -196,7 +204,7 @@
 
 // ── Column ──
 .board-column {
-  background: var(--bg-sunken);
+  background: rgba(142, 68, 173, 0.03);
   border-radius: var(--radius-lg);
   padding: 12px;
   display: flex;
@@ -205,11 +213,14 @@
   transition: background var(--transition), box-shadow var(--transition);
   border: 2px solid transparent;
 
+  .dark & {
+    background: rgba(142, 68, 173, 0.05);
+  }
+
   &.drag-over {
     border-color: var(--accent);
     background: var(--accent-soft);
   }
-
 }
 
 .column-header {
@@ -218,12 +229,6 @@
   gap: 8px;
   padding: 4px 4px 12px;
 
-  &.col-orange {
-    .column-icon { color: #e67e22; }
-    .column-title { color: #e67e22; }
-    .column-count { background: #fdebd0; color: #b7590a; }
-    .dark & .column-count { background: rgba(230, 126, 34, 0.2); color: #f0a050; }
-  }
   &.col-purple {
     .column-icon { color: #8e44ad; }
     .column-title { color: #8e44ad; }
@@ -550,7 +555,7 @@
 
   &.due-red {
     background: #fde8e8;
-    color: #a03030;
+    color: #d03030;
     border-color: #f5c4c4;
 
     .dark & {
@@ -562,7 +567,7 @@
 
   &.due-orange {
     background: #fef0e0;
-    color: #9a5800;
+    color: #d07010;
     border-color: #f5d8b0;
 
     .dark & {
@@ -574,7 +579,7 @@
 
   &.due-yellow {
     background: #fdf8dd;
-    color: #6a5e00;
+    color: #a89400;
     border-color: #f0e6a0;
     font-weight: 900;
 
@@ -587,7 +592,7 @@
 
   &.due-green {
     background: #e6f6ec;
-    color: #2a7040;
+    color: #1e8a40;
     border-color: #b8e4c8;
 
     .dark & {
@@ -1324,20 +1329,23 @@
 
 .shopping-columns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
 }
 
 .shopping-column {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: rgba(180, 140, 220, 0.04);
+  background: rgba(142, 68, 173, 0.03);
   border-radius: var(--radius-lg);
   padding: 12px;
+  min-height: 200px;
 
   .dark & {
-    background: rgba(180, 140, 220, 0.06);
+    background: rgba(142, 68, 173, 0.05);
   }
 }
 
@@ -1377,16 +1385,6 @@
   }
 }
 
-.shopping-done-section {
-  border-top: 1px solid var(--border);
-  padding-top: 12px;
-}
-
-.shopping-done-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
 
 // ── Grocery theme (pastel green) ──
 .grocery-tab.active {
@@ -1412,27 +1410,65 @@
   background: #78be82;
 }
 
-// ── Grocery Wrapper (half-width desktop) ──
-.grocery-wrapper {
+// ── Grocery Board Layout ──
+.grocery-board {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  padding-bottom: 40px;
+}
+
+.grocery-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(39, 174, 96, 0.03);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  min-height: 200px;
+
+  .dark & {
+    background: rgba(39, 174, 96, 0.05);
+  }
+}
+
+.grocery-column-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 8px;
+
+  .column-icon { color: #27ae60; }
+
+  h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #27ae60;
+  }
+
+  .column-count {
+    font-size: 0.65rem;
+    background: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+  }
 }
 
 .clear-bought-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 14px;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 600;
   background: rgba(120, 190, 130, 0.12);
   color: #5a9e65;
   border: 1px solid rgba(120, 190, 130, 0.3);
   transition: all var(--transition);
-  align-self: flex-start;
-  margin-bottom: 8px;
+  margin-left: auto;
 
   &:hover {
     background: rgba(120, 190, 130, 0.22);
@@ -1440,13 +1476,7 @@
   }
 
   .material-symbols-outlined {
-    font-size: 16px;
-  }
-}
-
-@media (min-width: 769px) {
-  .grocery-wrapper .grocery-list {
-    max-width: 50%;
+    font-size: 14px;
   }
 }
 
@@ -1510,7 +1540,25 @@
   }
 
   .shopping-columns {
-    grid-template-columns: 1fr;
+    grid-template-columns: none;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 12px;
+    padding-bottom: 8px;
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .shopping-column {
+    min-width: 80vw;
+    max-width: 85vw;
+    scroll-snap-align: start;
+    flex-shrink: 0;
   }
 }
 
