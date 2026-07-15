@@ -11,10 +11,339 @@ const app = new Hono();
 const mode: Mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 
-/**
- * Add any API routes here.
- */
-app.get("/api/hello-zo", (c) => c.json({ msg: "Hello from Zo" }));
+// ── Data layer ──
+const DATA_PATH = import.meta.dir + "/data/tasks.json";
+const SETTINGS_PATH = import.meta.dir + "/data/settings.json";
+const SHOPPING_PATH = import.meta.dir + "/data/shopping.json";
+const GROCERY_PATH = import.meta.dir + "/data/groceries.json";
+
+type TaskStatus = "this-week" | "this-month" | "future" | "done" | "trashed";
+
+type Task = {
+  id: string;
+  title: string;
+  done: boolean;
+  status: TaskStatus;
+  priority: "high" | "medium" | "low";
+  effort: "low" | "medium" | "high";
+  decisionLoad: "low" | "medium" | "high";
+  area: string;
+  dueDate: string | null;
+  isSmallWin: boolean;
+  createdAt: string;
+  completedAt: string | null;
+  deletedAt: string | null;
+};
+
+const TRASH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+async function readTasks(): Promise<Task[]> {
+  try {
+    const file = Bun.file(DATA_PATH);
+    if (await file.exists()) {
+      const raw = JSON.parse(await file.text()) as any[];
+      let needsMigration = false;
+      const now = Date.now();
+      const tasks = raw
+        .map((t) => {
+          if (!t.status) {
+            needsMigration = true;
+            t.status = t.done ? "done" : "this-week";
+          } else if (t.status === "active") {
+            needsMigration = true;
+            t.status = "this-week";
+          }
+          if (t.deletedAt === undefined) {
+            t.deletedAt = null;
+          }
+          return t as Task;
+        })
+        .filter((t) => {
+          if (t.status === "trashed" && t.deletedAt) {
+            const elapsed = now - new Date(t.deletedAt).getTime();
+            if (elapsed > TRASH_TTL_MS) {
+              needsMigration = true;
+              return false;
+            }
+          }
+          return true;
+        });
+      if (needsMigration) await writeTasks(tasks);
+      return tasks;
+    }
+  } catch {}
+  return [];
+}
+
+async function writeTasks(tasks: Task[]): Promise<void> {
+  await Bun.write(DATA_PATH, JSON.stringify(tasks, null, 2));
+}
+
+function inferSmallWin(task: Partial<Task>): boolean {
+  if (task.effort === "high") return false;
+  if (task.decisionLoad !== "low") return false;
+  return true;
+}
+
+// ── Shopping data layer ──
+
+type ShoppingItem = {
+  id: string;
+  title: string;
+  done: boolean;
+  archived: boolean;
+  category: "want" | "need";
+  createdAt: string;
+};
+
+async function readShopping(): Promise<ShoppingItem[]> {
+  try {
+    const file = Bun.file(SHOPPING_PATH);
+    if (await file.exists()) {
+      const raw = JSON.parse(await file.text()) as any[];
+      return raw.map((i) => ({ ...i, category: i.category || "need" }));
+    }
+  } catch {}
+  return [];
+}
+
+async function writeShopping(items: ShoppingItem[]): Promise<void> {
+  await Bun.write(SHOPPING_PATH, JSON.stringify(items, null, 2));
+}
+
+// ── Grocery data layer ──
+
+type GroceryItem = {
+  id: string;
+  title: string;
+  done: boolean;
+  createdAt: string;
+};
+
+async function readGroceries(): Promise<GroceryItem[]> {
+  try {
+    const file = Bun.file(GROCERY_PATH);
+    if (await file.exists()) return JSON.parse(await file.text()) as GroceryItem[];
+  } catch {}
+  return [];
+}
+
+async function writeGroceries(items: GroceryItem[]): Promise<void> {
+  await Bun.write(GROCERY_PATH, JSON.stringify(items, null, 2));
+}
+
+// ── Settings ──
+async function readSettings(): Promise<Record<string, any>> {
+  try {
+    const file = Bun.file(SETTINGS_PATH);
+    if (await file.exists()) {
+      return JSON.parse(await file.text());
+    }
+  } catch {}
+  return {};
+}
+
+async function writeSettings(settings: Record<string, any>): Promise<void> {
+  await Bun.write(SETTINGS_PATH, JSON.stringify(settings, null, 2));
+}
+
+// ── API Routes ──
+app.get("/api/settings", async (c) => {
+  const settings = await readSettings();
+  return c.json(settings);
+});
+
+app.put("/api/settings", async (c) => {
+  const body = await c.req.json();
+  const current = await readSettings();
+  const merged = { ...current, ...body };
+  await writeSettings(merged);
+  return c.json(merged);
+});
+
+app.get("/api/tasks", async (c) => {
+  const tasks = await readTasks();
+  return c.json(tasks);
+});
+
+app.post("/api/tasks", async (c) => {
+  const body = await c.req.json();
+  const tasks = await readTasks();
+
+  const task: Task = {
+    id: crypto.randomUUID().slice(0, 8),
+    title: body.title || "Untitled",
+    done: false,
+    status: body.status || "this-week",
+    priority: body.priority || "medium",
+    effort: body.effort || "medium",
+    decisionLoad: body.decisionLoad || "medium",
+    area: body.area || "life-admin",
+    dueDate: body.dueDate || null,
+    isSmallWin: body.isSmallWin ?? inferSmallWin(body),
+    createdAt: new Date().toISOString(),
+    completedAt: null,
+    deletedAt: null,
+  };
+
+  tasks.push(task);
+  await writeTasks(tasks);
+  return c.json(task, 201);
+});
+
+app.put("/api/tasks/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const tasks = await readTasks();
+  const idx = tasks.findIndex((t) => t.id === id);
+
+  if (idx === -1) return c.json({ error: "Not found" }, 404);
+
+  const task = tasks[idx];
+  const updated: Task = { ...task, ...body, id: task.id, createdAt: task.createdAt };
+
+  if (body.status && body.status !== "trashed" && task.status === "trashed") {
+    updated.deletedAt = null;
+  }
+
+  if (body.status === "done" && task.status !== "done") {
+    updated.done = true;
+    updated.completedAt = new Date().toISOString();
+  } else if (body.status && body.status !== "done" && task.status === "done") {
+    updated.done = false;
+    updated.completedAt = null;
+  } else if (body.done === true && !task.done) {
+    updated.status = "done";
+    updated.completedAt = new Date().toISOString();
+  } else if (body.done === false) {
+    updated.status = "this-week";
+    updated.completedAt = null;
+  }
+
+  if (body.isSmallWin === undefined && (body.effort !== undefined || body.decisionLoad !== undefined)) {
+    updated.isSmallWin = inferSmallWin(updated);
+  }
+
+  tasks[idx] = updated;
+  await writeTasks(tasks);
+  return c.json(updated);
+});
+
+app.delete("/api/tasks/:id", async (c) => {
+  const id = c.req.param("id");
+  const permanent = c.req.query("permanent") === "true";
+  const tasks = await readTasks();
+  const idx = tasks.findIndex((t) => t.id === id);
+
+  if (idx === -1) return c.json({ error: "Not found" }, 404);
+
+  if (permanent) {
+    tasks.splice(idx, 1);
+  } else {
+    tasks[idx].status = "trashed";
+    tasks[idx].deletedAt = new Date().toISOString();
+    tasks[idx].done = false;
+    tasks[idx].completedAt = null;
+  }
+
+  await writeTasks(tasks);
+  return c.json({ deleted: true });
+});
+
+// ── Shopping API ──
+
+app.get("/api/shopping", async (c) => {
+  const items = await readShopping();
+  return c.json(items);
+});
+
+app.post("/api/shopping", async (c) => {
+  const body = await c.req.json();
+  const items = await readShopping();
+  const item: ShoppingItem = {
+    id: crypto.randomUUID().slice(0, 8),
+    title: body.title || "Untitled",
+    done: false,
+    archived: false,
+    category: body.category === "want" ? "want" : "need",
+    createdAt: new Date().toISOString(),
+  };
+  items.push(item);
+  await writeShopping(items);
+  return c.json(item, 201);
+});
+
+app.put("/api/shopping/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const items = await readShopping();
+  const idx = items.findIndex((i) => i.id === id);
+  if (idx === -1) return c.json({ error: "Not found" }, 404);
+  items[idx] = { ...items[idx], ...body, id: items[idx].id, createdAt: items[idx].createdAt };
+  await writeShopping(items);
+  return c.json(items[idx]);
+});
+
+app.delete("/api/shopping/:id", async (c) => {
+  const id = c.req.param("id");
+  const items = await readShopping();
+  const idx = items.findIndex((i) => i.id === id);
+  if (idx === -1) return c.json({ error: "Not found" }, 404);
+  items.splice(idx, 1);
+  await writeShopping(items);
+  return c.json({ deleted: true });
+});
+
+// ── Groceries API ──
+
+app.get("/api/groceries", async (c) => {
+  const items = await readGroceries();
+  return c.json(items);
+});
+
+app.post("/api/groceries", async (c) => {
+  const body = await c.req.json();
+  const items = await readGroceries();
+  const item: GroceryItem = {
+    id: crypto.randomUUID().slice(0, 8),
+    title: body.title || "Untitled",
+    done: false,
+    createdAt: new Date().toISOString(),
+  };
+  items.push(item);
+  await writeGroceries(items);
+  return c.json(item, 201);
+});
+
+app.put("/api/groceries/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const items = await readGroceries();
+  const idx = items.findIndex((i) => i.id === id);
+  if (idx === -1) return c.json({ error: "Not found" }, 404);
+  items[idx] = { ...items[idx], ...body, id: items[idx].id, createdAt: items[idx].createdAt };
+  await writeGroceries(items);
+  return c.json(items[idx]);
+});
+
+app.delete("/api/groceries/clear-bought", async (c) => {
+  const items = await readGroceries();
+  const remaining = items.filter((i) => !i.done);
+  await writeGroceries(remaining);
+  return c.json({ cleared: items.length - remaining.length });
+});
+
+app.delete("/api/groceries/:id", async (c) => {
+  const id = c.req.param("id");
+  const items = await readGroceries();
+  const idx = items.findIndex((i) => i.id === id);
+  if (idx === -1) return c.json({ error: "Not found" }, 404);
+  items.splice(idx, 1);
+  await writeGroceries(items);
+  return c.json({ deleted: true });
+});
+
+// ── Static / SPA serving ──
 
 if (mode === "production") {
   configureProduction(app);
