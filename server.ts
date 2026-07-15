@@ -36,6 +36,7 @@ type Task = {
 };
 
 const TRASH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 async function readTasks(): Promise<Task[]> {
   try {
@@ -55,6 +56,13 @@ async function readTasks(): Promise<Task[]> {
           }
           if (t.deletedAt === undefined) {
             t.deletedAt = null;
+          }
+          if (t.status === "this-month" && t.dueDate) {
+            const dueMs = new Date(t.dueDate).getTime();
+            if (dueMs - now <= SEVEN_DAYS_MS) {
+              needsMigration = true;
+              t.status = "this-week";
+            }
           }
           return t as Task;
         })
@@ -94,6 +102,7 @@ type ShoppingItem = {
   archived: boolean;
   category: "want" | "need";
   createdAt: string;
+  doneAt: string | null;
 };
 
 async function readShopping(): Promise<ShoppingItem[]> {
@@ -101,7 +110,11 @@ async function readShopping(): Promise<ShoppingItem[]> {
     const file = Bun.file(SHOPPING_PATH);
     if (await file.exists()) {
       const raw = JSON.parse(await file.text()) as any[];
-      return raw.map((i) => ({ ...i, category: i.category || "need" }));
+      return raw.map((i) => ({
+        ...i,
+        category: i.category || "need",
+        doneAt: i.doneAt ?? null,
+      }));
     }
   } catch {}
   return [];
@@ -267,6 +280,7 @@ app.post("/api/shopping", async (c) => {
     archived: false,
     category: body.category === "want" ? "want" : "need",
     createdAt: new Date().toISOString(),
+    doneAt: null,
   };
   items.push(item);
   await writeShopping(items);
@@ -279,7 +293,13 @@ app.put("/api/shopping/:id", async (c) => {
   const items = await readShopping();
   const idx = items.findIndex((i) => i.id === id);
   if (idx === -1) return c.json({ error: "Not found" }, 404);
-  items[idx] = { ...items[idx], ...body, id: items[idx].id, createdAt: items[idx].createdAt };
+  const prev = items[idx];
+  items[idx] = { ...prev, ...body, id: prev.id, createdAt: prev.createdAt };
+  if (body.done === true && !prev.done) {
+    items[idx].doneAt = new Date().toISOString();
+  } else if (body.done === false && prev.done) {
+    items[idx].doneAt = null;
+  }
   await writeShopping(items);
   return c.json(items[idx]);
 });
@@ -341,6 +361,74 @@ app.delete("/api/groceries/:id", async (c) => {
   items.splice(idx, 1);
   await writeGroceries(items);
   return c.json({ deleted: true });
+});
+
+// ── Weekly Archive ──
+
+const ARCHIVE_PATH = import.meta.dir + "/data/archive.md";
+const FOUR_WEEKS_MS = 4 * 7 * 24 * 60 * 60 * 1000;
+
+app.post("/api/archive", async (c) => {
+  const now = Date.now();
+
+  const tasks = await readTasks();
+  const oldDone = tasks.filter(
+    (t) => t.status === "done" && t.completedAt && now - new Date(t.completedAt).getTime() > FOUR_WEEKS_MS
+  );
+
+  const shopping = await readShopping();
+  const oldBought = shopping.filter(
+    (i) => i.done && i.doneAt && now - new Date(i.doneAt).getTime() > FOUR_WEEKS_MS
+  );
+
+  if (oldDone.length === 0 && oldBought.length === 0) {
+    return c.json({ archived: 0, message: "Nothing old enough to archive" });
+  }
+
+  const weekOf = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const lines: string[] = [`## Week of ${weekOf}\n`];
+
+  if (oldDone.length > 0) {
+    lines.push("### Completed Tasks");
+    for (const t of oldDone) {
+      const date = t.completedAt
+        ? new Date(t.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        : "";
+      lines.push(`- ${t.title}${date ? ` (completed ${date})` : ""}`);
+    }
+    lines.push("");
+  }
+
+  if (oldBought.length > 0) {
+    lines.push("### Items Bought");
+    for (const i of oldBought) {
+      const date = i.doneAt
+        ? new Date(i.doneAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        : "";
+      lines.push(`- ${i.title}${date ? ` (bought ${date})` : ""}`);
+    }
+    lines.push("");
+  }
+
+  lines.push("---\n");
+  const section = lines.join("\n");
+
+  const archiveFile = Bun.file(ARCHIVE_PATH);
+  let existing = "";
+  if (await archiveFile.exists()) {
+    existing = await archiveFile.text();
+  } else {
+    existing = "# Todo Archive\n\n";
+  }
+  await Bun.write(ARCHIVE_PATH, existing + section);
+
+  const remainingTasks = tasks.filter((t) => !oldDone.some((d) => d.id === t.id));
+  await writeTasks(remainingTasks);
+
+  const remainingShopping = shopping.filter((i) => !oldBought.some((b) => b.id === i.id));
+  await writeShopping(remainingShopping);
+
+  return c.json({ archived: oldDone.length + oldBought.length, tasks: oldDone.length, shopping: oldBought.length });
 });
 
 // ── Static / SPA serving ──

@@ -52,6 +52,7 @@ type ShoppingItem = {
   archived: boolean;
   category: "want" | "need";
   createdAt: string;
+  doneAt: string | null;
 };
 
 type GroceryItem = {
