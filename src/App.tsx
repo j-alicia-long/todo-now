@@ -1,15 +1,13 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import BlankDemo from "./pages/blank-demo";
-import DesignKitDemo from "./pages/_design";
+import TodoPage from "./pages/TodoPage";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <BrowserRouter>
+    <ThemeProvider defaultTheme="light">
+      <BrowserRouter basename="/todo">
         <Routes>
-          <Route path="/_design" element={<DesignKitDemo />} />
-          <Route path="/" element={<BlankDemo />} />
+          <Route path="/" element={<TodoPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

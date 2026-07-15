@@ -1,0 +1,133 @@
+// ── Warm & Cozy Theme ──
+// Light: cream/linen bg, warm brown text, honey accents
+// Dark: deep cocoa bg, warm cream text, golden accents
+
+:root {
+  // Light mode (default)
+  --bg: #faf6f1;
+  --bg-raised: #ffffff;
+  --bg-sunken: #f0ebe4;
+  --bg-hover: #ece6dd;
+
+  --text: #3d2e1f;
+  --text-secondary: #7a6b5d;
+  --text-tertiary: #a89888;
+
+  --accent: #c8873e;
+  --accent-hover: #b5762f;
+  --accent-soft: rgba(200, 135, 62, 0.12);
+  --accent-text: #ffffff;
+
+  --success: #5a9a6a;
+  --success-soft: rgba(90, 154, 106, 0.12);
+  --danger: #c45c5c;
+  --danger-soft: rgba(196, 92, 92, 0.1);
+
+  --border: #e2dbd2;
+  --border-strong: #cfc5b8;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 1px 3px rgba(61, 46, 31, 0.06);
+  --shadow: 0 2px 8px rgba(61, 46, 31, 0.08);
+  --shadow-lg: 0 4px 16px rgba(61, 46, 31, 0.1);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+  --transition: 180ms ease;
+  --transition-slow: 300ms ease;
+
+  color-scheme: light dark;
+}
+
+.dark {
+  --bg: #1a1410;
+  --bg-raised: #241d16;
+  --bg-sunken: #130f0b;
+  --bg-hover: #2e261d;
+
+  --text: #f0e8dd;
+  --text-secondary: #b0a393;
+  --text-tertiary: #7a6e60;
+
+  --accent: #d4973f;
+  --accent-hover: #e0a64e;
+  --accent-soft: rgba(212, 151, 63, 0.15);
+  --accent-text: #1a1410;
+
+  --success: #6aab7a;
+  --success-soft: rgba(106, 171, 122, 0.15);
+  --danger: #d46b6b;
+  --danger-soft: rgba(212, 107, 107, 0.12);
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+// ── Base Reset ──
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
+input, textarea, select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+// ── Utility classes ──
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,2 +1,8 @@
 node_modules/
 dist/
+data/
+bun.lock
+.claude/
+--full-page
+*.log
+.DS_Store

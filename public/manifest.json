@@ -1,0 +1,25 @@
+{
+  "name": "Jennifer's To Dos",
+  "short_name": "To Dos",
+  "start_url": "/todo",
+  "display": "standalone",
+  "background_color": "#faf6f1",
+  "theme_color": "#c8873e",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/sprout-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/sprout-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
