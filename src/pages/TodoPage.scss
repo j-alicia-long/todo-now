@@ -1480,6 +1480,168 @@
   }
 }
 
+// ── Recurring Tab ──
+
+.recurring-tab.active {
+  background: rgba(77, 184, 164, 0.15) !important;
+  color: #3a9e8a !important;
+}
+
+.recurring-count {
+  background: rgba(77, 184, 164, 0.2) !important;
+  color: #3a9e8a !important;
+}
+
+.recurring-board {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 40px;
+}
+
+.recurring-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(77, 184, 164, 0.03);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+
+  .dark & {
+    background: rgba(77, 184, 164, 0.06);
+  }
+}
+
+.recurring-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 8px;
+
+  .column-icon { color: #3a9e8a; }
+
+  h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #3a9e8a;
+  }
+
+  .column-count {
+    font-size: 0.65rem;
+    background: rgba(77, 184, 164, 0.15);
+    color: #3a9e8a;
+  }
+}
+
+.recurring-progress {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(77, 184, 164, 0.12);
+  color: #3a9e8a;
+  margin-left: auto;
+}
+
+.recurring-item {
+  border-left: 3px solid rgba(77, 184, 164, 0.5);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+
+  .list-checkbox input:checked + .checkmark {
+    background: #4db8a4;
+    border-color: #4db8a4;
+  }
+
+  &.checked {
+    opacity: 0.6;
+  }
+}
+
+.recurring-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recurring-link {
+  color: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    color: #3a9e8a;
+    text-decoration: underline;
+  }
+
+  .link-icon {
+    font-size: 14px;
+    opacity: 0.5;
+  }
+}
+
+.recurring-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.recurring-day {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(77, 184, 164, 0.12);
+  color: #3a9e8a;
+}
+
+.recurring-note {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.recurring-last-done {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+
+  &.never {
+    color: var(--text-tertiary);
+    font-style: italic;
+  }
+}
+
+.recurring-freq-select {
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+
+  &:focus {
+    border-color: #4db8a4;
+    box-shadow: 0 0 0 2px rgba(77, 184, 164, 0.2);
+  }
+}
+
 // ── Mobile: always show delete on touch ──
 @media (hover: none) {
   .card-action.delete {

@@ -26,7 +26,7 @@ import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
 import "./TodoPage.scss";
 
 type TaskStatus = "this-week" | "this-month" | "future" | "done" | "trashed";
-type ViewTab = "board" | "shopping" | "groceries";
+type ViewTab = "board" | "shopping" | "groceries" | "recurring";
 type SidebarPanel = "todo-archive" | "todo-trash" | "shopping-archive" | "settings" | null;
 
 type Task = {
@@ -59,6 +59,18 @@ type GroceryItem = {
   id: string;
   title: string;
   done: boolean;
+  createdAt: string;
+};
+
+type RecurringItem = {
+  id: string;
+  title: string;
+  frequency: "weekly" | "long-term";
+  dayOfWeek: number | null;
+  note: string;
+  link: string;
+  completedThisWeek: boolean;
+  lastCompletedAt: string | null;
   createdAt: string;
 };
 
@@ -847,6 +859,77 @@ function BoardColumn({
 
 // ── Settings View ──
 
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function timeSince(isoDate: string): string {
+  const ms = Date.now() - new Date(isoDate).getTime();
+  const days = Math.floor(ms / 86400000);
+  if (days === 0) return "today";
+  if (days === 1) return "1 day ago";
+  if (days < 7) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks === 1) return "1 week ago";
+  if (weeks < 5) return `${weeks} weeks ago`;
+  const months = Math.floor(days / 30);
+  if (months === 1) return "1 month ago";
+  return `${months} months ago`;
+}
+
+function RecurringListItem({
+  item,
+  onToggle,
+  onDelete,
+}: {
+  item: RecurringItem;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const isChecked = item.frequency === "weekly" ? item.completedThisWeek : false;
+  return (
+    <div className={`list-item recurring-item ${isChecked ? "checked" : ""}`}>
+      {item.frequency === "weekly" && (
+        <label className="list-checkbox">
+          <input type="checkbox" checked={isChecked} onChange={() => onToggle(item.id)} />
+          <span className="checkmark" />
+        </label>
+      )}
+      <div className="recurring-info">
+        <span className={`list-title ${isChecked ? "done" : ""}`}>
+          {item.link ? (
+            <a href={item.link} target="_blank" rel="noopener noreferrer" className="recurring-link">
+              {item.title} <Icon name="open_in_new" className="link-icon" />
+            </a>
+          ) : (
+            item.title
+          )}
+        </span>
+        <div className="recurring-meta">
+          {item.frequency === "weekly" && item.dayOfWeek !== null && (
+            <span className="recurring-day">{DAY_NAMES[item.dayOfWeek]}</span>
+          )}
+          {item.note && <span className="recurring-note">{item.note}</span>}
+          {item.frequency === "long-term" && item.lastCompletedAt && (
+            <span className="recurring-last-done">Done {timeSince(item.lastCompletedAt)}</span>
+          )}
+          {item.frequency === "long-term" && !item.lastCompletedAt && (
+            <span className="recurring-last-done never">Not yet done</span>
+          )}
+        </div>
+      </div>
+      <div className="list-actions">
+        {item.frequency === "long-term" && (
+          <button className="list-action-btn" onClick={() => onToggle(item.id)} title="Mark done">
+            <Icon name="check_circle" />
+          </button>
+        )}
+        <button className="list-action-btn delete" onClick={() => onDelete(item.id)} title="Delete">
+          <Icon name="close" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SettingsView({
   settings,
   onToggle,
@@ -889,11 +972,13 @@ export default function TodoPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>([]);
   const [groceryItems, setGroceryItems] = useState<GroceryItem[]>([]);
+  const [recurringItems, setRecurringItems] = useState<RecurringItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState("");
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [showSmallWinsOnly, setShowSmallWinsOnly] = useState(false);
   const [viewTab, setViewTab] = useState<ViewTab>("board");
+  const [recurringAddFreq, setRecurringAddFreq] = useState<"weekly" | "long-term">("weekly");
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(null);
   const [settings, setSettings] = useState<Settings>(loadSettingsLocal);
   const { theme, setTheme } = useTheme();
@@ -934,7 +1019,14 @@ export default function TodoPage() {
     } catch (e) { console.error("Failed to fetch groceries:", e); }
   }, []);
 
-  useEffect(() => { fetchTasks(); fetchShopping(); fetchGroceries(); }, [fetchTasks, fetchShopping, fetchGroceries]);
+  const fetchRecurring = useCallback(async () => {
+    try {
+      const res = await fetch("/api/recurring", { headers: { Accept: "application/json" } });
+      setRecurringItems(await res.json());
+    } catch (e) { console.error("Failed to fetch recurring:", e); }
+  }, []);
+
+  useEffect(() => { fetchTasks(); fetchShopping(); fetchGroceries(); fetchRecurring(); }, [fetchTasks, fetchShopping, fetchGroceries, fetchRecurring]);
 
   useEffect(() => {
     fetchSettingsFromServer().then((serverSettings) => {
@@ -1162,6 +1254,67 @@ export default function TodoPage() {
     } catch (e) { console.error("Failed to clear bought groceries:", e); fetchGroceries(); }
   }
 
+  // ── Recurring CRUD ──
+
+  async function addRecurringItem(e: React.FormEvent) {
+    e.preventDefault();
+    const title = newTitle.trim();
+    if (!title) return;
+    try {
+      const res = await fetch("/api/recurring", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ title, frequency: recurringAddFreq }),
+      });
+      const item = await res.json();
+      setRecurringItems((prev) => [...prev, item]);
+      setNewTitle("");
+    } catch (e) { console.error("Failed to add recurring item:", e); }
+  }
+
+  async function toggleRecurringItem(id: string) {
+    const item = recurringItems.find((i) => i.id === id);
+    if (!item) return;
+    if (item.frequency === "weekly") {
+      const next = !item.completedThisWeek;
+      setRecurringItems((prev) => prev.map((i) => i.id === id ? { ...i, completedThisWeek: next, lastCompletedAt: next ? new Date().toISOString() : i.lastCompletedAt } : i));
+      try {
+        await fetch(`/api/recurring/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ completedThisWeek: next }),
+        });
+      } catch (e) { console.error("Failed to toggle recurring:", e); fetchRecurring(); }
+    } else {
+      setRecurringItems((prev) => prev.map((i) => i.id === id ? { ...i, lastCompletedAt: new Date().toISOString() } : i));
+      try {
+        await fetch(`/api/recurring/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ done: true }),
+        });
+      } catch (e) { console.error("Failed to mark recurring done:", e); fetchRecurring(); }
+    }
+  }
+
+  async function deleteRecurringItem(id: string) {
+    setRecurringItems((prev) => prev.filter((i) => i.id !== id));
+    try {
+      await fetch(`/api/recurring/${id}`, { method: "DELETE", headers: { Accept: "application/json" } });
+    } catch (e) { console.error("Failed to delete recurring:", e); fetchRecurring(); }
+  }
+
+  async function updateRecurringItem(id: string, fields: Partial<RecurringItem>) {
+    setRecurringItems((prev) => prev.map((i) => i.id === id ? { ...i, ...fields } : i));
+    try {
+      await fetch(`/api/recurring/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(fields),
+      });
+    } catch (e) { console.error("Failed to update recurring:", e); fetchRecurring(); }
+  }
+
   function handleDragStart(event: DragStartEvent) {
     const task = tasks.find((t) => t.id === event.active.id);
     setActiveTask(task || null);
@@ -1188,6 +1341,9 @@ export default function TodoPage() {
   const shoppingWants = activeShoppingItems.filter((i) => i.category === "want");
   const boughtGroceries = groceryItems.filter((i) => i.done);
   const unboughtGroceries = groceryItems.filter((i) => !i.done);
+  const weeklyRecurring = recurringItems.filter((i) => i.frequency === "weekly");
+  const longTermRecurring = recurringItems.filter((i) => i.frequency === "long-term");
+  const weeklyDoneCount = weeklyRecurring.filter((i) => i.completedThisWeek).length;
 
   if (loading) {
     return (
@@ -1197,8 +1353,8 @@ export default function TodoPage() {
     );
   }
 
-  const handleAddForm = viewTab === "shopping" ? addShoppingItem : viewTab === "groceries" ? addGroceryItem : addTask;
-  const addPlaceholder = viewTab === "shopping" ? "Add a shopping item..." : viewTab === "groceries" ? "Add a grocery item..." : "Add a task...";
+  const handleAddForm = viewTab === "shopping" ? addShoppingItem : viewTab === "groceries" ? addGroceryItem : viewTab === "recurring" ? addRecurringItem : addTask;
+  const addPlaceholder = viewTab === "shopping" ? "Add a shopping item..." : viewTab === "groceries" ? "Add a grocery item..." : viewTab === "recurring" ? "Add a recurring item..." : "Add a task...";
 
   return (
     <div className="todo-page">
@@ -1240,6 +1396,9 @@ export default function TodoPage() {
         <button className={`view-tab grocery-tab ${viewTab === "groceries" ? "active" : ""}`} onClick={() => setViewTab("groceries")}>
           <Icon name="grocery" className="tab-icon" /> Groceries {groceryItems.length > 0 && <span className="tab-count grocery-count">{groceryItems.length}</span>}
         </button>
+        <button className={`view-tab recurring-tab ${viewTab === "recurring" ? "active" : ""}`} onClick={() => setViewTab("recurring")}>
+          <Icon name="repeat" className="tab-icon" /> Recurring {recurringItems.length > 0 && <span className="tab-count recurring-count">{recurringItems.length}</span>}
+        </button>
       </div>
 
       <form className="add-task-form" onSubmit={handleAddForm}>
@@ -1250,6 +1409,16 @@ export default function TodoPage() {
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
         />
+        {viewTab === "recurring" && (
+          <select
+            className="recurring-freq-select"
+            value={recurringAddFreq}
+            onChange={(e) => setRecurringAddFreq(e.target.value as "weekly" | "long-term")}
+          >
+            <option value="weekly">Weekly</option>
+            <option value="long-term">Long-term</option>
+          </select>
+        )}
         <button className="add-task-btn" type="submit">Add</button>
       </form>
 
@@ -1360,6 +1529,41 @@ export default function TodoPage() {
                   <GroceryListItem key={item.id} item={item} onToggle={toggleGroceryItem} onDelete={deleteGroceryItem} />
                 ))}
               </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {viewTab === "recurring" && (
+        <div className="recurring-board">
+          <div className="recurring-section">
+            <div className="recurring-section-header">
+              <Icon name="date_range" className="column-icon" />
+              <h3>Weekly</h3>
+              {weeklyRecurring.length > 0 && (
+                <span className="recurring-progress">{weeklyDoneCount}/{weeklyRecurring.length} done</span>
+              )}
+            </div>
+            {weeklyRecurring.length === 0 ? (
+              <div className="column-empty">No weekly recurring items yet</div>
+            ) : (
+              weeklyRecurring.map((item) => (
+                <RecurringListItem key={item.id} item={item} onToggle={toggleRecurringItem} onDelete={deleteRecurringItem} />
+              ))
+            )}
+          </div>
+          <div className="recurring-section long-term-section">
+            <div className="recurring-section-header">
+              <Icon name="event_repeat" className="column-icon" />
+              <h3>Long-term</h3>
+              <span className="column-count">{longTermRecurring.length}</span>
+            </div>
+            {longTermRecurring.length === 0 ? (
+              <div className="column-empty">No long-term recurring items yet</div>
+            ) : (
+              longTermRecurring.map((item) => (
+                <RecurringListItem key={item.id} item={item} onToggle={toggleRecurringItem} onDelete={deleteRecurringItem} />
+              ))
             )}
           </div>
         </div>

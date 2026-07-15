@@ -16,6 +16,7 @@ const DATA_PATH = import.meta.dir + "/data/tasks.json";
 const SETTINGS_PATH = import.meta.dir + "/data/settings.json";
 const SHOPPING_PATH = import.meta.dir + "/data/shopping.json";
 const GROCERY_PATH = import.meta.dir + "/data/groceries.json";
+const RECURRING_PATH = import.meta.dir + "/data/recurring.json";
 
 type TaskStatus = "this-week" | "this-month" | "future" | "done" | "trashed";
 
@@ -143,6 +144,67 @@ async function readGroceries(): Promise<GroceryItem[]> {
 
 async function writeGroceries(items: GroceryItem[]): Promise<void> {
   await Bun.write(GROCERY_PATH, JSON.stringify(items, null, 2));
+}
+
+// ── Recurring data layer ──
+
+type RecurringItem = {
+  id: string;
+  title: string;
+  frequency: "weekly" | "long-term";
+  dayOfWeek: number | null;
+  note: string;
+  link: string;
+  completedThisWeek: boolean;
+  lastCompletedAt: string | null;
+  createdAt: string;
+};
+
+function getWeekStart(): number {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
+  return monday.getTime();
+}
+
+async function readRecurring(): Promise<RecurringItem[]> {
+  try {
+    const file = Bun.file(RECURRING_PATH);
+    if (await file.exists()) {
+      const raw = JSON.parse(await file.text()) as any[];
+      const weekStart = getWeekStart();
+      let needsReset = false;
+      const items = raw.map((i) => {
+        const item: RecurringItem = {
+          id: i.id,
+          title: i.title || "Untitled",
+          frequency: i.frequency === "long-term" ? "long-term" : "weekly",
+          dayOfWeek: i.dayOfWeek ?? null,
+          note: i.note || "",
+          link: i.link || "",
+          completedThisWeek: i.completedThisWeek || false,
+          lastCompletedAt: i.lastCompletedAt || null,
+          createdAt: i.createdAt,
+        };
+        if (item.frequency === "weekly" && item.completedThisWeek) {
+          const lastDone = item.lastCompletedAt ? new Date(item.lastCompletedAt).getTime() : 0;
+          if (lastDone < weekStart) {
+            item.completedThisWeek = false;
+            needsReset = true;
+          }
+        }
+        return item;
+      });
+      if (needsReset) await writeRecurring(items);
+      return items;
+    }
+  } catch {}
+  return [];
+}
+
+async function writeRecurring(items: RecurringItem[]): Promise<void> {
+  await Bun.write(RECURRING_PATH, JSON.stringify(items, null, 2));
 }
 
 // ── Settings ──
@@ -360,6 +422,63 @@ app.delete("/api/groceries/:id", async (c) => {
   if (idx === -1) return c.json({ error: "Not found" }, 404);
   items.splice(idx, 1);
   await writeGroceries(items);
+  return c.json({ deleted: true });
+});
+
+// ── Recurring API ──
+
+app.get("/api/recurring", async (c) => {
+  const items = await readRecurring();
+  return c.json(items);
+});
+
+app.post("/api/recurring", async (c) => {
+  const body = await c.req.json();
+  const items = await readRecurring();
+  const item: RecurringItem = {
+    id: crypto.randomUUID().slice(0, 8),
+    title: body.title || "Untitled",
+    frequency: body.frequency === "long-term" ? "long-term" : "weekly",
+    dayOfWeek: body.dayOfWeek ?? null,
+    note: body.note || "",
+    link: body.link || "",
+    completedThisWeek: false,
+    lastCompletedAt: null,
+    createdAt: new Date().toISOString(),
+  };
+  items.push(item);
+  await writeRecurring(items);
+  return c.json(item, 201);
+});
+
+app.put("/api/recurring/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const items = await readRecurring();
+  const idx = items.findIndex((i) => i.id === id);
+  if (idx === -1) return c.json({ error: "Not found" }, 404);
+  const prev = items[idx];
+  items[idx] = { ...prev, ...body, id: prev.id, createdAt: prev.createdAt };
+  if (body.completedThisWeek === true && !prev.completedThisWeek) {
+    items[idx].lastCompletedAt = new Date().toISOString();
+  }
+  if (body.done === true) {
+    items[idx].lastCompletedAt = new Date().toISOString();
+    if (items[idx].frequency === "weekly") {
+      items[idx].completedThisWeek = true;
+    }
+  }
+  await writeRecurring(items);
+  return c.json(items[idx]);
+});
+
+app.delete("/api/recurring/:id", async (c) => {
+  const id = c.req.param("id");
+  const items = await readRecurring();
+  const idx = items.findIndex((i) => i.id === id);
+  if (idx === -1) return c.json({ error: "Not found" }, 404);
+  items.splice(idx, 1);
+  await writeRecurring(items);
   return c.json({ deleted: true });
 });
 
