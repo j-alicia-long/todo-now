@@ -671,12 +671,20 @@
 }
 
 .react-aria-CalendarCell {
-  padding: 2px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+  border-radius: 50%;
+  font-size: 0.82rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition);
 
-  [data-outside-month] {
-    color: var(--text-tertiary);
-    opacity: 0.4;
+  &:hover:not([data-selected]):not([data-today]) {
+    background: var(--bg-hover);
   }
 
   &[data-outside-month] {
@@ -684,47 +692,28 @@
     opacity: 0.4;
   }
 
-  > * {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    margin: 0 auto;
-    border-radius: 50%;
-    font-size: 0.82rem;
-    color: var(--text);
-    cursor: pointer;
-    transition: all var(--transition);
-
-    &:hover:not([data-selected]):not([data-today]) {
-      background: var(--bg-hover);
-    }
-  }
-
-  // react-aria puts data attrs on the inner div, not the td
-  > [data-selected] {
+  &[data-selected] {
     background: var(--accent) !important;
     color: white !important;
     font-weight: 700;
     box-shadow: 0 0 0 2px var(--accent), 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
-  > [data-today] {
+  &[data-today] {
     font-weight: 700;
     background: var(--accent-soft) !important;
     box-shadow: inset 0 0 0 2px var(--accent);
     color: var(--accent) !important;
   }
 
-  > [data-today][data-selected] {
+  &[data-today][data-selected] {
     background: var(--accent) !important;
     color: white !important;
     box-shadow: 0 0 0 2px var(--accent), 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
-  > [data-unavailable],
-  > [data-disabled] {
+  &[data-unavailable],
+  &[data-disabled] {
     opacity: 0.25;
     pointer-events: none;
   }
