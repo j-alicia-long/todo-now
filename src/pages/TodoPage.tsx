@@ -130,10 +130,10 @@ const PRIORITY_OPTIONS: Task["priority"][] = ["high", "medium", "low"];
 const EFFORT_OPTIONS: Task["effort"][] = ["low", "medium", "high"];
 const DECISION_LOAD_OPTIONS: Task["decisionLoad"][] = ["low", "medium", "high"];
 
-const BOARD_COLUMNS: { id: TaskStatus; title: string; icon: string; colorClass: string; bgClass: string }[] = [
-  { id: "this-week", title: "This Week", icon: "bolt", colorClass: "col-orange", bgClass: "col-bg-orange" },
-  { id: "this-month", title: "This Month", icon: "date_range", colorClass: "col-purple", bgClass: "col-bg-purple" },
-  { id: "done", title: "Done", icon: "check_circle", colorClass: "col-green", bgClass: "col-bg-green" },
+const BOARD_COLUMNS: { id: TaskStatus; title: string; icon: string; colorClass: string }[] = [
+  { id: "this-week", title: "This Week", icon: "bolt", colorClass: "col-orange" },
+  { id: "this-month", title: "This Month", icon: "date_range", colorClass: "col-purple" },
+  { id: "done", title: "Done", icon: "check_circle", colorClass: "col-green" },
 ];
 
 function getDaysLeft(date: string): number {
@@ -194,11 +194,13 @@ function ShoppingListItem({
   onToggle,
   onArchive,
   onDelete,
+  onMove,
 }: {
   item: ShoppingItem;
   onToggle: (id: string) => void;
   onArchive: (id: string) => void;
   onDelete: (id: string) => void;
+  onMove: (id: string) => void;
 }) {
   return (
     <div className={`list-item shopping-item ${item.done ? "checked" : ""}`}>
@@ -208,6 +210,9 @@ function ShoppingListItem({
       </label>
       <span className={`list-title ${item.done ? "done" : ""}`}>{item.title}</span>
       <div className="list-actions">
+        <button className="list-action-btn" onClick={() => onMove(item.id)} title={item.category === "need" ? "Move to Wants" : "Move to Needs"}>
+          <Icon name={item.category === "need" ? "chevron_right" : "chevron_left"} />
+        </button>
         <button className="list-action-btn" onClick={() => onArchive(item.id)} title="Archive">
           <Icon name="archive" />
         </button>
@@ -766,7 +771,6 @@ function BoardColumn({
   title,
   icon,
   colorClass,
-  bgClass,
   tasks,
   onStatusChange,
   onDelete,
@@ -778,7 +782,6 @@ function BoardColumn({
   title: string;
   icon: string;
   colorClass: string;
-  bgClass: string;
   tasks: Task[];
   onStatusChange: (id: string, status: TaskStatus) => void;
   onDelete: (id: string) => void;
@@ -795,7 +798,7 @@ function BoardColumn({
   const doneGroups = id === "done" ? groupDoneByDate(displayTasks) : null;
 
   return (
-    <div className={`board-column ${bgClass} ${isOver ? "drag-over" : ""}`} ref={setNodeRef}>
+    <div className={`board-column ${isOver ? "drag-over" : ""}`} ref={setNodeRef}>
       <div className={`column-header ${colorClass}`}>
         <Icon name={icon} className="column-icon" />
         <h2 className="column-title">{title}</h2>
@@ -1041,8 +1044,6 @@ export default function TodoPage() {
 
   // ── Shopping CRUD ──
 
-  const [shoppingAddCategory, setShoppingAddCategory] = useState<"want" | "need">("need");
-
   async function addShoppingItem(e: React.FormEvent) {
     e.preventDefault();
     const title = newTitle.trim();
@@ -1051,7 +1052,7 @@ export default function TodoPage() {
       const res = await fetch("/api/shopping", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ title, category: shoppingAddCategory }),
+        body: JSON.stringify({ title, category: "need" }),
       });
       const item = await res.json();
       setShoppingItems((prev) => [...prev, item]);
@@ -1099,6 +1100,20 @@ export default function TodoPage() {
     try {
       await fetch(`/api/shopping/${id}`, { method: "DELETE", headers: { Accept: "application/json" } });
     } catch (e) { console.error("Failed to delete shopping item:", e); fetchShopping(); }
+  }
+
+  async function changeShoppingCategory(id: string) {
+    const item = shoppingItems.find((i) => i.id === id);
+    if (!item) return;
+    const newCategory = item.category === "need" ? "want" : "need";
+    setShoppingItems((prev) => prev.map((i) => i.id === id ? { ...i, category: newCategory } : i));
+    try {
+      await fetch(`/api/shopping/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ category: newCategory }),
+      });
+    } catch (e) { console.error("Failed to change shopping category:", e); fetchShopping(); }
   }
 
   // ── Grocery CRUD ──
@@ -1247,7 +1262,6 @@ export default function TodoPage() {
                 title={col.title}
                 icon={col.icon}
                 colorClass={col.colorClass}
-                bgClass={col.bgClass}
                 tasks={tasksByStatus(col.id)}
                 onStatusChange={changeStatus}
                 onDelete={deleteTask}
@@ -1274,10 +1288,6 @@ export default function TodoPage() {
 
       {viewTab === "shopping" && (
         <div className="shopping-board">
-          <div className="shopping-add-category">
-            <button className={`category-btn ${shoppingAddCategory === "need" ? "active" : ""}`} onClick={() => setShoppingAddCategory("need")}>Add to Needs</button>
-            <button className={`category-btn ${shoppingAddCategory === "want" ? "active" : ""}`} onClick={() => setShoppingAddCategory("want")}>Add to Wants</button>
-          </div>
           <div className="shopping-columns">
             <div className="shopping-column">
               <div className="shopping-column-header needs-header">
@@ -1289,7 +1299,7 @@ export default function TodoPage() {
                 <div className="column-empty">No items needed right now</div>
               ) : (
                 shoppingNeeds.map((item) => (
-                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} />
+                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} />
                 ))
               )}
             </div>
@@ -1303,7 +1313,7 @@ export default function TodoPage() {
                 <div className="column-empty">No wishlist items</div>
               ) : (
                 shoppingWants.map((item) => (
-                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} />
+                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} />
                 ))
               )}
             </div>
