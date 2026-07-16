@@ -1740,7 +1740,7 @@ export default function TodoPage() {
 
       {showRecurringModal && (
         <div className="recurring-modal-overlay" onClick={closeRecurringModal}>
-          <div className="recurring-modal" onClick={(e) => e.stopPropagation()}>
+          <div className={`recurring-modal ${recurringAddCategory === "reference" ? "event-modal" : ""}`} onClick={(e) => e.stopPropagation()}>
             <div className="recurring-modal-header">
               <h3>{editingRecurringId ? (recurringAddCategory === "reference" ? "Edit Event / Class" : "Edit Recurring Task") : (recurringAddCategory === "reference" ? "Add Event / Class" : "Add Recurring Task")}</h3>
               <button className="recurring-modal-close" onClick={closeRecurringModal}>
