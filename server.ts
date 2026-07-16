@@ -132,6 +132,7 @@ type GroceryItem = {
   title: string;
   done: boolean;
   createdAt: string;
+  category: "task" | "reference";
 };
 
 async function readGroceries(): Promise<GroceryItem[]> {
@@ -153,11 +154,18 @@ type RecurringItem = {
   title: string;
   frequency: "weekly" | "long-term";
   dayOfWeek: number | null;
+  repeatEvery: number;
+  repeatUnit: "day" | "week" | "month" | "year";
+  repeatDays: number[];
+  endsType: "never" | "on" | "after";
+  endsOn: string | null;
+  endsAfter: number | null;
   note: string;
   link: string;
   completedThisWeek: boolean;
   lastCompletedAt: string | null;
   createdAt: string;
+  category: "task" | "reference";
 };
 
 function getWeekStart(): number {
@@ -181,11 +189,18 @@ async function readRecurring(): Promise<RecurringItem[]> {
           title: i.title || "Untitled",
           frequency: i.frequency === "long-term" ? "long-term" : "weekly",
           dayOfWeek: i.dayOfWeek ?? null,
+          repeatEvery: i.repeatEvery ?? 1,
+          repeatUnit: i.repeatUnit ?? "week",
+          repeatDays: i.repeatDays ?? (i.dayOfWeek != null ? [i.dayOfWeek] : []),
+          endsType: i.endsType ?? "never",
+          endsOn: i.endsOn ?? null,
+          endsAfter: i.endsAfter ?? null,
           note: i.note || "",
           link: i.link || "",
           completedThisWeek: i.completedThisWeek || false,
           lastCompletedAt: i.lastCompletedAt || null,
           createdAt: i.createdAt,
+          category: i.category === "reference" ? "reference" : "task",
         };
         if (item.frequency === "weekly" && item.completedThisWeek) {
           const lastDone = item.lastCompletedAt ? new Date(item.lastCompletedAt).getTime() : 0;
@@ -391,6 +406,7 @@ app.post("/api/groceries", async (c) => {
     title: body.title || "Untitled",
     done: false,
     createdAt: new Date().toISOString(),
+    category: body.category === "reference" ? "reference" : "task",
   };
   items.push(item);
   await writeGroceries(items);
@@ -440,11 +456,18 @@ app.post("/api/recurring", async (c) => {
     title: body.title || "Untitled",
     frequency: body.frequency === "long-term" ? "long-term" : "weekly",
     dayOfWeek: body.dayOfWeek ?? null,
+    repeatEvery: body.repeatEvery ?? 1,
+    repeatUnit: body.repeatUnit ?? "week",
+    repeatDays: body.repeatDays ?? (body.dayOfWeek != null ? [body.dayOfWeek] : []),
+    endsType: body.endsType ?? "never",
+    endsOn: body.endsOn ?? null,
+    endsAfter: body.endsAfter ?? null,
     note: body.note || "",
     link: body.link || "",
     completedThisWeek: false,
     lastCompletedAt: null,
     createdAt: new Date().toISOString(),
+    category: body.category === "reference" ? "reference" : "task",
   };
   items.push(item);
   await writeRecurring(items);

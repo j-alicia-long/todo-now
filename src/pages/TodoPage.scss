@@ -1494,10 +1494,18 @@
 
 .recurring-board {
   flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding-bottom: 40px;
+  align-items: start;
+}
+
+.recurring-left-col,
+.recurring-right-col {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding-bottom: 40px;
 }
 
 .recurring-section {
@@ -1721,6 +1729,17 @@
   align-items: center;
 }
 
+.recurring-schedule-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: rgba(77, 184, 164, 0.1);
+  color: #3a9e8a;
+}
+
 .recurring-day {
   display: inline-flex;
   align-items: center;
@@ -1808,6 +1827,35 @@
 }
 
 // ── Recurring Modal + FAB ──
+
+
+.recurring-board-tasks {
+  margin-bottom: 8px;
+  border-left: 3px solid #2dd4bf;
+  border-radius: 8px;
+  background: rgba(45, 212, 191, 0.06);
+  padding: 4px 0;
+}
+
+.recurring-board-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 0.92rem;
+}
+
+.recurring-board-title {
+  flex: 1;
+  font-weight: 500;
+}
+
+.events-section {
+  border-left: 3px solid #818cf8;
+  .recurring-section-header {
+    .column-icon { color: #818cf8; }
+  }
+}
 
 .recurring-fab {
   position: fixed;
@@ -1974,6 +2022,179 @@
   }
 }
 
+.recurring-modal-row {
+  display: flex;
+  gap: 8px;
+
+  .recurring-modal-select {
+    flex: 1;
+  }
+}
+
+.recurrence-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+}
+
+.recurrence-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recurrence-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.recurrence-repeat-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.recurrence-number-input {
+  width: 64px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+
+  &:focus {
+    border-color: #4db8a4;
+    box-shadow: 0 0 0 2px rgba(77, 184, 164, 0.15);
+  }
+}
+
+.recurrence-unit-select {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+
+  &:focus {
+    border-color: #4db8a4;
+    box-shadow: 0 0 0 2px rgba(77, 184, 164, 0.15);
+  }
+}
+
+.recurrence-days-row {
+  display: flex;
+  gap: 6px;
+}
+
+.recurrence-day-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(77, 184, 164, 0.1);
+    border-color: rgba(77, 184, 164, 0.3);
+    color: #3a9e8a;
+  }
+
+  &.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+  }
+}
+
+.recurrence-ends-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recurrence-radio-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+
+  input[type="radio"] {
+    accent-color: #3b82f6;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+}
+
+.recurrence-date-input {
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.82rem;
+  outline: none;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:focus {
+    border-color: #4db8a4;
+  }
+}
+
+.recurrence-occurrence-input {
+  width: 60px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:focus {
+    border-color: #4db8a4;
+  }
+}
+
+.recurrence-occurrence-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
 // ── Mobile: always show delete on touch ──
 @media (hover: none) {
   .card-action.delete {
@@ -2044,6 +2265,10 @@
 
   .sidebar {
     width: 300px;
+  }
+
+  .recurring-board {
+    grid-template-columns: 1fr;
   }
 
   .shopping-columns {
