@@ -164,6 +164,8 @@ type RecurringItem = {
   link: string;
   completedThisWeek: boolean;
   lastCompletedAt: string | null;
+  dueDate: string | null;
+  area: string;
   createdAt: string;
   category: "task" | "reference";
 };
@@ -200,8 +202,14 @@ async function readRecurring(): Promise<RecurringItem[]> {
           completedThisWeek: i.completedThisWeek || false,
           lastCompletedAt: i.lastCompletedAt || null,
           createdAt: i.createdAt,
+          dueDate: i.dueDate ?? null,
+          area: i.area || "",
           category: i.category === "reference" ? "reference" : "task",
         };
+        if (item.frequency === "long-term" && item.repeatUnit === "week" && item.repeatEvery === 1) {
+          item.repeatUnit = "year";
+          needsReset = true;
+        }
         if (item.frequency === "weekly" && item.completedThisWeek) {
           const lastDone = item.lastCompletedAt ? new Date(item.lastCompletedAt).getTime() : 0;
           if (lastDone < weekStart) {
@@ -467,6 +475,8 @@ app.post("/api/recurring", async (c) => {
     completedThisWeek: false,
     lastCompletedAt: null,
     createdAt: new Date().toISOString(),
+    dueDate: body.dueDate ?? null,
+    area: body.area || "",
     category: body.category === "reference" ? "reference" : "task",
   };
   items.push(item);
