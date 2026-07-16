@@ -204,7 +204,7 @@
 
 // ── Column ──
 .board-column {
-  background: rgba(142, 68, 173, 0.03);
+  background: var(--bg-sunken);
   border-radius: var(--radius-lg);
   padding: 12px;
   display: flex;
@@ -212,10 +212,6 @@
   min-height: 200px;
   transition: background var(--transition), box-shadow var(--transition);
   border: 2px solid transparent;
-
-  .dark & {
-    background: rgba(142, 68, 173, 0.05);
-  }
 
   &.drag-over {
     border-color: var(--accent);
@@ -229,17 +225,11 @@
   gap: 8px;
   padding: 4px 4px 12px;
 
-  &.col-purple {
-    .column-icon { color: #8e44ad; }
-    .column-title { color: #8e44ad; }
-    .column-count { background: #ebdef0; color: #6c3483; }
-    .dark & .column-count { background: rgba(142, 68, 173, 0.2); color: #c39be0; }
-  }
+  &.col-purple,
   &.col-green {
-    .column-icon { color: #27ae60; }
-    .column-title { color: #27ae60; }
-    .column-count { background: #d5f5e3; color: #1e8449; }
-    .dark & .column-count { background: rgba(39, 174, 96, 0.2); color: #6cdc90; }
+    .column-icon { color: var(--text-secondary); }
+    .column-title { color: var(--text); }
+    .column-count { background: var(--border); color: var(--text-secondary); }
   }
 }
 
@@ -2183,10 +2173,14 @@
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-secondary);
-  background: var(--bg-raised);
+  background: white;
   border: 1px solid var(--border);
   cursor: pointer;
   transition: all 0.15s ease;
+
+  .dark & {
+    background: rgba(255, 255, 255, 0.12);
+  }
 
   &:hover {
     background: rgba(245, 158, 11, 0.1);
@@ -2195,8 +2189,8 @@
   }
 
   &.active {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: #f59e0b;
+    border-color: #f59e0b;
     color: white;
   }
 }

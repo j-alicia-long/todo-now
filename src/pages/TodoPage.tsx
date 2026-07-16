@@ -786,22 +786,6 @@ function BoardColumn({
             ))}
           </div>
         )}
-        {recurringTasks && recurringTasks.length > 0 && id === "done" && (
-          groupRecurringDoneByDate(recurringTasks).map((group) => (
-            <div key={`recurring-${group.label}`} className="done-group recurring-done-group">
-              <div className="done-group-label">{group.label}</div>
-              {group.items.map((ri) => (
-                <div key={ri.id} className="recurring-board-item recurring-board-done">
-                  <label className="list-checkbox">
-                    <input type="checkbox" checked={true} onChange={() => onToggleRecurring?.(ri.id)} />
-                    <span className="checkmark" />
-                  </label>
-                  <span className="recurring-board-title done">{ri.title}</span>
-                </div>
-              ))}
-            </div>
-          ))
-        )}
         {displayTasks.length === 0 && (!recurringTasks || recurringTasks.length === 0) ? (
           <div className="column-empty">
             {id === "done" ? "Nothing completed yet" :
@@ -809,21 +793,49 @@ function BoardColumn({
              showSmallWinsOnly ? "No small wins right now" : "All clear!"}
           </div>
         ) : doneGroups ? (
-          doneGroups.map((group) => (
-            <div key={group.label} className="done-group">
-              <div className="done-group-label">{group.label}</div>
-              {group.tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onStatusChange={onStatusChange}
-                  onDelete={onDelete}
-                  onUpdate={onUpdate}
-                  settings={settings}
-                />
-              ))}
-            </div>
-          ))
+          (() => {
+            const recurringDoneGroups = recurringTasks && recurringTasks.length > 0
+              ? groupRecurringDoneByDate(recurringTasks) : [];
+            const allDateKeys = new Set([
+              ...doneGroups.map(g => g.label),
+              ...recurringDoneGroups.map(g => g.label),
+            ]);
+            const mergedLabels = [...allDateKeys].sort((a, b) => {
+              if (a === "Today") return -1;
+              if (b === "Today") return 1;
+              if (a === "Earlier") return 1;
+              if (b === "Earlier") return -1;
+              return b.localeCompare(a);
+            });
+            return mergedLabels.map((label) => {
+              const taskGroup = doneGroups.find(g => g.label === label);
+              const recurringGroup = recurringDoneGroups.find(g => g.label === label);
+              return (
+                <div key={label} className="done-group">
+                  <div className="done-group-label">{label}</div>
+                  {recurringGroup && recurringGroup.items.map((ri) => (
+                    <div key={ri.id} className="recurring-board-item recurring-board-done">
+                      <label className="list-checkbox">
+                        <input type="checkbox" checked={true} onChange={() => onToggleRecurring?.(ri.id)} />
+                        <span className="checkmark" />
+                      </label>
+                      <span className="recurring-board-title done">{ri.title}</span>
+                    </div>
+                  ))}
+                  {taskGroup && taskGroup.tasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onStatusChange={onStatusChange}
+                      onDelete={onDelete}
+                      onUpdate={onUpdate}
+                      settings={settings}
+                    />
+                  ))}
+                </div>
+              );
+            });
+          })()
         ) : (
           sortTasks(displayTasks).map((task) => (
             <TaskCard
@@ -1730,7 +1742,7 @@ export default function TodoPage() {
         <div className="recurring-modal-overlay" onClick={closeRecurringModal}>
           <div className="recurring-modal" onClick={(e) => e.stopPropagation()}>
             <div className="recurring-modal-header">
-              <h3>{editingRecurringId ? "Edit Recurring Item" : "Add Recurring Item"}</h3>
+              <h3>{editingRecurringId ? (recurringAddCategory === "reference" ? "Edit Event / Class" : "Edit Recurring Task") : (recurringAddCategory === "reference" ? "Add Event / Class" : "Add Recurring Task")}</h3>
               <button className="recurring-modal-close" onClick={closeRecurringModal}>
                 <Icon name="close" />
               </button>
@@ -1739,21 +1751,12 @@ export default function TodoPage() {
               <input
                 className="recurring-modal-input"
                 type="text"
-                placeholder="What do you do regularly?"
+                placeholder={recurringAddCategory === "reference" ? "Event or class name..." : "What do you do regularly?"}
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 autoFocus
               />
-              <div className="recurring-modal-row">
-                <select
-                  className="recurring-modal-select"
-                  value={recurringAddCategory}
-                  onChange={(e) => setRecurringAddCategory(e.target.value as "task" | "reference")}
-                >
-                  <option value="task">Task</option>
-                  <option value="reference">Event / Class</option>
-                </select>
-              </div>
+
 
               <div className="recurring-modal-row">
                 <select
@@ -1774,7 +1777,7 @@ export default function TodoPage() {
                 />
               </div>
 
-              <div className="recurrence-picker">
+              {recurringAddCategory === "task" && <div className="recurrence-picker">
                   <div className="recurrence-section">
                     <label className="recurrence-label">Repeat every</label>
                     <div className="recurrence-repeat-row">
@@ -1853,7 +1856,7 @@ export default function TodoPage() {
                       </label>
                     </div>
                   </div>
-                </div>
+                </div>}
 
               <input
                 className="recurring-modal-input"
