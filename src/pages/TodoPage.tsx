@@ -1030,6 +1030,7 @@ export default function TodoPage() {
   const [recurringAddLink, setRecurringAddLink] = useState("");
   const [recurringAddNote, setRecurringAddNote] = useState("");
   const [recurringAddDay, setRecurringAddDay] = useState<number | null>(null);
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(null);
   const [settings, setSettings] = useState<Settings>(loadSettingsLocal);
   const { theme, setTheme } = useTheme();
@@ -1327,6 +1328,7 @@ export default function TodoPage() {
       setRecurringAddLink("");
       setRecurringAddNote("");
       setRecurringAddDay(null);
+      setShowRecurringModal(false);
     } catch (e) { console.error("Failed to add recurring item:", e); }
   }
 
@@ -1419,14 +1421,6 @@ export default function TodoPage() {
       <header className="todo-header">
         <h1><Icon name="eco" /> {formatHeadingDate()}</h1>
         <div className="header-actions">
-          {viewTab === "board" && (
-            <button
-              className={`small-wins-toggle ${showSmallWinsOnly ? "active" : ""}`}
-              onClick={() => setShowSmallWinsOnly(!showSmallWinsOnly)}
-            >
-              <Icon name="auto_awesome" /> Small Wins
-            </button>
-          )}
           <button
             className="theme-toggle"
             onClick={() => {
@@ -1446,71 +1440,33 @@ export default function TodoPage() {
 
       <div className="view-tabs">
         <button className={`view-tab ${viewTab === "board" ? "active" : ""}`} onClick={() => setViewTab("board")}>
-          <Icon name="dashboard" className="tab-icon" /> Board
+          <Icon name="dashboard" className="tab-icon" /><span className="tab-label"> Board</span>
         </button>
         <button className={`view-tab shopping-tab ${viewTab === "shopping" ? "active" : ""}`} onClick={() => setViewTab("shopping")}>
-          <Icon name="shopping_bag" className="tab-icon" /> Shopping {(activeShoppingItems.length + doneShoppingItems.length) > 0 && <span className="tab-count shopping-count">{activeShoppingItems.length + doneShoppingItems.length}</span>}
+          <Icon name="shopping_bag" className="tab-icon" /><span className="tab-label"> Shopping</span> {(activeShoppingItems.length + doneShoppingItems.length) > 0 && <span className="tab-count shopping-count">{activeShoppingItems.length + doneShoppingItems.length}</span>}
         </button>
         <button className={`view-tab grocery-tab ${viewTab === "groceries" ? "active" : ""}`} onClick={() => setViewTab("groceries")}>
-          <Icon name="grocery" className="tab-icon" /> Groceries {groceryItems.length > 0 && <span className="tab-count grocery-count">{groceryItems.length}</span>}
+          <Icon name="grocery" className="tab-icon" /><span className="tab-label"> Groceries</span> {groceryItems.length > 0 && <span className="tab-count grocery-count">{groceryItems.length}</span>}
         </button>
         <button className={`view-tab recurring-tab ${viewTab === "recurring" ? "active" : ""}`} onClick={() => setViewTab("recurring")}>
-          <Icon name="repeat" className="tab-icon" /> Recurring {recurringItems.length > 0 && <span className="tab-count recurring-count">{recurringItems.length}</span>}
+          <Icon name="repeat" className="tab-icon" /><span className="tab-label"> Recurring</span> {recurringItems.length > 0 && <span className="tab-count recurring-count">{recurringItems.length}</span>}
         </button>
       </div>
 
-      <form className={`add-task-form ${viewTab === "recurring" ? "recurring-add-form" : ""}`} onSubmit={handleAddForm}>
-        <div className="add-form-main-row">
-          <input
-            className="add-task-input"
-            type="text"
-            placeholder={addPlaceholder}
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-          />
-          {viewTab === "recurring" && (
-            <select
-              className="recurring-freq-select"
-              value={recurringAddFreq}
-              onChange={(e) => setRecurringAddFreq(e.target.value as "weekly" | "long-term")}
-            >
-              <option value="weekly">Weekly</option>
-              <option value="long-term">Long-term</option>
-            </select>
-          )}
-          <button className="add-task-btn" type="submit">Add</button>
-        </div>
-        {viewTab === "recurring" && (
-          <div className="recurring-add-extras">
+      {viewTab !== "recurring" && (
+        <form className="add-task-form" onSubmit={handleAddForm}>
+          <div className="add-form-main-row">
             <input
-              className="recurring-extra-input"
-              type="url"
-              placeholder="Link (optional) — e.g. schedule page, WhatsApp group"
-              value={recurringAddLink}
-              onChange={(e) => setRecurringAddLink(e.target.value)}
+              className="add-task-input"
+              type="text"
+              placeholder={addPlaceholder}
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
             />
-            <div className="recurring-extra-row">
-              <input
-                className="recurring-extra-input"
-                type="text"
-                placeholder="Note (optional)"
-                value={recurringAddNote}
-                onChange={(e) => setRecurringAddNote(e.target.value)}
-              />
-              {recurringAddFreq === "weekly" && (
-                <select
-                  className="recurring-freq-select"
-                  value={recurringAddDay === null ? "" : recurringAddDay}
-                  onChange={(e) => setRecurringAddDay(e.target.value === "" ? null : Number(e.target.value))}
-                >
-                  <option value="">Day (optional)</option>
-                  {DAY_NAMES.map((d, i) => <option key={i} value={i}>{d}</option>)}
-                </select>
-              )}
-            </div>
+            <button className="add-task-btn" type="submit">Add</button>
           </div>
-        )}
-      </form>
+        </form>
+      )}
 
       {viewTab === "board" && (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -1655,6 +1611,68 @@ export default function TodoPage() {
                 <RecurringListItem key={item.id} item={item} onToggle={toggleRecurringItem} onDelete={deleteRecurringItem} onUpdate={updateRecurringItem} />
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {viewTab === "recurring" && (
+        <button className="recurring-fab" onClick={() => setShowRecurringModal(true)} aria-label="Add recurring item">
+          <Icon name="add" />
+        </button>
+      )}
+
+      {showRecurringModal && (
+        <div className="recurring-modal-overlay" onClick={() => setShowRecurringModal(false)}>
+          <div className="recurring-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="recurring-modal-header">
+              <h3>Add Recurring Item</h3>
+              <button className="recurring-modal-close" onClick={() => setShowRecurringModal(false)}>
+                <Icon name="close" />
+              </button>
+            </div>
+            <form className="recurring-modal-form" onSubmit={addRecurringItem}>
+              <input
+                className="recurring-modal-input"
+                type="text"
+                placeholder="What do you do regularly?"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                autoFocus
+              />
+              <select
+                className="recurring-modal-select"
+                value={recurringAddFreq}
+                onChange={(e) => setRecurringAddFreq(e.target.value as "weekly" | "long-term")}
+              >
+                <option value="weekly">Weekly</option>
+                <option value="long-term">Long-term</option>
+              </select>
+              <input
+                className="recurring-modal-input"
+                type="url"
+                placeholder="Link (optional) — e.g. schedule page, group chat"
+                value={recurringAddLink}
+                onChange={(e) => setRecurringAddLink(e.target.value)}
+              />
+              <input
+                className="recurring-modal-input"
+                type="text"
+                placeholder="Note (optional)"
+                value={recurringAddNote}
+                onChange={(e) => setRecurringAddNote(e.target.value)}
+              />
+              {recurringAddFreq === "weekly" && (
+                <select
+                  className="recurring-modal-select"
+                  value={recurringAddDay === null ? "" : recurringAddDay}
+                  onChange={(e) => setRecurringAddDay(e.target.value === "" ? null : Number(e.target.value))}
+                >
+                  <option value="">Day of week (optional)</option>
+                  {DAY_NAMES.map((d, i) => <option key={i} value={i}>{d}</option>)}
+                </select>
+              )}
+              <button className="recurring-modal-submit" type="submit">Add</button>
+            </form>
           </div>
         </div>
       )}
