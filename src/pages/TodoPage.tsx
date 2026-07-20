@@ -43,6 +43,8 @@ type Task = {
   createdAt: string;
   completedAt: string | null;
   deletedAt: string | null;
+  source: "board" | "shopping" | "grocery";
+  sourceItemId: string | null;
 };
 
 type ShoppingItem = {
@@ -164,6 +166,11 @@ function formatDueDate(date: string): string {
   return `${diff} days`;
 }
 
+function formatDueDateFull(date: string): string {
+  const d = new Date(date + "T00:00:00");
+  return "Due: " + d.toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" });
+}
+
 function dueUrgencyClass(date: string): string {
   const diff = getDaysLeft(date);
   if (diff <= 2) return "due-red";
@@ -206,12 +213,14 @@ function ShoppingListItem({
   onArchive,
   onDelete,
   onMove,
+  onAddToBoard,
 }: {
   item: ShoppingItem;
   onToggle: (id: string) => void;
   onArchive: (id: string) => void;
   onDelete: (id: string) => void;
   onMove: (id: string) => void;
+  onAddToBoard: (title: string, source: string, sourceItemId: string) => void;
 }) {
   return (
     <div className={`list-item shopping-item ${item.done ? "checked" : ""}`}>
@@ -221,6 +230,9 @@ function ShoppingListItem({
       </label>
       <span className={`list-title ${item.done ? "done" : ""}`}>{item.title}</span>
       <div className="list-actions">
+        <button className="list-action-btn" onClick={() => onAddToBoard(item.title, "shopping", item.id)} title="Add to Board">
+          <Icon name="dashboard" />
+        </button>
         <button className="list-action-btn" onClick={() => onMove(item.id)} title={item.category === "need" ? "Move to Wants" : "Move to Needs"}>
           <Icon name={item.category === "need" ? "chevron_right" : "chevron_left"} />
         </button>
@@ -260,10 +272,12 @@ function GroceryListItem({
   item,
   onToggle,
   onDelete,
+  onAddToBoard,
 }: {
   item: GroceryItem;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onAddToBoard: (title: string, source: string, sourceItemId: string) => void;
 }) {
   return (
     <div className={`list-item grocery-item ${item.done ? "checked" : ""}`}>
@@ -273,6 +287,9 @@ function GroceryListItem({
       </label>
       <span className={`list-title ${item.done ? "done" : ""}`}>{item.title}</span>
       <div className="list-actions">
+        <button className="list-action-btn" onClick={() => onAddToBoard(item.title, "grocery", item.id)} title="Add to Board">
+          <Icon name="dashboard" />
+        </button>
         <button className="list-action-btn delete" onClick={() => onDelete(item.id)} title="Delete"><Icon name="close" /></button>
       </div>
     </div>
@@ -297,6 +314,7 @@ function TagSelect<T extends string>({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [above, setAbove] = useState(false);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -306,8 +324,17 @@ function TagSelect<T extends string>({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [onClose]);
 
+  useEffect(() => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      if (rect.bottom > window.innerHeight) {
+        setAbove(true);
+      }
+    }
+  }, []);
+
   return (
-    <div ref={ref} className={`tag-select ${className || ""}`}>
+    <div ref={ref} className={`tag-select ${above ? "tag-select-above" : ""} ${className || ""}`}>
       {options.map((opt) => (
         <button
           key={opt}
@@ -384,6 +411,61 @@ function DatePickerModal({
   );
 }
 
+function DatePickerDropdown({
+  value,
+  onChange,
+  onClose,
+}: {
+  value: string | null;
+  onChange: (date: string | null) => void;
+  onClose: () => void;
+}) {
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const tz = getLocalTimeZone();
+  const todayDate = today(tz);
+  const calendarValue = value ? parseDate(value) : undefined;
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  return (
+    <div className="date-picker-dropdown" ref={dropdownRef} onClick={(e) => e.stopPropagation()}>
+      <Calendar
+        aria-label="Due date"
+        value={calendarValue}
+        onChange={(d) => { onChange(d.toString()); onClose(); }}
+        minValue={todayDate}
+      >
+        <header className="date-picker-header">
+          <AriaButton slot="previous" className="date-picker-nav">‹</AriaButton>
+          <Heading className="date-picker-heading" />
+          <AriaButton slot="next" className="date-picker-nav">›</AriaButton>
+        </header>
+        <CalendarGrid>
+          <CalendarGridHeader>
+            {(day) => <CalendarHeaderCell>{day}</CalendarHeaderCell>}
+          </CalendarGridHeader>
+          <CalendarGridBody>
+            {(date) => <CalendarCell date={date} />}
+          </CalendarGridBody>
+        </CalendarGrid>
+      </Calendar>
+      {value && (
+        <button className="date-picker-clear" onClick={() => { onChange(null); onClose(); }}>
+          Clear date
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Task Card ──
 
 function TaskCard({
@@ -402,6 +484,9 @@ function TaskCard({
   isDragOverlay?: boolean;
 }) {
   const [editingTag, setEditingTag] = useState<string | null>(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const editInputRef = useRef<HTMLInputElement>(null);
   const {
     attributes,
     listeners,
@@ -409,6 +494,23 @@ function TaskCard({
     transform,
     isDragging,
   } = useDraggable({ id: task.id, data: { task } });
+
+  useEffect(() => {
+    if (isEditingTitle && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [isEditingTitle]);
+
+  const commitTitleEdit = () => {
+    const trimmed = editTitle.trim();
+    if (trimmed && trimmed !== task.title) {
+      onUpdate(task.id, { title: trimmed });
+    } else {
+      setEditTitle(task.title);
+    }
+    setIsEditingTitle(false);
+  };
 
   const style: React.CSSProperties = {};
   if (isDragOverlay) {
@@ -431,7 +533,7 @@ function TaskCard({
   return (
     <div
       ref={ref}
-      className={`task-card ${isDragging && !isDragOverlay ? "dragging" : ""}`}
+      className={`task-card ${isDragging && !isDragOverlay ? "dragging" : ""} ${task.source && task.source !== "board" ? `source-${task.source}` : ""}`}
       style={style}
       {...dragProps}
     >
@@ -459,12 +561,33 @@ function TaskCard({
           />
           <span className="checkmark" />
         </label>
-        <span className={`card-title ${task.done ? "done" : ""}`}>{task.title}</span>
+        {isEditingTitle ? (
+          <input
+            ref={editInputRef}
+            className="card-title-edit"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onBlur={commitTitleEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); commitTitleEdit(); }
+              if (e.key === "Escape") { setEditTitle(task.title); setIsEditingTitle(false); }
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span
+            className={`card-title ${task.done ? "done" : ""}`}
+            onDoubleClick={(e) => { e.stopPropagation(); setEditTitle(task.title); setIsEditingTitle(true); }}
+          >{task.title}</span>
+        )}
       </div>
 
       <div className="card-row">
         <div className="card-tags">
-          {task.dueDate && (
+          {task.done && task.dueDate && (
+            <span className="card-due-subtext">{formatDueDateFull(task.dueDate)}</span>
+          )}
+          {!task.done && task.dueDate && (
             <span
               className={`card-tag ${dueUrgencyClass(task.dueDate)} tappable`}
               onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "dueDate" ? null : "dueDate"); }}
@@ -472,7 +595,7 @@ function TaskCard({
               {formatDueDate(task.dueDate)}
             </span>
           )}
-          {!task.dueDate && (
+          {!task.done && !task.dueDate && (
             <span
               className="card-tag due-none tappable"
               onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "dueDate" ? null : "dueDate"); }}
@@ -488,22 +611,24 @@ function TaskCard({
             />
           )}
           {settings.showArea && task.area && (
-            <span
-              className={`card-tag area ${AREA_COLORS[task.area] || ""} tappable`}
-              onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "area" ? null : "area"); }}
-            >
-              {AREA_LABELS[task.area] || task.area}
+            <span className="tag-anchor">
+              <span
+                className={`card-tag area ${AREA_COLORS[task.area] || ""} tappable`}
+                onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "area" ? null : "area"); }}
+              >
+                {AREA_LABELS[task.area] || task.area}
+              </span>
+              {editingTag === "area" && (
+                <TagSelect
+                  value={task.area}
+                  options={AREA_OPTIONS.map(([k]) => k)}
+                  labels={AREA_LABELS}
+                  onChange={(v) => onUpdate(task.id, { area: v })}
+                  onClose={() => setEditingTag(null)}
+                  className="area-select"
+                />
+              )}
             </span>
-          )}
-          {editingTag === "area" && (
-            <TagSelect
-              value={task.area}
-              options={AREA_OPTIONS.map(([k]) => k)}
-              labels={AREA_LABELS}
-              onChange={(v) => onUpdate(task.id, { area: v })}
-              onClose={() => setEditingTag(null)}
-              className="area-select"
-            />
           )}
 
 
@@ -548,15 +673,6 @@ function TaskCard({
               </button>
             </>
           )}
-          {task.status === "done" && (
-            <button
-              className="card-action-btn undo"
-              onClick={(e) => { e.stopPropagation(); onStatusChange(task.id, "this-week"); }}
-              title="Move back to This Week"
-            >
-              <Icon name="undo" /> Reopen
-          </button>
-        )}
         </div>
       </div>
     </div>
@@ -579,6 +695,26 @@ function FutureTaskCard({
   settings: Settings;
 }) {
   const [editingTag, setEditingTag] = useState<string | null>(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingTitle && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [isEditingTitle]);
+
+  const commitTitleEdit = () => {
+    const trimmed = editTitle.trim();
+    if (trimmed && trimmed !== task.title) {
+      onUpdate(task.id, { title: trimmed });
+    } else {
+      setEditTitle(task.title);
+    }
+    setIsEditingTitle(false);
+  };
 
   return (
     <div className="task-card future-card">
@@ -599,7 +735,25 @@ function FutureTaskCard({
           />
           <span className="checkmark" />
         </label>
-        <span className="card-title">{task.title}</span>
+        {isEditingTitle ? (
+          <input
+            ref={editInputRef}
+            className="card-title-edit"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onBlur={commitTitleEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); commitTitleEdit(); }
+              if (e.key === "Escape") { setEditTitle(task.title); setIsEditingTitle(false); }
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span
+            className="card-title"
+            onDoubleClick={(e) => { e.stopPropagation(); setEditTitle(task.title); setIsEditingTitle(true); }}
+          >{task.title}</span>
+        )}
       </div>
 
       <div className="card-tags">
@@ -627,21 +781,23 @@ function FutureTaskCard({
           />
         )}
         {settings.showArea && task.area && (
-          <span
-            className={`card-tag area ${AREA_COLORS[task.area] || ""} tappable`}
-            onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "area" ? null : "area"); }}
-          >
-            {AREA_LABELS[task.area] || task.area}
+          <span className="tag-anchor">
+            <span
+              className={`card-tag area ${AREA_COLORS[task.area] || ""} tappable`}
+              onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "area" ? null : "area"); }}
+            >
+              {AREA_LABELS[task.area] || task.area}
+            </span>
+            {editingTag === "area" && (
+              <TagSelect
+                value={task.area}
+                options={AREA_OPTIONS.map(([k]) => k)}
+                labels={AREA_LABELS}
+                onChange={(v) => onUpdate(task.id, { area: v })}
+                onClose={() => setEditingTag(null)}
+              />
+            )}
           </span>
-        )}
-        {editingTag === "area" && (
-          <TagSelect
-            value={task.area}
-            options={AREA_OPTIONS.map(([k]) => k)}
-            labels={AREA_LABELS}
-            onChange={(v) => onUpdate(task.id, { area: v })}
-            onClose={() => setEditingTag(null)}
-          />
         )}
       </div>
 
@@ -697,7 +853,13 @@ function TrashCard({
 
 // ── Board Column ──
 
-function groupDoneByDate(tasks: Task[]): { label: string; tasks: Task[] }[] {
+function formatDateLabel(dateKey: string, todayStr: string): string {
+  if (dateKey === todayStr) return "Today";
+  if (dateKey === "unknown") return "Earlier";
+  return new Date(dateKey + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+function groupDoneByDate(tasks: Task[]): { dateKey: string; label: string; tasks: Task[] }[] {
   const todayStr = new Date().toISOString().slice(0, 10);
   const groups = new Map<string, Task[]>();
   for (const t of tasks) {
@@ -706,14 +868,10 @@ function groupDoneByDate(tasks: Task[]): { label: string; tasks: Task[] }[] {
     groups.get(dateKey)!.push(t);
   }
   const sorted = [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-  return sorted.map(([dateKey, tasks]) => ({
-    label: dateKey === todayStr ? "Today" : dateKey === "unknown" ? "Earlier" :
-      new Date(dateKey + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
-    tasks,
-  }));
+  return sorted.map(([dateKey, tasks]) => ({ dateKey, label: formatDateLabel(dateKey, todayStr), tasks }));
 }
 
-function groupRecurringDoneByDate(items: RecurringItem[]): { label: string; items: RecurringItem[] }[] {
+function groupRecurringDoneByDate(items: RecurringItem[]): { dateKey: string; label: string; items: RecurringItem[] }[] {
   const todayStr = new Date().toISOString().slice(0, 10);
   const groups = new Map<string, RecurringItem[]>();
   for (const item of items) {
@@ -722,11 +880,7 @@ function groupRecurringDoneByDate(items: RecurringItem[]): { label: string; item
     groups.get(dateKey)!.push(item);
   }
   const sorted = [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-  return sorted.map(([dateKey, grpItems]) => ({
-    label: dateKey === todayStr ? "Today" : dateKey === "unknown" ? "Earlier" :
-      new Date(dateKey + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
-    items: grpItems,
-  }));
+  return sorted.map(([dateKey, grpItems]) => ({ dateKey, label: formatDateLabel(dateKey, todayStr), items: grpItems }));
 }
 
 function BoardColumn({
@@ -742,6 +896,9 @@ function BoardColumn({
   settings,
   recurringTasks,
   onToggleRecurring,
+  onDeleteRecurring,
+  onUpdateRecurring,
+  onEditRecurring,
 }: {
   id: TaskStatus;
   title: string;
@@ -755,8 +912,12 @@ function BoardColumn({
   settings: Settings;
   recurringTasks?: RecurringItem[];
   onToggleRecurring?: (id: string) => void;
+  onDeleteRecurring?: (id: string) => void;
+  onUpdateRecurring?: (id: string, fields: Partial<RecurringItem>) => void;
+  onEditRecurring?: (item: RecurringItem) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
+  const [editingRecurringDate, setEditingRecurringDate] = useState<string | null>(null);
 
   const displayTasks = id === "this-week" && showSmallWinsOnly
     ? tasks.filter((t) => t.isSmallWin)
@@ -772,20 +933,47 @@ function BoardColumn({
         <span className="column-count">{displayTasks.length}</span>
       </div>
       <div className="column-cards">
-        {recurringTasks && recurringTasks.length > 0 && id !== "done" && (
-          <div className="recurring-board-tasks">
-            {recurringTasks.map((ri) => (
-              <div key={ri.id} className="recurring-board-item">
-                <label className="list-checkbox">
-                  <input type="checkbox" checked={ri.completedThisWeek} onChange={() => onToggleRecurring?.(ri.id)} />
-                  <span className="checkmark" />
-                </label>
-                <span className="recurring-board-title">{ri.title}</span>
-                {ri.dayOfWeek !== null && <span className="recurring-day">{DAY_NAMES[ri.dayOfWeek]}</span>}
+        {recurringTasks && recurringTasks.length > 0 && id !== "done" && recurringTasks.map((ri) => (
+          <div key={ri.id} className="task-card recurring-task-card">
+            <button className="card-delete-btn" onClick={(e) => { e.stopPropagation(); onDeleteRecurring?.(ri.id); }} title="Delete" aria-label="Delete recurring task">
+              <Icon name="close" />
+            </button>
+            <div className="card-header">
+              <label className="card-checkbox" onClick={(e) => e.stopPropagation()}>
+                <input type="checkbox" checked={ri.completedThisWeek} onChange={(e) => { e.stopPropagation(); onToggleRecurring?.(ri.id); }} />
+                <span className="checkmark" />
+              </label>
+              <span className="card-title">{ri.title}</span>
+            </div>
+            <div className="card-row">
+              <div className="card-tags">
+                {ri.dueDate && (
+                  <span
+                    className={`card-tag ${dueUrgencyClass(ri.dueDate)} tappable`}
+                    onClick={(e) => { e.stopPropagation(); setEditingRecurringDate(editingRecurringDate === ri.id ? null : ri.id); }}
+                  >
+                    {formatDueDate(ri.dueDate)}
+                  </span>
+                )}
+                {!ri.dueDate && (
+                  <span
+                    className="card-tag due-none tappable"
+                    onClick={(e) => { e.stopPropagation(); setEditingRecurringDate(editingRecurringDate === ri.id ? null : ri.id); }}
+                  >
+                    + date
+                  </span>
+                )}
+                {editingRecurringDate === ri.id && (
+                  <DatePickerModal
+                    value={ri.dueDate}
+                    onChange={(d) => onUpdateRecurring?.(ri.id, { dueDate: d })}
+                    onClose={() => setEditingRecurringDate(null)}
+                  />
+                )}
               </div>
-            ))}
+            </div>
           </div>
-        )}
+        ))}
         {displayTasks.length === 0 && (!recurringTasks || recurringTasks.length === 0) ? (
           <div className="column-empty">
             {id === "done" ? "Nothing completed yet" :
@@ -796,30 +984,40 @@ function BoardColumn({
           (() => {
             const recurringDoneGroups = recurringTasks && recurringTasks.length > 0
               ? groupRecurringDoneByDate(recurringTasks) : [];
-            const allDateKeys = new Set([
-              ...doneGroups.map(g => g.label),
-              ...recurringDoneGroups.map(g => g.label),
-            ]);
-            const mergedLabels = [...allDateKeys].sort((a, b) => {
-              if (a === "Today") return -1;
-              if (b === "Today") return 1;
-              if (a === "Earlier") return 1;
-              if (b === "Earlier") return -1;
+            const dateKeyMap = new Map<string, string>();
+            for (const g of doneGroups) dateKeyMap.set(g.dateKey, g.label);
+            for (const g of recurringDoneGroups) dateKeyMap.set(g.dateKey, g.label);
+            const sortedKeys = [...dateKeyMap.keys()].sort((a, b) => {
+              if (a === "unknown") return 1;
+              if (b === "unknown") return -1;
               return b.localeCompare(a);
             });
-            return mergedLabels.map((label) => {
-              const taskGroup = doneGroups.find(g => g.label === label);
-              const recurringGroup = recurringDoneGroups.find(g => g.label === label);
+            return sortedKeys.map((key) => {
+              const label = dateKeyMap.get(key)!;
+              const taskGroup = doneGroups.find(g => g.dateKey === key);
+              const recurringGroup = recurringDoneGroups.find(g => g.dateKey === key);
               return (
                 <div key={label} className="done-group">
                   <div className="done-group-label">{label}</div>
                   {recurringGroup && recurringGroup.items.map((ri) => (
-                    <div key={ri.id} className="recurring-board-item recurring-board-done">
-                      <label className="list-checkbox">
-                        <input type="checkbox" checked={true} onChange={() => onToggleRecurring?.(ri.id)} />
-                        <span className="checkmark" />
-                      </label>
-                      <span className="recurring-board-title done">{ri.title}</span>
+                    <div key={ri.id} className="task-card recurring-task-card">
+                      <button className="card-delete-btn" onClick={(e) => { e.stopPropagation(); onDeleteRecurring?.(ri.id); }} title="Delete" aria-label="Delete recurring task">
+                        <Icon name="close" />
+                      </button>
+                      <div className="card-header">
+                        <label className="card-checkbox" onClick={(e) => e.stopPropagation()}>
+                          <input type="checkbox" checked={true} onChange={(e) => { e.stopPropagation(); onToggleRecurring?.(ri.id); }} />
+                          <span className="checkmark" />
+                        </label>
+                        <span className="card-title done">{ri.title}</span>
+                      </div>
+                      <div className="card-row">
+                        <div className="card-tags">
+                          {ri.dueDate && <span className="card-due-subtext">{formatDueDateFull(ri.dueDate)}</span>}
+                        </div>
+                        <div className="card-actions">
+                        </div>
+                      </div>
                     </div>
                   ))}
                   {taskGroup && taskGroup.tasks.map((task) => (
@@ -918,9 +1116,10 @@ function RecurringListItem({
 }) {
   const [editingLink, setEditingLink] = useState(false);
   const [linkDraft, setLinkDraft] = useState(item.link);
-  const isWeekly = item.repeatUnit === "week" && item.repeatEvery === 1 && item.frequency !== "long-term";
+  const isEvent = item.category === "reference";
+  const isWeekly = !isEvent && item.repeatUnit === "week" && item.repeatEvery === 1 && item.frequency !== "long-term";
   const isChecked = isWeekly ? item.completedThisWeek : false;
-  const recurrenceLabel = formatRecurrence(item);
+  const recurrenceLabel = isEvent ? "" : formatRecurrence(item);
 
   function saveLink() {
     const trimmed = linkDraft.trim();
@@ -930,7 +1129,7 @@ function RecurringListItem({
   }
 
   return (
-    <div className={`list-item recurring-item ${isChecked ? "checked" : ""} ${isWeekly ? "weekly-hub-item" : ""}`}>
+    <div className={`list-item recurring-item ${isChecked ? "checked" : ""} ${(isWeekly || isEvent) ? "weekly-hub-item" : ""}`}>
       {isWeekly && (
         <label className="list-checkbox">
           <input type="checkbox" checked={isChecked} onChange={() => onToggle(item.id)} />
@@ -944,14 +1143,14 @@ function RecurringListItem({
           {item.area && <span className={`recurring-area-tag ${AREA_COLORS[item.area] || ""}`}>{AREA_LABELS[item.area] || item.area}</span>}
           {item.dueDate && <span className={`recurring-due-tag ${dueUrgencyClass(item.dueDate)}`}>{formatDueDate(item.dueDate)}</span>}
           {item.note && <span className="recurring-note">{item.note}</span>}
-          {!isWeekly && item.lastCompletedAt && (
+          {!isWeekly && !isEvent && item.lastCompletedAt && (
             <span className="recurring-last-done">Done {timeSince(item.lastCompletedAt)}</span>
           )}
-          {!isWeekly && !item.lastCompletedAt && (
+          {!isWeekly && !isEvent && !item.lastCompletedAt && (
             <span className="recurring-last-done never">Not yet done</span>
           )}
         </div>
-        {isWeekly && (
+        {(isWeekly || isEvent) && (
           <div className="recurring-link-row">
             {item.link && !editingLink ? (
               <a href={item.link} target="_blank" rel="noopener noreferrer" className="recurring-link-btn" onClick={(e) => e.stopPropagation()}>
@@ -988,7 +1187,7 @@ function RecurringListItem({
         )}
       </div>
       <div className="list-actions">
-        {!isWeekly && (
+        {!isWeekly && !isEvent && (
           <button className="list-action-btn" onClick={() => onToggle(item.id)} title="Mark done">
             <Icon name="check_circle" />
           </button>
@@ -1046,6 +1245,8 @@ export default function TodoPage() {
   const [recurringItems, setRecurringItems] = useState<RecurringItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState<string | null>(null);
+  const [showAddDatePicker, setShowAddDatePicker] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [showSmallWinsOnly, setShowSmallWinsOnly] = useState(false);
   const [viewTab, setViewTab] = useState<ViewTab>("board");
@@ -1062,6 +1263,7 @@ export default function TodoPage() {
   const [recurringAddEndsOn, setRecurringAddEndsOn] = useState("");
   const [recurringAddEndsAfter, setRecurringAddEndsAfter] = useState(13);
   const [recurringAddDueDate, setRecurringAddDueDate] = useState("");
+  const [showRecurringDatePicker, setShowRecurringDatePicker] = useState(false);
   const [recurringAddArea, setRecurringAddArea] = useState("");
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(null);
   const [settings, setSettings] = useState<Settings>(loadSettingsLocal);
@@ -1151,17 +1353,34 @@ export default function TodoPage() {
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ title, status }),
+        body: JSON.stringify({ title, status, dueDate: newTaskDueDate }),
       });
       const task = await res.json();
       setTasks((prev) => [...prev, task]);
       setNewTitle("");
+      setNewTaskDueDate(null);
+      setShowAddDatePicker(false);
     } catch (e) {
       console.error("Failed to add task:", e);
     }
   }
 
+  async function addTaskFromList(title: string, source: string, sourceItemId: string) {
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ title, status: "this-week", source, sourceItemId }),
+      });
+      const task = await res.json();
+      setTasks((prev) => [...prev, task]);
+    } catch (e) {
+      console.error("Failed to add task from list:", e);
+    }
+  }
+
   async function changeStatus(id: string, status: TaskStatus) {
+    const task = tasks.find((t) => t.id === id);
     setTasks((prev) =>
       prev.map((t) =>
         t.id === id
@@ -1181,6 +1400,10 @@ export default function TodoPage() {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ status }),
       });
+      if (status === "done" && task?.sourceItemId) {
+        if (task.source === "shopping") toggleShoppingItem(task.sourceItemId);
+        else if (task.source === "grocery") toggleGroceryItem(task.sourceItemId);
+      }
     } catch (e) {
       console.error("Failed to update task:", e);
       fetchTasks();
@@ -1365,6 +1588,7 @@ export default function TodoPage() {
     setRecurringAddEndsOn("");
     setRecurringAddEndsAfter(13);
     setRecurringAddDueDate("");
+    setShowRecurringDatePicker(false);
     setRecurringAddArea("");
   }
 
@@ -1390,22 +1614,37 @@ export default function TodoPage() {
     e.preventDefault();
     const title = newTitle.trim();
     if (!title) return;
+    const isEvent = recurringAddCategory === "reference";
+    const effectiveDay = isEvent ? recurringAddDay : (recurringAddRepeatDays.length > 0 ? recurringAddRepeatDays[0] : recurringAddDay);
+    let dueDate: string | null = recurringAddDueDate || null;
+    if (!dueDate && effectiveDay != null && !isEvent) {
+      const today = new Date();
+      const todayDay = today.getDay();
+      let daysUntil = (effectiveDay - todayDay + 7) % 7;
+      if (daysUntil === 0) daysUntil = 7;
+      const recurDate = new Date(today);
+      recurDate.setDate(today.getDate() + daysUntil - 2);
+      if (recurDate <= today) recurDate.setDate(recurDate.getDate() + 7);
+      dueDate = recurDate.toISOString().slice(0, 10);
+    }
     const fields: Record<string, any> = {
       title,
       frequency: "weekly",
       category: recurringAddCategory,
       link: recurringAddLink.trim(),
       note: recurringAddNote.trim(),
-      dayOfWeek: recurringAddRepeatDays.length > 0 ? recurringAddRepeatDays[0] : recurringAddDay,
-      repeatEvery: recurringAddRepeatEvery,
-      repeatUnit: recurringAddRepeatUnit,
-      repeatDays: recurringAddRepeatDays,
-      endsType: recurringAddEndsType,
-      endsOn: recurringAddEndsType === "on" ? recurringAddEndsOn : null,
-      endsAfter: recurringAddEndsType === "after" ? recurringAddEndsAfter : null,
-      dueDate: recurringAddDueDate || null,
+      dayOfWeek: effectiveDay,
+      dueDate,
       area: recurringAddArea || "",
     };
+    if (!isEvent) {
+      fields.repeatEvery = recurringAddRepeatEvery;
+      fields.repeatUnit = recurringAddRepeatUnit;
+      fields.repeatDays = recurringAddRepeatDays;
+      fields.endsType = recurringAddEndsType;
+      fields.endsOn = recurringAddEndsType === "on" ? recurringAddEndsOn : null;
+      fields.endsAfter = recurringAddEndsType === "after" ? recurringAddEndsAfter : null;
+    }
 
     if (editingRecurringId) {
       updateRecurringItem(editingRecurringId, fields as Partial<RecurringItem>);
@@ -1498,11 +1737,22 @@ export default function TodoPage() {
   const allTasks = recurringItems.filter((i) => i.category === "task");
   const allReferences = recurringItems.filter((i) => i.category === "reference");
   const weeklyTasks = allTasks.filter(isWeeklyItem);
-  const longTermTasks = allTasks.filter((i) => !isWeeklyItem(i));
-  const weeklyReferences = allReferences.filter(isWeeklyItem);
+  const todayDow = new Date().getDay();
+  const boardWeeklyTasks = weeklyTasks.filter((i) =>
+    i.repeatDays.length === 0 || i.repeatDays.includes(todayDow) || i.completedThisWeek
+  );
+  const unitOrder: Record<string, number> = { day: 0, week: 1, month: 2, year: 3 };
+  const longTermTasks = allTasks.filter((i) => !isWeeklyItem(i)).sort((a, b) => (unitOrder[a.repeatUnit] ?? 9) - (unitOrder[b.repeatUnit] ?? 9));
   const weeklyDoneCount = weeklyTasks.filter((i) => i.completedThisWeek).length;
-  const boardRecurringTasks = weeklyTasks.filter((i) => !i.completedThisWeek);
-  const boardRecurringDone = weeklyTasks.filter((i) => i.completedThisWeek);
+  const upcomingLongTerm = longTermTasks.filter((i) => {
+    if (!i.dueDate) return false;
+    const due = new Date(i.dueDate).getTime();
+    const now = Date.now();
+    return due - now <= 7 * 24 * 60 * 60 * 1000 && due - now > -24 * 60 * 60 * 1000;
+  });
+  const allBoardRecurring = [...boardWeeklyTasks, ...upcomingLongTerm];
+  const boardRecurringTasks = allBoardRecurring.filter((i) => !i.completedThisWeek);
+  const boardRecurringDone = allBoardRecurring.filter((i) => i.completedThisWeek);
 
   if (loading) {
     return (
@@ -1562,6 +1812,26 @@ export default function TodoPage() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
             />
+            {viewTab === "board" && (
+              <div className="add-date-picker-wrapper">
+                <button
+                  type="button"
+                  className={`add-date-btn ${newTaskDueDate ? "has-date" : ""}`}
+                  onClick={() => setShowAddDatePicker(!showAddDatePicker)}
+                  title={newTaskDueDate ? `Due: ${formatDueDate(newTaskDueDate)}` : "Set due date"}
+                >
+                  <Icon name="calendar_month" />
+                  {newTaskDueDate && <span className="add-date-label">{formatDueDate(newTaskDueDate)}</span>}
+                </button>
+                {showAddDatePicker && (
+                  <DatePickerDropdown
+                    value={newTaskDueDate}
+                    onChange={(d) => setNewTaskDueDate(d)}
+                    onClose={() => setShowAddDatePicker(false)}
+                  />
+                )}
+              </div>
+            )}
             <button className="add-task-btn" type="submit">Add</button>
           </div>
         </form>
@@ -1585,6 +1855,9 @@ export default function TodoPage() {
                 settings={settings}
                 recurringTasks={col.id === "this-week" ? boardRecurringTasks : col.id === "done" ? boardRecurringDone : undefined}
                 onToggleRecurring={(col.id === "this-week" || col.id === "done") ? toggleRecurringItem : undefined}
+                onDeleteRecurring={(col.id === "this-week" || col.id === "done") ? deleteRecurringItem : undefined}
+                onUpdateRecurring={(col.id === "this-week" || col.id === "done") ? updateRecurringItem : undefined}
+                onEditRecurring={(col.id === "this-week" || col.id === "done") ? openRecurringEdit : undefined}
               />
             ))}
           </div>
@@ -1616,7 +1889,7 @@ export default function TodoPage() {
                 <div className="column-empty">No items needed right now</div>
               ) : (
                 shoppingNeeds.map((item) => (
-                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} />
+                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} onAddToBoard={addTaskFromList} />
                 ))
               )}
             </div>
@@ -1630,7 +1903,7 @@ export default function TodoPage() {
                 <div className="column-empty">No wishlist items</div>
               ) : (
                 shoppingWants.map((item) => (
-                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} />
+                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} onAddToBoard={addTaskFromList} />
                 ))
               )}
             </div>
@@ -1670,10 +1943,10 @@ export default function TodoPage() {
             ) : (
               <>
                 {unboughtGroceries.map((item) => (
-                  <GroceryListItem key={item.id} item={item} onToggle={toggleGroceryItem} onDelete={deleteGroceryItem} />
+                  <GroceryListItem key={item.id} item={item} onToggle={toggleGroceryItem} onDelete={deleteGroceryItem} onAddToBoard={addTaskFromList} />
                 ))}
                 {boughtGroceries.map((item) => (
-                  <GroceryListItem key={item.id} item={item} onToggle={toggleGroceryItem} onDelete={deleteGroceryItem} />
+                  <GroceryListItem key={item.id} item={item} onToggle={toggleGroceryItem} onDelete={deleteGroceryItem} onAddToBoard={addTaskFromList} />
                 ))}
               </>
             )}
@@ -1724,12 +1997,12 @@ export default function TodoPage() {
               <div className="recurring-section-header">
                 <Icon name="event" className="column-icon" />
                 <h3>Events & Classes</h3>
-                <span className="column-count">{weeklyReferences.length}</span>
+                <span className="column-count">{allReferences.length}</span>
               </div>
-              {weeklyReferences.length === 0 ? (
+              {allReferences.length === 0 ? (
                 <div className="column-empty">No events or classes yet</div>
               ) : (
-                weeklyReferences.map((item) => (
+                allReferences.map((item) => (
                   <RecurringListItem key={item.id} item={item} onToggle={toggleRecurringItem} onDelete={deleteRecurringItem} onUpdate={updateRecurringItem} onEdit={openRecurringEdit} />
                 ))
               )}
@@ -1769,12 +2042,24 @@ export default function TodoPage() {
                     <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
-                <input
-                  className="recurring-modal-input recurring-date-field"
-                  type="date"
-                  value={recurringAddDueDate}
-                  onChange={(e) => setRecurringAddDueDate(e.target.value)}
-                />
+                <div className="add-date-picker-wrapper">
+                  <button
+                    type="button"
+                    className={`add-date-btn recurring-date-btn ${recurringAddDueDate ? "has-date" : ""}`}
+                    onClick={() => setShowRecurringDatePicker(!showRecurringDatePicker)}
+                    title={recurringAddDueDate ? `Due: ${formatDueDate(recurringAddDueDate)}` : "Set due date"}
+                  >
+                    <Icon name="calendar_month" />
+                    {recurringAddDueDate ? <span className="add-date-label">{formatDueDate(recurringAddDueDate)}</span> : <span className="add-date-label">Date</span>}
+                  </button>
+                  {showRecurringDatePicker && (
+                    <DatePickerDropdown
+                      value={recurringAddDueDate || null}
+                      onChange={(d) => setRecurringAddDueDate(d || "")}
+                      onClose={() => setShowRecurringDatePicker(false)}
+                    />
+                  )}
+                </div>
               </div>
 
               {recurringAddCategory === "task" && <div className="recurrence-picker">
