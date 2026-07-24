@@ -10,6 +10,7 @@ import {
   type TaskStatus,
 } from "../domain/task-rules";
 import {
+  advanceDueDate,
   applyRecurringCompletion,
   isWeeklyRecurring,
   type RecurringItem,
@@ -159,7 +160,8 @@ export const useRecurring = (transport: Transport = httpTransport) => {
   );
 
   // Weekly items toggle completedThisWeek; long-term items are "done" for
-  // this occurrence. Optimistic stamping shares the server's domain rule.
+  // this occurrence, which also advances their dueDate. Optimistic updates
+  // share the server's domain rules.
   const toggle = (id: string) => {
     const item = store.items.find((i) => i.id === id);
     if (!item) return Promise.resolve(false);
@@ -168,9 +170,12 @@ export const useRecurring = (transport: Transport = httpTransport) => {
       : { done: true };
     return store.mutate(
       (prev) =>
-        prev.map((i) =>
-          i.id === id ? applyRecurringCompletion(i, change, new Date()) : i
-        ),
+        prev.map((i) => {
+          if (i.id !== id) return i;
+          const now = new Date();
+          const stamped = applyRecurringCompletion(i, change, now);
+          return change.done ? advanceDueDate(stamped, now) : stamped;
+        }),
       () => transport.put(`/api/recurring/${id}`, change)
     );
   };

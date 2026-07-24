@@ -10,6 +10,7 @@ import {
   type Task,
 } from "./src/domain/task-rules";
 import {
+  advanceDueDate,
   applyRecurringCompletion,
   resetWeeklyItems,
   type RecurringItem,
@@ -187,6 +188,7 @@ const readRecurring = async (): Promise<RecurringItem[]> => {
           lastCompletedAt: i.lastCompletedAt || null,
           createdAt: i.createdAt,
           dueDate: i.dueDate ?? null,
+          showEarlyDays: i.showEarlyDays ?? null,
           area: i.area || "",
           category: i.category === "reference" ? "reference" : "task",
         };
@@ -474,6 +476,7 @@ app.post("/api/recurring", async (c) => {
     lastCompletedAt: null,
     createdAt: new Date().toISOString(),
     dueDate: body.dueDate ?? null,
+    showEarlyDays: body.showEarlyDays ?? null,
     area: body.area || "",
     category: isEvent ? "reference" : "task",
   };
@@ -504,7 +507,9 @@ app.put("/api/recurring/:id", async (c) => {
   );
   merged.lastCompletedAt = stamped.lastCompletedAt;
   merged.completedThisWeek = stamped.completedThisWeek;
-  items[idx] = merged;
+  // Completing a long-term item advances its dueDate to the next
+  // occurrence (or ends the recurrence per its ends settings).
+  items[idx] = body.done === true ? advanceDueDate(merged, new Date()) : merged;
   await writeRecurring(items);
   return c.json(items[idx]);
 });

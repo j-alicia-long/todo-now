@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  advanceDueDate,
   applyRecurringCompletion,
   boardWeeklyItems,
   deriveFirstDueDate,
@@ -27,6 +28,7 @@ const makeItem = (overrides: Partial<RecurringItem> = {}): RecurringItem => ({
   completedThisWeek: false,
   lastCompletedAt: null,
   dueDate: null,
+  showEarlyDays: null,
   area: "",
   createdAt: "2026-01-01T00:00:00.000Z",
   category: "task",
@@ -190,24 +192,24 @@ describe("deriveFirstDueDate", () => {
   // wednesday = 2026-07-22, getDay() === 3
   const cases: Array<{ name: string; day: number; expected: string }> = [
     {
-      name: "Friday target → Friday - 2d = Wednesday... pushed a week (not strictly future)",
-      day: 5, // Friday 07-24 → -2d = 07-22 (today, not > now) → +7 = 07-29
-      expected: "2026-07-29",
+      name: "Friday target → this Friday",
+      day: 5,
+      expected: "2026-07-24",
     },
     {
-      name: "Saturday target → Thursday buffer",
-      day: 6, // Saturday 07-25 → -2d = 07-23
-      expected: "2026-07-23",
+      name: "Saturday target → this Saturday",
+      day: 6,
+      expected: "2026-07-25",
     },
     {
-      name: "same weekday skips to next week",
-      day: 3, // Wednesday → next Wednesday 07-29 → -2d = 07-27
-      expected: "2026-07-27",
+      name: "same weekday → due today",
+      day: 3,
+      expected: "2026-07-22",
     },
     {
       name: "Monday target wraps the weekend",
-      day: 1, // Monday 07-27 → -2d = 07-25
-      expected: "2026-07-25",
+      day: 1,
+      expected: "2026-07-27",
     },
   ];
   for (const c of cases) {
@@ -218,7 +220,7 @@ describe("deriveFirstDueDate", () => {
 });
 
 describe("boardWeeklyItems", () => {
-  test("shows items with no repeatDays, today's items, and completed items", () => {
+  test("default (0 days early): no-repeatDays, today's, and completed items", () => {
     const everyday = makeItem({ id: "a" });
     const today = makeItem({ id: "b", repeatDays: [3] }); // Wednesday
     const otherDay = makeItem({ id: "c", repeatDays: [5] });
@@ -233,15 +235,33 @@ describe("boardWeeklyItems", () => {
     );
     expect(result.map((i) => i.id)).toEqual(["a", "b", "d"]);
   });
+
+  test("showEarlyDays pulls upcoming days onto the board", () => {
+    // Friday is 2 days after Wednesday
+    const twoEarly = makeItem({ id: "a", repeatDays: [5], showEarlyDays: 2 });
+    const oneEarly = makeItem({ id: "b", repeatDays: [5], showEarlyDays: 1 });
+    const result = boardWeeklyItems([twoEarly, oneEarly], wednesday);
+    expect(result.map((i) => i.id)).toEqual(["a"]);
+  });
 });
 
 describe("upcomingLongTermItems", () => {
-  const longTerm = (id: string, dueDate: string | null) =>
-    makeItem({ id, frequency: "long-term", repeatUnit: "month", dueDate });
+  const longTerm = (
+    id: string,
+    dueDate: string | null,
+    showEarlyDays: number | null = null
+  ) =>
+    makeItem({
+      id,
+      frequency: "long-term",
+      repeatUnit: "month",
+      dueDate,
+      showEarlyDays,
+    });
 
-  test("due within 7 days shows; beyond doesn't; drops 24h after due", () => {
+  test("default window is 14 days; drops 24h after due", () => {
     const items = [
-      longTerm("soon", "2026-07-25"),
+      longTerm("soon", "2026-08-03"),
       longTerm("far", "2026-08-15"),
       longTerm("just-passed", "2026-07-22"),
       longTerm("long-passed", "2026-07-19"),
@@ -249,6 +269,82 @@ describe("upcomingLongTermItems", () => {
     ];
     const result = upcomingLongTermItems(items, wednesday);
     expect(result.map((i) => i.id)).toEqual(["soon", "just-passed"]);
+  });
+
+  test("showEarlyDays overrides the window", () => {
+    const items = [
+      longTerm("wide", "2026-08-15", 30),
+      longTerm("narrow", "2026-07-25", 1),
+    ];
+    const result = upcomingLongTermItems(items, wednesday);
+    expect(result.map((i) => i.id)).toEqual(["wide"]);
+  });
+});
+
+describe("advanceDueDate", () => {
+  const longTerm = (overrides: Partial<RecurringItem> = {}) =>
+    makeItem({
+      frequency: "long-term",
+      repeatEvery: 1,
+      repeatUnit: "month",
+      dueDate: "2026-07-20",
+      createdAt: "2026-01-05T00:00:00.000Z",
+      ...overrides,
+    });
+
+  test("weekly items are returned unchanged", () => {
+    const item = makeItem({ dueDate: "2026-07-20" });
+    expect(advanceDueDate(item, wednesday)).toBe(item);
+  });
+
+  test("items without a dueDate are returned unchanged", () => {
+    const item = longTerm({ dueDate: null });
+    expect(advanceDueDate(item, wednesday)).toBe(item);
+  });
+
+  test("advances one interval past a just-passed due date", () => {
+    expect(advanceDueDate(longTerm(), wednesday).dueDate).toBe("2026-08-20");
+  });
+
+  test("completing early still advances to the next occurrence", () => {
+    const item = longTerm({ dueDate: "2026-07-25" });
+    expect(advanceDueDate(item, wednesday).dueDate).toBe("2026-08-25");
+  });
+
+  test("catches up across several lapsed occurrences", () => {
+    const item = longTerm({ dueDate: "2026-03-10" });
+    expect(advanceDueDate(item, wednesday).dueDate).toBe("2026-08-10");
+  });
+
+  test("week unit steps by 7 × repeatEvery days", () => {
+    const item = longTerm({
+      repeatEvery: 2,
+      repeatUnit: "week",
+      dueDate: "2026-07-20",
+    });
+    expect(advanceDueDate(item, wednesday).dueDate).toBe("2026-08-03");
+  });
+
+  test("endsOn: advancing past the cutoff ends the recurrence", () => {
+    const item = longTerm({ endsType: "on", endsOn: "2026-08-01" });
+    expect(advanceDueDate(item, wednesday).dueDate).toBe(null);
+  });
+
+  test("endsOn: cutoff day itself still counts", () => {
+    const item = longTerm({ endsType: "on", endsOn: "2026-08-20" });
+    expect(advanceDueDate(item, wednesday).dueDate).toBe("2026-08-20");
+  });
+
+  test("endsAfter: occurrence past the limit ends the recurrence", () => {
+    // Grid anchored at 2026-01-20 (first occurrence after createdAt);
+    // next due 2026-08-20 is occurrence #8.
+    const item = longTerm({ endsType: "after", endsAfter: 7 });
+    expect(advanceDueDate(item, wednesday).dueDate).toBe(null);
+  });
+
+  test("endsAfter: occurrence within the limit advances normally", () => {
+    const item = longTerm({ endsType: "after", endsAfter: 8 });
+    expect(advanceDueDate(item, wednesday).dueDate).toBe("2026-08-20");
   });
 });
 

@@ -1677,6 +1677,7 @@ export default function TodoPage() {
   const [recurringAddEndsOn, setRecurringAddEndsOn] = useState("");
   const [recurringAddEndsAfter, setRecurringAddEndsAfter] = useState(13);
   const [recurringAddDueDate, setRecurringAddDueDate] = useState("");
+  const [recurringAddShowEarly, setRecurringAddShowEarly] = useState("");
   const [showRecurringDatePicker, setShowRecurringDatePicker] = useState(false);
   const [recurringAddArea, setRecurringAddArea] = useState("");
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(null);
@@ -1823,6 +1824,7 @@ export default function TodoPage() {
     setRecurringAddEndsOn("");
     setRecurringAddEndsAfter(13);
     setRecurringAddDueDate("");
+    setRecurringAddShowEarly("");
     setShowRecurringDatePicker(false);
     setRecurringAddArea("");
   };
@@ -1841,6 +1843,9 @@ export default function TodoPage() {
     setRecurringAddEndsOn(item.endsOn || "");
     setRecurringAddEndsAfter(item.endsAfter || 13);
     setRecurringAddDueDate(item.dueDate || "");
+    setRecurringAddShowEarly(
+      item.showEarlyDays != null ? String(item.showEarlyDays) : ""
+    );
     setRecurringAddArea(item.area || "");
     setShowRecurringModal(true);
   };
@@ -1877,6 +1882,10 @@ export default function TodoPage() {
       fields.endsOn = recurringAddEndsType === "on" ? recurringAddEndsOn : null;
       fields.endsAfter =
         recurringAddEndsType === "after" ? recurringAddEndsAfter : null;
+      fields.showEarlyDays =
+        recurringAddShowEarly.trim() === ""
+          ? null
+          : Math.max(0, parseInt(recurringAddShowEarly) || 0);
     }
 
     if (editingRecurringId) {
@@ -2581,6 +2590,30 @@ export default function TodoPage() {
                           occurrences
                         </span>
                       </label>
+                    </div>
+                  </div>
+
+                  <div className="recurrence-section">
+                    <label className="recurrence-label">Show on board</label>
+                    <div className="recurrence-row">
+                      <input
+                        type="number"
+                        className="recurrence-occurrence-input"
+                        min={0}
+                        placeholder={
+                          recurringAddRepeatUnit === "week" &&
+                          recurringAddRepeatEvery === 1
+                            ? "0"
+                            : "14"
+                        }
+                        value={recurringAddShowEarly}
+                        onChange={(e) =>
+                          setRecurringAddShowEarly(e.target.value)
+                        }
+                      />
+                      <span className="recurrence-occurrence-label">
+                        days early
+                      </span>
                     </div>
                   </div>
                 </div>

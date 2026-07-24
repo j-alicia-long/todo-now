@@ -114,6 +114,7 @@ const makeRecurring = (
   completedThisWeek: false,
   lastCompletedAt: null,
   dueDate: null,
+  showEarlyDays: null,
   area: "",
   createdAt: "2026-01-01T00:00:00.000Z",
   category: "task",
@@ -379,9 +380,13 @@ describe("useRecurring", () => {
     });
   });
 
-  test("long-term item PUTs done:true and stamps lastCompletedAt locally", async () => {
+  test("long-term item PUTs done:true, stamps, and advances dueDate locally", async () => {
     const fx = makeMemoryTransport("/api/recurring", [
-      makeRecurring({ repeatUnit: "month", frequency: "long-term" }),
+      makeRecurring({
+        repeatUnit: "month",
+        frequency: "long-term",
+        dueDate: "2026-01-10",
+      }),
     ]);
     const { result } = renderHook(() => useRecurring(fx.transport));
     await waitFor(() => expect(result.current.items).toHaveLength(1));
@@ -391,6 +396,7 @@ describe("useRecurring", () => {
     });
 
     expect(result.current.items[0].lastCompletedAt).not.toBeNull();
+    expect(result.current.items[0].dueDate).not.toBe("2026-01-10");
     expect(fx.calls.at(-1)).toMatchObject({
       method: "PUT",
       path: "/api/recurring/r1",
