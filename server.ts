@@ -30,7 +30,6 @@ type Task = {
   decisionLoad: "low" | "medium" | "high";
   area: string;
   dueDate: string | null;
-  isSmallWin: boolean;
   createdAt: string;
   completedAt: string | null;
   deletedAt: string | null;
@@ -110,12 +109,6 @@ async function readTasks(): Promise<Task[]> {
 
 async function writeTasks(tasks: Task[]): Promise<void> {
   await Bun.write(DATA_PATH, JSON.stringify(tasks, null, 2));
-}
-
-function inferSmallWin(task: Partial<Task>): boolean {
-  if (task.effort === "high") return false;
-  if (task.decisionLoad !== "low") return false;
-  return true;
 }
 
 // ── Shopping data layer ──
@@ -304,7 +297,6 @@ app.post("/api/tasks", async (c) => {
     decisionLoad: body.decisionLoad || "medium",
     area: body.area || "life-admin",
     dueDate: body.dueDate || null,
-    isSmallWin: body.isSmallWin ?? inferSmallWin(body),
     createdAt: new Date().toISOString(),
     completedAt: null,
     deletedAt: null,
@@ -344,10 +336,6 @@ app.put("/api/tasks/:id", async (c) => {
   } else if (body.done === false) {
     updated.status = "this-week";
     updated.completedAt = null;
-  }
-
-  if (body.isSmallWin === undefined && (body.effort !== undefined || body.decisionLoad !== undefined)) {
-    updated.isSmallWin = inferSmallWin(updated);
   }
 
   tasks[idx] = updated;

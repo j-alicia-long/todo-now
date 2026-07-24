@@ -39,7 +39,6 @@ type Task = {
   decisionLoad: "low" | "medium" | "high";
   area: string;
   dueDate: string | null;
-  isSmallWin: boolean;
   createdAt: string;
   completedAt: string | null;
   deletedAt: string | null;
@@ -88,12 +87,10 @@ type RecurringItem = {
 
 type Settings = {
   showArea: boolean;
-  showSmallWinBadge: boolean;
 };
 
 const DEFAULT_SETTINGS: Settings = {
   showArea: true,
-  showSmallWinBadge: true,
 };
 
 type SyncedSettings = Settings & { theme?: "light" | "dark" };
@@ -610,8 +607,7 @@ function TaskCard({
   const ref = isDragOverlay ? undefined : setNodeRef;
   const dragProps = isDragOverlay ? {} : { ...attributes, ...listeners };
 
-  const hasTags = (settings.showArea || (task.dueDate) ||
-    (settings.showSmallWinBadge && task.isSmallWin && task.status !== "done" && task.status !== "future"));
+  const hasTags = (settings.showArea || (task.dueDate));
 
   return (
     <div
@@ -712,11 +708,6 @@ function TaskCard({
                 />
               )}
             </span>
-          )}
-
-
-          {settings.showSmallWinBadge && task.isSmallWin && task.status !== "done" && task.status !== "future" && (
-            <span className="card-tag small-win">small win</span>
           )}
         </div>
         <div className="card-actions">
@@ -975,7 +966,6 @@ function BoardColumn({
   onStatusChange,
   onDelete,
   onUpdate,
-  showSmallWinsOnly,
   settings,
   recurringTasks,
   onToggleRecurring,
@@ -991,7 +981,6 @@ function BoardColumn({
   onStatusChange: (id: string, status: TaskStatus) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, fields: Partial<Task>) => void;
-  showSmallWinsOnly: boolean;
   settings: Settings;
   recurringTasks?: RecurringItem[];
   onToggleRecurring?: (id: string) => void;
@@ -1002,9 +991,7 @@ function BoardColumn({
   const { setNodeRef, isOver } = useDroppable({ id });
   const [editingRecurringDate, setEditingRecurringDate] = useState<string | null>(null);
 
-  const displayTasks = id === "this-week" && showSmallWinsOnly
-    ? tasks.filter((t) => t.isSmallWin)
-    : tasks;
+  const displayTasks = tasks;
 
   const doneGroups = id === "done" ? groupDoneByDate(displayTasks) : null;
 
@@ -1061,7 +1048,7 @@ function BoardColumn({
           <div className="column-empty">
             {id === "done" ? "Nothing completed yet" :
              id === "this-month" ? "Drag tasks here or use the arrow" :
-             showSmallWinsOnly ? "No small wins right now" : "All clear!"}
+             "All clear!"}
           </div>
         ) : doneGroups ? (
           (() => {
@@ -1295,7 +1282,6 @@ function SettingsView({
 }) {
   const toggles: { key: keyof Settings; label: string; description: string }[] = [
     { key: "showArea", label: "Area", description: "Show category label (Life Admin, Social, etc.)" },
-    { key: "showSmallWinBadge", label: "Small Win Badge", description: "Show 'small win' badge on qualifying tasks" },
   ];
 
   return (
@@ -1331,7 +1317,6 @@ export default function TodoPage() {
   const [newTaskDueDate, setNewTaskDueDate] = useState<string | null>(null);
   const [showAddDatePicker, setShowAddDatePicker] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [showSmallWinsOnly, setShowSmallWinsOnly] = useState(false);
   const [viewTab, setViewTab] = useState<ViewTab>("board");
   const [recurringAddLink, setRecurringAddLink] = useState("");
   const [recurringAddNote, setRecurringAddNote] = useState("");
@@ -1945,7 +1930,6 @@ export default function TodoPage() {
                 onStatusChange={changeStatus}
                 onDelete={deleteTask}
                 onUpdate={updateTask}
-                showSmallWinsOnly={showSmallWinsOnly}
                 settings={settings}
                 recurringTasks={col.id === "this-week" ? boardRecurringTasks : col.id === "done" ? boardRecurringDone : undefined}
                 onToggleRecurring={(col.id === "this-week" || col.id === "done") ? toggleRecurringItem : undefined}

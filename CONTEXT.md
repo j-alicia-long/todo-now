@@ -33,10 +33,6 @@ How much work a Task takes: low, medium, or high.
 How much thinking and deciding a Task demands, independent of effort: low, medium, or high.
 _Avoid_: Complexity, difficulty
 
-**Small Win**:
-A Task that is easy to start when stuck: effort is not high AND decision load is low. Auto-inferred, with manual override.
-_Avoid_: Quick win, easy task
-
 ### The Matrix
 
 **Matrix**:

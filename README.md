@@ -11,7 +11,6 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 - **Shopping list**: Lightweight checklist with archive support (pastel purple theme)
 - **Grocery list**: Lightweight checklist for groceries (pastel green theme)
 - **Sidebar drawer**: Todo Archive, Shopping Archive, and Settings in a slide-out menu
-- **Small Wins filter**: Surface only low-effort, low-decision tasks
 - **Inline tag editing**: Tap priority, area, effort, or decision load to change it
 - **Due date urgency**: Color-coded countdown (red → orange → yellow → green), shown first on every card
 - **Tappable due date**: Tap to open a calendar modal and change or set the date
@@ -85,20 +84,11 @@ todo-now/
   decisionLoad: "low" | "medium" | "high";
   area: string;
   dueDate: string | null;
-  isSmallWin: boolean;  // auto-inferred from effort + decisionLoad
   createdAt: string;
   completedAt: string | null;
   deletedAt: string | null;
 }
 ```
-
-### Small Win Logic
-
-A task qualifies as a "small win" when:
-- Effort is **not** high
-- Decision load is **low**
-
-This filters out tasks likely to trigger research spirals or extended comparison.
 
 ## Development
 
