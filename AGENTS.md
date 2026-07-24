@@ -48,6 +48,8 @@ Sidebar drawer: Todo Archive, Todo Trash, Shopping Archive, Settings
 ## Project context
 
 - Product spec: `personal-os/02-projects/todo-app/todo-architecture.md`
-- Development history: `personal-os/02-projects/todo-app/devlog.md`
+- Devlog: `devlog.md` (this repo) — short, dated entries with commit links; update it when shipping notable work
+- Roadmap: `docs/roadmap.md` — planned, deferred, and cut work
+- Narrative history: `personal-os/02-projects/todo-app/devlog.md` (condensed sessions & decisions)
 - Project map: `personal-os/02-projects/todo-app/AGENTS.md`
 - Domain glossary: `CONTEXT.md` (this repo)
