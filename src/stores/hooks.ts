@@ -9,8 +9,16 @@ import {
   type Task,
   type TaskStatus,
 } from "../domain/task-rules";
+import {
+  applyRecurringCompletion,
+  isWeeklyRecurring,
+  type RecurringItem,
+} from "../domain/recurrence";
 import { useEntityList } from "./entity-store";
 import { httpTransport, type Transport } from "./transport";
+
+// Re-exported so store consumers keep a single import site.
+export { isWeeklyRecurring, type RecurringItem };
 
 // ── Entity types ──
 
@@ -31,31 +39,6 @@ export type GroceryItem = {
   done: boolean;
   createdAt: string;
 };
-
-export type RecurringItem = {
-  id: string;
-  title: string;
-  frequency: "weekly" | "long-term";
-  dayOfWeek: number | null;
-  repeatEvery: number;
-  repeatUnit: "day" | "week" | "month" | "year";
-  repeatDays: number[];
-  endsType: "never" | "on" | "after";
-  endsOn: string | null;
-  endsAfter: number | null;
-  note: string;
-  link: string;
-  completedThisWeek: boolean;
-  lastCompletedAt: string | null;
-  dueDate: string | null;
-  area: string;
-  createdAt: string;
-  category: "task" | "reference";
-};
-
-/** A recurring item that repeats every single week (the default cadence). */
-export const isWeeklyRecurring = (i: RecurringItem): boolean =>
-  i.repeatUnit === "week" && i.repeatEvery === 1 && i.frequency !== "long-term";
 
 // ── Tasks ──
 
@@ -176,34 +159,19 @@ export const useRecurring = (transport: Transport = httpTransport) => {
   );
 
   // Weekly items toggle completedThisWeek; long-term items are "done" for
-  // this occurrence, which the server answers by advancing their dueDate.
+  // this occurrence. Optimistic stamping shares the server's domain rule.
   const toggle = (id: string) => {
     const item = store.items.find((i) => i.id === id);
     if (!item) return Promise.resolve(false);
-    if (isWeeklyRecurring(item)) {
-      const next = !item.completedThisWeek;
-      return store.mutate(
-        (prev) =>
-          prev.map((i) =>
-            i.id === id
-              ? {
-                  ...i,
-                  completedThisWeek: next,
-                  lastCompletedAt: next
-                    ? new Date().toISOString()
-                    : i.lastCompletedAt,
-                }
-              : i
-          ),
-        () => transport.put(`/api/recurring/${id}`, { completedThisWeek: next })
-      );
-    }
+    const change = isWeeklyRecurring(item)
+      ? { completedThisWeek: !item.completedThisWeek }
+      : { done: true };
     return store.mutate(
       (prev) =>
         prev.map((i) =>
-          i.id === id ? { ...i, lastCompletedAt: new Date().toISOString() } : i
+          i.id === id ? applyRecurringCompletion(i, change, new Date()) : i
         ),
-      () => transport.put(`/api/recurring/${id}`, { done: true })
+      () => transport.put(`/api/recurring/${id}`, change)
     );
   };
 

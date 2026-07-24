@@ -9,6 +9,11 @@ import {
   purgeTrash,
   type Task,
 } from "./src/domain/task-rules";
+import {
+  applyRecurringCompletion,
+  resetWeeklyItems,
+  type RecurringItem,
+} from "./src/domain/recurrence";
 
 // AI agents: read README.md for navigation and contribution guidance.
 type Mode = "development" | "production";
@@ -154,48 +159,16 @@ const writeGroceries = async (items: GroceryItem[]): Promise<void> => {
 };
 
 // ── Recurring data layer ──
-
-type RecurringItem = {
-  id: string;
-  title: string;
-  frequency: "weekly" | "long-term";
-  dayOfWeek: number | null;
-  repeatEvery: number;
-  repeatUnit: "day" | "week" | "month" | "year";
-  repeatDays: number[];
-  endsType: "never" | "on" | "after";
-  endsOn: string | null;
-  endsAfter: number | null;
-  note: string;
-  link: string;
-  completedThisWeek: boolean;
-  lastCompletedAt: string | null;
-  dueDate: string | null;
-  area: string;
-  createdAt: string;
-  category: "task" | "reference";
-};
-
-const getWeekStart = (): number => {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = day === 0 ? 6 : day - 1;
-  const monday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() - diff
-  );
-  return monday.getTime();
-};
+// Legacy file-format migrations only; week & recurrence rules live in
+// src/domain/recurrence.ts
 
 const readRecurring = async (): Promise<RecurringItem[]> => {
   try {
     const file = Bun.file(RECURRING_PATH);
     if (await file.exists()) {
       const raw = JSON.parse(await file.text()) as RecurringItem[];
-      const weekStart = getWeekStart();
-      let needsReset = false;
-      const items = raw.map((i) => {
+      let needsMigration = false;
+      const migrated = raw.map((i) => {
         const item: RecurringItem = {
           id: i.id,
           title: i.title || "Untitled",
@@ -223,20 +196,12 @@ const readRecurring = async (): Promise<RecurringItem[]> => {
           item.repeatEvery === 1
         ) {
           item.repeatUnit = "year";
-          needsReset = true;
-        }
-        if (item.frequency === "weekly" && item.completedThisWeek) {
-          const lastDone = item.lastCompletedAt
-            ? new Date(item.lastCompletedAt).getTime()
-            : 0;
-          if (lastDone < weekStart) {
-            item.completedThisWeek = false;
-            needsReset = true;
-          }
+          needsMigration = true;
         }
         return item;
       });
-      if (needsReset) await writeRecurring(items);
+      const items = resetWeeklyItems(migrated, new Date());
+      if (needsMigration || items !== migrated) await writeRecurring(items);
       return items;
     }
   } catch {
@@ -524,16 +489,22 @@ app.put("/api/recurring/:id", async (c) => {
   const idx = items.findIndex((i) => i.id === id);
   if (idx === -1) return c.json({ error: "Not found" }, 404);
   const prev = items[idx];
-  items[idx] = { ...prev, ...body, id: prev.id, createdAt: prev.createdAt };
-  if (body.completedThisWeek === true && !prev.completedThisWeek) {
-    items[idx].lastCompletedAt = new Date().toISOString();
-  }
-  if (body.done === true) {
-    items[idx].lastCompletedAt = new Date().toISOString();
-    if (items[idx].frequency === "weekly") {
-      items[idx].completedThisWeek = true;
-    }
-  }
+  const merged: RecurringItem = {
+    ...prev,
+    ...body,
+    id: prev.id,
+    createdAt: prev.createdAt,
+  };
+  // Completion stamping is a domain rule; evaluate it against the
+  // pre-merge item so "already completed" checks see the previous state.
+  const stamped = applyRecurringCompletion(
+    prev,
+    { completedThisWeek: body.completedThisWeek, done: body.done },
+    new Date()
+  );
+  merged.lastCompletedAt = stamped.lastCompletedAt;
+  merged.completedThisWeek = stamped.completedThisWeek;
+  items[idx] = merged;
   await writeRecurring(items);
   return c.json(items[idx]);
 });

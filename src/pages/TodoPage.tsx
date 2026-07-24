@@ -24,6 +24,12 @@ import {
 import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import {
+  boardWeeklyItems,
+  deriveFirstDueDate,
+  toLocalDateKey,
+  upcomingLongTermItems,
+} from "../domain/recurrence";
+import {
   useTasks,
   useShopping,
   useGroceries,
@@ -81,13 +87,7 @@ const BOARD_COLUMNS: {
   { id: "done", title: "Done", icon: "check_circle", colorClass: "col-green" },
 ];
 
-// Local-timezone YYYY-MM-DD key (toISOString would use UTC and shift dates in the evening)
-const toLocalDateKey = (d: Date): string => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
+// Local-timezone date key helper lives in src/domain/recurrence.ts (toLocalDateKey)
 
 const getDaysLeft = (date: string): number => {
   const d = new Date(date + "T00:00:00");
@@ -1857,14 +1857,7 @@ export default function TodoPage() {
         : recurringAddDay;
     let dueDate: string | null = recurringAddDueDate || null;
     if (!dueDate && effectiveDay != null && !isEvent) {
-      const today = new Date();
-      const todayDay = today.getDay();
-      let daysUntil = (effectiveDay - todayDay + 7) % 7;
-      if (daysUntil === 0) daysUntil = 7;
-      const recurDate = new Date(today);
-      recurDate.setDate(today.getDate() + daysUntil - 2);
-      if (recurDate <= today) recurDate.setDate(recurDate.getDate() + 7);
-      dueDate = toLocalDateKey(recurDate);
+      dueDate = deriveFirstDueDate(effectiveDay, new Date());
     }
     const fields: Record<string, unknown> = {
       title,
@@ -1949,13 +1942,7 @@ export default function TodoPage() {
     (i) => i.category === "reference"
   );
   const weeklyTasks = allTasks.filter(isWeeklyItem);
-  const todayDow = new Date().getDay();
-  const boardWeeklyTasks = weeklyTasks.filter(
-    (i) =>
-      i.repeatDays.length === 0 ||
-      i.repeatDays.includes(todayDow) ||
-      i.completedThisWeek
-  );
+  const boardWeeklyTasks = boardWeeklyItems(weeklyTasks, new Date());
   const unitOrder: Record<string, number> = {
     day: 0,
     week: 1,
@@ -1968,14 +1955,7 @@ export default function TodoPage() {
       (a, b) => (unitOrder[a.repeatUnit] ?? 9) - (unitOrder[b.repeatUnit] ?? 9)
     );
   const weeklyDoneCount = weeklyTasks.filter((i) => i.completedThisWeek).length;
-  const upcomingLongTerm = longTermTasks.filter((i) => {
-    if (!i.dueDate) return false;
-    const due = new Date(i.dueDate).getTime();
-    const now = Date.now();
-    return (
-      due - now <= 7 * 24 * 60 * 60 * 1000 && due - now > -24 * 60 * 60 * 1000
-    );
-  });
+  const upcomingLongTerm = upcomingLongTermItems(longTermTasks, new Date());
   const allBoardRecurring = [...boardWeeklyTasks, ...upcomingLongTerm];
   const boardRecurringTasks = allBoardRecurring.filter(
     (i) => !i.completedThisWeek
