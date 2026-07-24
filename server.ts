@@ -34,6 +34,8 @@ type Task = {
   createdAt: string;
   completedAt: string | null;
   deletedAt: string | null;
+  source: "board" | "shopping" | "grocery";
+  sourceItemId: string | null;
 };
 
 const TRASH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -58,6 +60,15 @@ async function readTasks(): Promise<Task[]> {
           if (t.deletedAt === undefined) {
             t.deletedAt = null;
           }
+          if (!t.source) {
+            t.source = "board";
+          }
+          if (t.sourceItemId === undefined || t.sourceItemId === null) {
+            t.sourceItemId = null;
+            if (t.source === "shopping" || t.source === "grocery") {
+              needsMigration = true;
+            }
+          }
           if (t.status === "this-month" && t.dueDate) {
             const dueMs = new Date(t.dueDate).getTime();
             if (dueMs - now <= SEVEN_DAYS_MS) {
@@ -77,7 +88,20 @@ async function readTasks(): Promise<Task[]> {
           }
           return true;
         });
-      if (needsMigration) await writeTasks(tasks);
+      if (needsMigration) {
+        const shopping = await readShopping();
+        const groceries = await readGroceries();
+        for (const t of tasks) {
+          if (!t.sourceItemId && t.source === "shopping") {
+            const match = shopping.find((s) => s.title === t.title);
+            if (match) t.sourceItemId = match.id;
+          } else if (!t.sourceItemId && t.source === "grocery") {
+            const match = groceries.find((g) => g.title === t.title);
+            if (match) t.sourceItemId = match.id;
+          }
+        }
+        await writeTasks(tasks);
+      }
       return tasks;
     }
   } catch {}
@@ -102,6 +126,7 @@ type ShoppingItem = {
   done: boolean;
   archived: boolean;
   category: "want" | "need";
+  links: string[];
   createdAt: string;
   doneAt: string | null;
 };
@@ -114,6 +139,7 @@ async function readShopping(): Promise<ShoppingItem[]> {
       return raw.map((i) => ({
         ...i,
         category: i.category || "need",
+        links: Array.isArray(i.links) ? i.links : [],
         doneAt: i.doneAt ?? null,
       }));
     }
@@ -282,6 +308,8 @@ app.post("/api/tasks", async (c) => {
     createdAt: new Date().toISOString(),
     completedAt: null,
     deletedAt: null,
+    source: body.source || "board",
+    sourceItemId: body.sourceItemId || null,
   };
 
   tasks.push(task);
@@ -364,6 +392,7 @@ app.post("/api/shopping", async (c) => {
     done: false,
     archived: false,
     category: body.category === "want" ? "want" : "need",
+    links: Array.isArray(body.links) ? body.links : [],
     createdAt: new Date().toISOString(),
     doneAt: null,
   };
@@ -459,17 +488,18 @@ app.get("/api/recurring", async (c) => {
 app.post("/api/recurring", async (c) => {
   const body = await c.req.json();
   const items = await readRecurring();
+  const isEvent = body.category === "reference";
   const item: RecurringItem = {
     id: crypto.randomUUID().slice(0, 8),
     title: body.title || "Untitled",
-    frequency: body.frequency === "long-term" ? "long-term" : "weekly",
+    frequency: isEvent ? "weekly" : (body.frequency === "long-term" ? "long-term" : "weekly"),
     dayOfWeek: body.dayOfWeek ?? null,
-    repeatEvery: body.repeatEvery ?? 1,
-    repeatUnit: body.repeatUnit ?? "week",
-    repeatDays: body.repeatDays ?? (body.dayOfWeek != null ? [body.dayOfWeek] : []),
-    endsType: body.endsType ?? "never",
-    endsOn: body.endsOn ?? null,
-    endsAfter: body.endsAfter ?? null,
+    repeatEvery: isEvent ? 1 : (body.repeatEvery ?? 1),
+    repeatUnit: isEvent ? "week" : (body.repeatUnit ?? "week"),
+    repeatDays: isEvent ? [] : (body.repeatDays ?? (body.dayOfWeek != null ? [body.dayOfWeek] : [])),
+    endsType: isEvent ? "never" : (body.endsType ?? "never"),
+    endsOn: isEvent ? null : (body.endsOn ?? null),
+    endsAfter: isEvent ? null : (body.endsAfter ?? null),
     note: body.note || "",
     link: body.link || "",
     completedThisWeek: false,
@@ -477,7 +507,7 @@ app.post("/api/recurring", async (c) => {
     createdAt: new Date().toISOString(),
     dueDate: body.dueDate ?? null,
     area: body.area || "",
-    category: body.category === "reference" ? "reference" : "task",
+    category: isEvent ? "reference" : "task",
   };
   items.push(item);
   await writeRecurring(items);

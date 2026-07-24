@@ -53,6 +53,7 @@ type ShoppingItem = {
   done: boolean;
   archived: boolean;
   category: "want" | "need";
+  links: string[];
   createdAt: string;
   doneAt: string | null;
 };
@@ -150,6 +151,14 @@ const BOARD_COLUMNS: { id: TaskStatus; title: string; icon: string; colorClass: 
   { id: "done", title: "Done", icon: "check_circle", colorClass: "col-green" },
 ];
 
+// Local-timezone YYYY-MM-DD key (toISOString would use UTC and shift dates in the evening)
+function toLocalDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function getDaysLeft(date: string): number {
   const d = new Date(date + "T00:00:00");
   const now = new Date();
@@ -207,6 +216,60 @@ function formatHeadingDate(): string {
 
 // ── Lightweight List Items ──
 
+function linkLabel(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+function LinkPills({ links, onChange }: { links: string[]; onChange: (links: string[]) => void }) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (adding) inputRef.current?.focus(); }, [adding]);
+
+  const commit = () => {
+    const raw = draft.trim();
+    if (raw) {
+      const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+      onChange([...links, url]);
+    }
+    setDraft("");
+    setAdding(false);
+  };
+
+  return (
+    <div className="link-pills">
+      {links.map((url, i) => (
+        <span key={`${url}-${i}`} className="link-pill">
+          <a href={url} target="_blank" rel="noopener noreferrer" title={url}>{linkLabel(url)}</a>
+          <button className="link-pill-remove" onClick={() => onChange(links.filter((_, j) => j !== i))} title="Remove link">
+            <Icon name="close" />
+          </button>
+        </span>
+      ))}
+      {adding ? (
+        <input
+          ref={inputRef}
+          className="link-pill-input"
+          value={draft}
+          placeholder="Paste a link…"
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+            if (e.key === "Escape") { setDraft(""); setAdding(false); }
+          }}
+        />
+      ) : (
+        <button className="link-pill add" onClick={() => setAdding(true)}>+ link</button>
+      )}
+    </div>
+  );
+}
+
 function ShoppingListItem({
   item,
   onToggle,
@@ -214,6 +277,7 @@ function ShoppingListItem({
   onDelete,
   onMove,
   onAddToBoard,
+  onUpdateLinks,
 }: {
   item: ShoppingItem;
   onToggle: (id: string) => void;
@@ -221,25 +285,44 @@ function ShoppingListItem({
   onDelete: (id: string) => void;
   onMove: (id: string) => void;
   onAddToBoard: (title: string, source: string, sourceItemId: string) => void;
+  onUpdateLinks: (id: string, links: string[]) => void;
 }) {
+  const [addedToBoard, setAddedToBoard] = useState(false);
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (addedTimer.current) clearTimeout(addedTimer.current); }, []);
+
+  const handleAddToBoard = () => {
+    onAddToBoard(item.title, "shopping", item.id);
+    setAddedToBoard(true);
+    if (addedTimer.current) clearTimeout(addedTimer.current);
+    addedTimer.current = setTimeout(() => setAddedToBoard(false), 3000);
+  };
+
   return (
-    <div className={`list-item shopping-item ${item.done ? "checked" : ""}`}>
-      <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
-        <input type="checkbox" checked={item.done} onChange={() => onToggle(item.id)} />
-        <span className="checkmark" />
-      </label>
-      <span className={`list-title ${item.done ? "done" : ""}`}>{item.title}</span>
-      <div className="list-actions">
-        <button className="list-action-btn" onClick={() => onAddToBoard(item.title, "shopping", item.id)} title="Add to Board">
-          <Icon name="dashboard" />
-        </button>
-        <button className="list-action-btn" onClick={() => onMove(item.id)} title={item.category === "need" ? "Move to Wants" : "Move to Needs"}>
-          <Icon name={item.category === "need" ? "chevron_right" : "chevron_left"} />
-        </button>
-        <button className="list-action-btn" onClick={() => onArchive(item.id)} title="Archive">
-          <Icon name="archive" />
-        </button>
-        <button className="list-action-btn delete" onClick={() => onDelete(item.id)} title="Delete"><Icon name="close" /></button>
+    <div className={`list-item shopping-item two-row ${item.done ? "checked" : ""}`}>
+      <div className="list-item-main">
+        <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
+          <input type="checkbox" checked={item.done} onChange={() => onToggle(item.id)} />
+          <span className="checkmark" />
+        </label>
+        <span className={`list-title ${item.done ? "done" : ""}`}>{item.title}</span>
+        <div className="list-actions">
+          <button className="list-action-btn" onClick={() => onArchive(item.id)} title="Archive">
+            <Icon name="archive" />
+          </button>
+          <button className="list-action-btn delete" onClick={() => onDelete(item.id)} title="Delete"><Icon name="close" /></button>
+        </div>
+      </div>
+      <div className="list-item-sub">
+        <LinkPills links={item.links || []} onChange={(links) => onUpdateLinks(item.id, links)} />
+        <div className="list-actions">
+          <button className={`list-action-btn ${addedToBoard ? "added" : ""}`} onClick={handleAddToBoard} title={addedToBoard ? "Added to Board" : "Add to Board"}>
+            <Icon name={addedToBoard ? "check" : "dashboard"} />
+          </button>
+          <button className="list-action-btn" onClick={() => onMove(item.id)} title={item.category === "need" ? "Move to Wants" : "Move to Needs"}>
+            <Icon name={item.category === "need" ? "chevron_right" : "chevron_left"} />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -860,10 +943,10 @@ function formatDateLabel(dateKey: string, todayStr: string): string {
 }
 
 function groupDoneByDate(tasks: Task[]): { dateKey: string; label: string; tasks: Task[] }[] {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = toLocalDateKey(new Date());
   const groups = new Map<string, Task[]>();
   for (const t of tasks) {
-    const dateKey = t.completedAt ? t.completedAt.slice(0, 10) : "unknown";
+    const dateKey = t.completedAt ? toLocalDateKey(new Date(t.completedAt)) : "unknown";
     if (!groups.has(dateKey)) groups.set(dateKey, []);
     groups.get(dateKey)!.push(t);
   }
@@ -872,10 +955,10 @@ function groupDoneByDate(tasks: Task[]): { dateKey: string; label: string; tasks
 }
 
 function groupRecurringDoneByDate(items: RecurringItem[]): { dateKey: string; label: string; items: RecurringItem[] }[] {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = toLocalDateKey(new Date());
   const groups = new Map<string, RecurringItem[]>();
   for (const item of items) {
-    const dateKey = item.lastCompletedAt ? item.lastCompletedAt.slice(0, 10) : "unknown";
+    const dateKey = item.lastCompletedAt ? toLocalDateKey(new Date(item.lastCompletedAt)) : "unknown";
     if (!groups.has(dateKey)) groups.set(dateKey, []);
     groups.get(dateKey)!.push(item);
   }
@@ -1512,6 +1595,17 @@ export default function TodoPage() {
     } catch (e) { console.error("Failed to delete shopping item:", e); fetchShopping(); }
   }
 
+  async function updateShoppingLinks(id: string, links: string[]) {
+    setShoppingItems((prev) => prev.map((i) => i.id === id ? { ...i, links } : i));
+    try {
+      await fetch(`/api/shopping/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ links }),
+      });
+    } catch (e) { console.error("Failed to update shopping links:", e); fetchShopping(); }
+  }
+
   async function changeShoppingCategory(id: string) {
     const item = shoppingItems.find((i) => i.id === id);
     if (!item) return;
@@ -1625,7 +1719,7 @@ export default function TodoPage() {
       const recurDate = new Date(today);
       recurDate.setDate(today.getDate() + daysUntil - 2);
       if (recurDate <= today) recurDate.setDate(recurDate.getDate() + 7);
-      dueDate = recurDate.toISOString().slice(0, 10);
+      dueDate = toLocalDateKey(recurDate);
     }
     const fields: Record<string, any> = {
       title,
@@ -1889,7 +1983,7 @@ export default function TodoPage() {
                 <div className="column-empty">No items needed right now</div>
               ) : (
                 shoppingNeeds.map((item) => (
-                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} onAddToBoard={addTaskFromList} />
+                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} onAddToBoard={addTaskFromList} onUpdateLinks={updateShoppingLinks} />
                 ))
               )}
             </div>
@@ -1903,7 +1997,7 @@ export default function TodoPage() {
                 <div className="column-empty">No wishlist items</div>
               ) : (
                 shoppingWants.map((item) => (
-                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} onAddToBoard={addTaskFromList} />
+                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} onAddToBoard={addTaskFromList} onUpdateLinks={updateShoppingLinks} />
                 ))
               )}
             </div>

@@ -23,6 +23,37 @@
   --danger: #c45c5c;
   --danger-soft: rgba(196, 92, 92, 0.1);
 
+  // Tab themes — Recurring (orange/amber)
+  --recurring: #d97706;
+  --recurring-accent: #f59e0b;
+  --recurring-dark: #b45309;
+  --recurring-soft: rgba(245, 158, 11, 0.15);
+  --recurring-col-bg: rgba(217, 119, 6, 0.03);
+  --recurring-card-bg: rgba(255, 237, 213, 0.6);
+  --recurring-card-border: rgba(245, 158, 11, 0.2);
+
+  // Tab themes — Events (maroon)
+  --events: #9b2c2c;
+  --events-hover: #7b2323;
+  --events-soft: rgba(155, 44, 44, 0.15);
+
+  // Tab themes — Shopping (purple/pink)
+  --shopping-needs: #9b6fc0;
+  --shopping-wants: #e07090;
+  --shopping-col-bg: rgba(142, 68, 173, 0.03);
+  --shopping-soft: rgba(180, 140, 220, 0.15);
+  --shopping-card-bg: rgba(232, 221, 255, 0.5);
+  --shopping-card-border: rgba(168, 130, 230, 0.2);
+
+  // Tab themes — Grocery (green)
+  --grocery: #27ae60;
+  --grocery-text: #5a9e65;
+  --grocery-accent: #78be82;
+  --grocery-col-bg: rgba(39, 174, 96, 0.03);
+  --grocery-soft: rgba(120, 190, 130, 0.15);
+  --grocery-card-bg: rgba(220, 252, 231, 0.5);
+  --grocery-card-border: rgba(74, 180, 110, 0.2);
+
   --border: #e2dbd2;
   --border-strong: #cfc5b8;
 
@@ -63,6 +94,37 @@
   --danger: #d46b6b;
   --danger-soft: rgba(212, 107, 107, 0.12);
 
+  // Tab themes — Recurring
+  --recurring: #d97706;
+  --recurring-accent: #f59e0b;
+  --recurring-dark: #f59e0b;
+  --recurring-soft: rgba(245, 158, 11, 0.15);
+  --recurring-col-bg: rgba(217, 119, 6, 0.05);
+  --recurring-card-bg: rgba(245, 158, 11, 0.06);
+  --recurring-card-border: rgba(245, 158, 11, 0.15);
+
+  // Tab themes — Events
+  --events: #9b2c2c;
+  --events-hover: #c44040;
+  --events-soft: rgba(155, 44, 44, 0.15);
+
+  // Tab themes — Shopping
+  --shopping-needs: #b088d0;
+  --shopping-wants: #e07090;
+  --shopping-col-bg: rgba(142, 68, 173, 0.05);
+  --shopping-soft: rgba(180, 140, 220, 0.15);
+  --shopping-card-bg: rgba(168, 130, 230, 0.06);
+  --shopping-card-border: rgba(168, 130, 230, 0.15);
+
+  // Tab themes — Grocery
+  --grocery: #27ae60;
+  --grocery-text: #6aab7a;
+  --grocery-accent: #78be82;
+  --grocery-col-bg: rgba(39, 174, 96, 0.05);
+  --grocery-soft: rgba(120, 190, 130, 0.15);
+  --grocery-card-bg: rgba(74, 180, 110, 0.06);
+  --grocery-card-border: rgba(74, 180, 110, 0.15);
+
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
 
@@ -85,12 +147,15 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
   min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 button {
