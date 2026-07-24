@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
 import {
   DndContext,
@@ -22,12 +22,10 @@ import {
   useRecurring,
   useSettings,
   isWeeklyRecurring,
-  type ShoppingItem,
-  type GroceryItem,
   type RecurringItem,
   type Settings,
 } from "../stores/hooks";
-import { Icon, LinkPills } from "../components/ui";
+import { Icon } from "../components/ui";
 import { DatePickerDropdown } from "../components/DatePicker";
 import { TaskCard, type TaskActions } from "../components/TaskCard";
 import { FutureTaskCard } from "../components/FutureTaskCard";
@@ -37,18 +35,24 @@ import {
   type RecurringCardActions,
 } from "../components/BoardColumn";
 import {
-  AREA_LABELS,
-  AREA_COLORS,
+  ShoppingListItem,
+  ShoppingDoneItem,
+  GroceryListItem,
+  type ShoppingItemActions,
+  type GroceryItemActions,
+} from "../components/ShoppingItems";
+import {
+  RecurringListItem,
+  type RecurringItemActions,
+} from "../components/RecurringListItem";
+import { SettingsView } from "../components/SettingsView";
+import {
   AREA_OPTIONS,
   DAY_LETTERS,
   REPEAT_UNITS,
-  dueUrgencyClass,
   formatDueDate,
   formatHeadingDate,
-  formatRecurrence,
-  getDomain,
   sortTasks,
-  timeSince,
 } from "../lib/presentation";
 import "./TodoPage.scss";
 
@@ -79,388 +83,6 @@ const BOARD_COLUMNS: {
 
 // Date/label helpers live in src/lib/presentation.ts;
 // toLocalDateKey lives in src/domain/recurrence.ts.
-
-const ShoppingListItem = ({
-  item,
-  onToggle,
-  onArchive,
-  onDelete,
-  onMove,
-  onAddToBoard,
-  onUpdateLinks,
-}: {
-  item: ShoppingItem;
-  onToggle: (id: string) => void;
-  onArchive: (id: string) => void;
-  onDelete: (id: string) => void;
-  onMove: (id: string) => void;
-  onAddToBoard: (title: string, source: string, sourceItemId: string) => void;
-  onUpdateLinks: (id: string, links: string[]) => void;
-}) => {
-  const [addedToBoard, setAddedToBoard] = useState(false);
-  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (addedTimer.current) clearTimeout(addedTimer.current);
-    },
-    []
-  );
-
-  const handleAddToBoard = () => {
-    onAddToBoard(item.title, "shopping", item.id);
-    setAddedToBoard(true);
-    if (addedTimer.current) clearTimeout(addedTimer.current);
-    addedTimer.current = setTimeout(() => setAddedToBoard(false), 3000);
-  };
-
-  return (
-    <div
-      className={`list-item shopping-item two-row ${item.done ? "checked" : ""}`}
-    >
-      <div className="list-item-main">
-        <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={item.done}
-            onChange={() => onToggle(item.id)}
-          />
-          <span className="checkmark" />
-        </label>
-        <span className={`list-title ${item.done ? "done" : ""}`}>
-          {item.title}
-        </span>
-        <div className="list-actions">
-          <button
-            className="list-action-btn"
-            onClick={() => onArchive(item.id)}
-            title="Archive"
-          >
-            <Icon name="archive" />
-          </button>
-          <button
-            className="list-action-btn delete"
-            onClick={() => onDelete(item.id)}
-            title="Delete"
-          >
-            <Icon name="close" />
-          </button>
-        </div>
-      </div>
-      <div className="list-item-sub">
-        <LinkPills
-          links={item.links || []}
-          onChange={(links) => onUpdateLinks(item.id, links)}
-        />
-        <div className="list-actions">
-          <button
-            className={`list-action-btn ${addedToBoard ? "added" : ""}`}
-            onClick={handleAddToBoard}
-            title={addedToBoard ? "Added to Board" : "Add to Board"}
-          >
-            <Icon name={addedToBoard ? "check" : "dashboard"} />
-          </button>
-          <button
-            className="list-action-btn"
-            onClick={() => onMove(item.id)}
-            title={item.category === "need" ? "Move to Wants" : "Move to Needs"}
-          >
-            <Icon
-              name={item.category === "need" ? "chevron_right" : "chevron_left"}
-            />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ShoppingDoneItem = ({
-  item,
-  onUndone,
-  onDelete,
-}: {
-  item: ShoppingItem;
-  onUndone: (id: string) => void;
-  onDelete: (id: string) => void;
-}) => (
-  <div className="list-item shopping-item checked">
-    <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
-      <input type="checkbox" checked onChange={() => onUndone(item.id)} />
-      <span className="checkmark" />
-    </label>
-    <span className="list-title done">{item.title}</span>
-    <div className="list-actions">
-      <button
-        className="list-action-btn delete"
-        onClick={() => onDelete(item.id)}
-        title="Delete"
-      >
-        <Icon name="close" />
-      </button>
-    </div>
-  </div>
-);
-
-const GroceryListItem = ({
-  item,
-  onToggle,
-  onDelete,
-  onAddToBoard,
-}: {
-  item: GroceryItem;
-  onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
-  onAddToBoard: (title: string, source: string, sourceItemId: string) => void;
-}) => (
-  <div className={`list-item grocery-item ${item.done ? "checked" : ""}`}>
-    <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
-      <input
-        type="checkbox"
-        checked={item.done}
-        onChange={() => onToggle(item.id)}
-      />
-      <span className="checkmark" />
-    </label>
-    <span className={`list-title ${item.done ? "done" : ""}`}>
-      {item.title}
-    </span>
-    <div className="list-actions">
-      <button
-        className="list-action-btn"
-        onClick={() => onAddToBoard(item.title, "grocery", item.id)}
-        title="Add to Board"
-      >
-        <Icon name="dashboard" />
-      </button>
-      <button
-        className="list-action-btn delete"
-        onClick={() => onDelete(item.id)}
-        title="Delete"
-      >
-        <Icon name="close" />
-      </button>
-    </div>
-  </div>
-);
-
-// ── Settings View ──
-
-const RecurringListItem = ({
-  item,
-  onToggle,
-  onDelete,
-  onUpdate,
-  onEdit,
-}: {
-  item: RecurringItem;
-  onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
-  onUpdate: (id: string, fields: Partial<RecurringItem>) => void;
-  onEdit: (item: RecurringItem) => void;
-}) => {
-  const [editingLink, setEditingLink] = useState(false);
-  const [linkDraft, setLinkDraft] = useState(item.link);
-  const isEvent = item.category === "reference";
-  const isWeekly =
-    !isEvent &&
-    item.repeatUnit === "week" &&
-    item.repeatEvery === 1 &&
-    item.frequency !== "long-term";
-  const isChecked = isWeekly ? item.completedThisWeek : false;
-  const recurrenceLabel = isEvent ? "" : formatRecurrence(item);
-
-  const saveLink = () => {
-    const trimmed = linkDraft.trim();
-    const normalized =
-      trimmed && !trimmed.match(/^https?:\/\//)
-        ? `https://${trimmed}`
-        : trimmed;
-    onUpdate(item.id, { link: normalized });
-    setEditingLink(false);
-  };
-
-  return (
-    <div
-      className={`list-item recurring-item ${isChecked ? "checked" : ""} ${isWeekly || isEvent ? "weekly-hub-item" : ""}`}
-    >
-      {isWeekly && (
-        <label className="list-checkbox">
-          <input
-            type="checkbox"
-            checked={isChecked}
-            onChange={() => onToggle(item.id)}
-          />
-          <span className="checkmark" />
-        </label>
-      )}
-      <div className="recurring-info">
-        <span className={`list-title ${isChecked ? "done" : ""}`}>
-          {item.title}
-        </span>
-        <div className="recurring-meta">
-          {recurrenceLabel && (
-            <span className="recurring-schedule-label">{recurrenceLabel}</span>
-          )}
-          {item.area && (
-            <span
-              className={`recurring-area-tag ${AREA_COLORS[item.area] || ""}`}
-            >
-              {AREA_LABELS[item.area] || item.area}
-            </span>
-          )}
-          {item.dueDate && (
-            <span
-              className={`recurring-due-tag ${dueUrgencyClass(item.dueDate)}`}
-            >
-              {formatDueDate(item.dueDate)}
-            </span>
-          )}
-          {item.note && <span className="recurring-note">{item.note}</span>}
-          {!isWeekly && !isEvent && item.lastCompletedAt && (
-            <span className="recurring-last-done">
-              Done {timeSince(item.lastCompletedAt)}
-            </span>
-          )}
-          {!isWeekly && !isEvent && !item.lastCompletedAt && (
-            <span className="recurring-last-done never">Not yet done</span>
-          )}
-        </div>
-        {(isWeekly || isEvent) && (
-          <div className="recurring-link-row">
-            {item.link && !editingLink ? (
-              <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="recurring-link-btn"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Icon name="open_in_new" className="link-btn-icon" />
-                <span className="link-domain">{getDomain(item.link)}</span>
-              </a>
-            ) : null}
-            {!item.link && !editingLink ? (
-              <button
-                className="recurring-add-link-btn"
-                onClick={() => {
-                  setEditingLink(true);
-                  setLinkDraft("");
-                }}
-              >
-                <Icon name="add_link" className="link-btn-icon" /> Add link
-              </button>
-            ) : null}
-            {editingLink && (
-              <div className="recurring-link-edit">
-                <input
-                  className="link-edit-input"
-                  type="url"
-                  placeholder="https://..."
-                  value={linkDraft}
-                  onChange={(e) => setLinkDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      saveLink();
-                    }
-                    if (e.key === "Escape") setEditingLink(false);
-                  }}
-                  autoFocus
-                />
-                <button className="link-edit-save" onClick={saveLink}>
-                  <Icon name="check" />
-                </button>
-                <button
-                  className="link-edit-cancel"
-                  onClick={() => setEditingLink(false)}
-                >
-                  <Icon name="close" />
-                </button>
-              </div>
-            )}
-            {item.link && !editingLink && (
-              <button
-                className="recurring-edit-link-btn"
-                onClick={() => {
-                  setEditingLink(true);
-                  setLinkDraft(item.link);
-                }}
-                title="Edit link"
-              >
-                <Icon name="edit" />
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="list-actions">
-        {!isWeekly && !isEvent && (
-          <button
-            className="list-action-btn"
-            onClick={() => onToggle(item.id)}
-            title="Mark done"
-          >
-            <Icon name="check_circle" />
-          </button>
-        )}
-        <button
-          className="list-action-btn"
-          onClick={() => onEdit(item)}
-          title="Edit"
-        >
-          <Icon name="edit" />
-        </button>
-        <button
-          className="list-action-btn delete"
-          onClick={() => onDelete(item.id)}
-          title="Delete"
-        >
-          <Icon name="close" />
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const SettingsView = ({
-  settings,
-  onToggle,
-}: {
-  settings: Settings;
-  onToggle: (key: keyof Settings) => void;
-}) => {
-  const toggles: { key: keyof Settings; label: string; description: string }[] =
-    [
-      {
-        key: "showArea",
-        label: "Area",
-        description: "Show category label (Life Admin, Social, etc.)",
-      },
-    ];
-
-  return (
-    <div className="settings-view">
-      <h2 className="settings-title">Card Labels</h2>
-      <p className="settings-desc">Choose which labels appear on task cards.</p>
-      <div className="settings-list">
-        {toggles.map(({ key, label, description }) => (
-          <label key={key} className="settings-toggle">
-            <div className="toggle-info">
-              <span className="toggle-label">{label}</span>
-              <span className="toggle-desc">{description}</span>
-            </div>
-            <div
-              className={`toggle-switch ${settings[key] ? "on" : ""}`}
-              onClick={() => onToggle(key)}
-            >
-              <div className="toggle-knob" />
-            </div>
-          </label>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 // ── Main Page ──
 
@@ -625,6 +247,15 @@ export default function TodoPage() {
     await shopping.toggleCategory(id);
   };
 
+  const shoppingItemActions: ShoppingItemActions = {
+    toggle: toggleShoppingItem,
+    archive: archiveShoppingItem,
+    remove: deleteShoppingItem,
+    move: changeShoppingCategory,
+    addToBoard: addTaskFromList,
+    updateLinks: updateShoppingLinks,
+  };
+
   // ── Grocery CRUD ──
 
   const addGroceryItem = async (e: React.FormEvent) => {
@@ -645,6 +276,12 @@ export default function TodoPage() {
 
   const clearBoughtGroceries = async () => {
     await groceries.clearBought();
+  };
+
+  const groceryItemActions: GroceryItemActions = {
+    toggle: toggleGroceryItem,
+    remove: deleteGroceryItem,
+    addToBoard: addTaskFromList,
   };
 
   // ── Recurring CRUD ──
@@ -756,6 +393,13 @@ export default function TodoPage() {
     toggle: toggleRecurringItem,
     remove: deleteRecurringItem,
     update: updateRecurringItem,
+  };
+
+  const recurringItemActions: RecurringItemActions = {
+    toggle: toggleRecurringItem,
+    remove: deleteRecurringItem,
+    update: updateRecurringItem,
+    edit: openRecurringEdit,
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -1023,12 +667,7 @@ export default function TodoPage() {
                   <ShoppingListItem
                     key={item.id}
                     item={item}
-                    onToggle={toggleShoppingItem}
-                    onArchive={archiveShoppingItem}
-                    onDelete={deleteShoppingItem}
-                    onMove={changeShoppingCategory}
-                    onAddToBoard={addTaskFromList}
-                    onUpdateLinks={updateShoppingLinks}
+                    actions={shoppingItemActions}
                   />
                 ))
               )}
@@ -1046,12 +685,7 @@ export default function TodoPage() {
                   <ShoppingListItem
                     key={item.id}
                     item={item}
-                    onToggle={toggleShoppingItem}
-                    onArchive={archiveShoppingItem}
-                    onDelete={deleteShoppingItem}
-                    onMove={changeShoppingCategory}
-                    onAddToBoard={addTaskFromList}
-                    onUpdateLinks={updateShoppingLinks}
+                    actions={shoppingItemActions}
                   />
                 ))
               )}
@@ -1104,18 +738,14 @@ export default function TodoPage() {
                   <GroceryListItem
                     key={item.id}
                     item={item}
-                    onToggle={toggleGroceryItem}
-                    onDelete={deleteGroceryItem}
-                    onAddToBoard={addTaskFromList}
+                    actions={groceryItemActions}
                   />
                 ))}
                 {boughtGroceries.map((item) => (
                   <GroceryListItem
                     key={item.id}
                     item={item}
-                    onToggle={toggleGroceryItem}
-                    onDelete={deleteGroceryItem}
-                    onAddToBoard={addTaskFromList}
+                    actions={groceryItemActions}
                   />
                 ))}
               </>
@@ -1153,10 +783,7 @@ export default function TodoPage() {
                   <RecurringListItem
                     key={item.id}
                     item={item}
-                    onToggle={toggleRecurringItem}
-                    onDelete={deleteRecurringItem}
-                    onUpdate={updateRecurringItem}
-                    onEdit={openRecurringEdit}
+                    actions={recurringItemActions}
                   />
                 ))
               )}
@@ -1172,10 +799,7 @@ export default function TodoPage() {
                   <RecurringListItem
                     key={item.id}
                     item={item}
-                    onToggle={toggleRecurringItem}
-                    onDelete={deleteRecurringItem}
-                    onUpdate={updateRecurringItem}
-                    onEdit={openRecurringEdit}
+                    actions={recurringItemActions}
                   />
                 ))}
               </div>
@@ -1204,10 +828,7 @@ export default function TodoPage() {
                   <RecurringListItem
                     key={item.id}
                     item={item}
-                    onToggle={toggleRecurringItem}
-                    onDelete={deleteRecurringItem}
-                    onUpdate={updateRecurringItem}
-                    onEdit={openRecurringEdit}
+                    actions={recurringItemActions}
                   />
                 ))
               )}
