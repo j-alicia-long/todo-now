@@ -3,12 +3,10 @@
 ## Pure rendering
 
 - Keep render bodies pure: no side effects, no reads from mutable globals. Side effects belong in `useEffect` or event handlers.
-- Read reactive values from reactive sources — e.g. router hooks instead of `window.location` — so the component re-renders when they change.
 
 ## Hooks
 
 - Extract repeated state-plus-handler logic into a custom hook.
-- Never call a hook inline as a prop value.
 - An object's setup and cleanup belong in the _same_ effect, unless they genuinely need different dependency arrays.
 
 ## Components

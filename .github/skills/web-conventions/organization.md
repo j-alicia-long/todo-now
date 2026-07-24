@@ -4,7 +4,6 @@
 
 - Where things live is defined in the project's `AGENTS.md` — follow it.
 - Group related components in a domain subfolder rather than a flat pile.
-- Avoid `index.ts` barrel files for grouping — they invite circular imports.
 - Keep the server route layer thin (HTTP semantics only); business rules go in domain modules as pure functions shared by server and client.
 
 ## Code layout
