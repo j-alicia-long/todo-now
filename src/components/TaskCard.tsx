@@ -16,7 +16,7 @@ import {
   formatDueDateFull,
 } from "../lib/presentation";
 
-/** Everything a task card can do. TodoPage builds this from its
+/** Everything a task card can do. TodoBase builds this from its
  *  coordinated wrappers (e.g. changeStatus also ticks source list items). */
 export type TaskActions = {
   changeStatus: (id: string, status: TaskStatus) => void;

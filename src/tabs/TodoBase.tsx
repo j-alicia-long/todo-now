@@ -54,7 +54,7 @@ import {
   formatHeadingDate,
   sortTasks,
 } from "../lib/presentation";
-import "./TodoPage.scss";
+import "./TodoBase.scss";
 
 type ViewTab = "board" | "shopping" | "groceries" | "recurring";
 type SidebarPanel =
@@ -86,7 +86,7 @@ const BOARD_COLUMNS: {
 
 // ── Main Page ──
 
-export default function TodoPage() {
+export default function TodoBase() {
   const { theme, setTheme } = useTheme();
   const tasksStore = useTasks();
   const shopping = useShopping();

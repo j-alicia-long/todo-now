@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import TodoPage from "./pages/TodoPage";
+import TodoBase from "./tabs/TodoBase";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export default function App() {
@@ -7,7 +7,7 @@ export default function App() {
     <ThemeProvider defaultTheme="light">
       <BrowserRouter basename="/todo">
         <Routes>
-          <Route path="/" element={<TodoPage />} />
+          <Route path="/" element={<TodoBase />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
