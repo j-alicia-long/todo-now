@@ -10,6 +10,10 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 Codebase quality pass: extracted domain logic, added tooling, deepened the data layer.
 
+- Adopted shared [j-alicia-long/web-config](https://github.com/j-alicia-long/web-config) (new repo created today): ESLint preset as a bun git dependency plus a synced `web-conventions` agent skill; conventions that can be lint rules are, judgment calls live in the skill ([`3140856`](https://github.com/j-alicia-long/todo-now/commit/3140856), [`a186cca`](https://github.com/j-alicia-long/todo-now/commit/a186cca))
+- Renamed all source files to kebab-case and enforced it via ESLint ([`8c183ae`](https://github.com/j-alicia-long/todo-now/commit/8c183ae))
+- Modeled the planned **Eisenhower Matrix** feature via domain modeling: Matrix/Importance/Urgency/Quadrant/Unsorted terms added to `CONTEXT.md`, plus ADR 0001 (urgency is derived from due dates, never stored)
+
 - Deepened the server with a generic per-family resource module: one `createResourceRoutes` call per list family replaces twenty near-identical CRUD handlers; persistence behind an injected `ListStore` seam, family rules as pure `construct`/`applyUpdate`/`applyRemove` hooks with writable-field whitelists; server.ts 730 → 270 lines; route + family-config tests (15 new) ([`0e1188a`](https://github.com/j-alicia-long/todo-now/commit/0e1188a))
 - Dropped the retired `priority` field from Tasks (schema, whitelist, fixtures, dead styles) with a read-migration stripping stored rows; the Matrix will start all Tasks Unsorted ([`8d393f0`](https://github.com/j-alicia-long/todo-now/commit/8d393f0))
 
@@ -22,7 +26,7 @@ Codebase quality pass: extracted domain logic, added tooling, deepened the data 
 - ESLint + pre-commit hooks (husky, lint-staged, prettier); fixed all lint errors ([`f540c86`](https://github.com/j-alicia-long/todo-now/commit/f540c86), [`0a58054`](https://github.com/j-alicia-long/todo-now/commit/0a58054))
 - Extracted Task lifecycle rules into a shared domain module ([`ed0ee22`](https://github.com/j-alicia-long/todo-now/commit/ed0ee22))
 - Added CONTEXT.md domain glossary and first ADR ([`7f87092`](https://github.com/j-alicia-long/todo-now/commit/7f87092))
-- Removed Small Win feature ([`c338076`](https://github.com/j-alicia-long/todo-now/commit/c338076)); added deployment instructions ([`1179da6`](https://github.com/j-alicia-long/todo-now/commit/1179da6)); shopping list item links ([`5415bd8`](https://github.com/j-alicia-long/todo-now/commit/5415bd8))
+- Removed Small Win feature ([`c338076`](https://github.com/j-alicia-long/todo-now/commit/c338076)); added deployment instructions ([`1179da6`](https://github.com/j-alicia-long/todo-now/commit/1179da6)); shopping list item links, add-to-board success checkmark, and a Done-column timezone fix (grouping now uses local dates, not UTC) ([`5415bd8`](https://github.com/j-alicia-long/todo-now/commit/5415bd8))
 
 ## 2026-07-20 — Calendar & recurring fixes
 

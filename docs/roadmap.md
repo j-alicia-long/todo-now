@@ -4,6 +4,7 @@ Planned and deferred work. Shipped work is logged in `../devlog.md`.
 
 ## Planned
 
+- **Eisenhower Matrix view** — 2×2 grid mapping Board Tasks by importance × derived urgency, with an Unsorted tray. Domain model settled (see `CONTEXT.md` Matrix terms and `docs/adr/0001-derived-urgency-on-the-matrix.md`); not yet built
 - **Weekly momentum view** — encouraging progress tracking
 - **Service worker + offline support** — app currently requires internet
 - **STR feedback loop** — speak text, submit directly to agent

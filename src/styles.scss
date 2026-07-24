@@ -5,7 +5,7 @@
 :root {
   // Light mode (default)
   --bg: #faf6f1;
-  --bg-raised: #ffffff;
+  --bg-raised: #fff;
   --bg-sunken: #f0ebe4;
   --bg-hover: #ece6dd;
 
@@ -15,44 +15,44 @@
 
   --accent: #9b7bb8;
   --accent-hover: #8a6aa8;
-  --accent-soft: rgba(155, 123, 184, 0.12);
-  --accent-text: #ffffff;
+  --accent-soft: rgb(155, 123, 184, 0.12);
+  --accent-text: #fff;
 
   --success: #5a9a6a;
-  --success-soft: rgba(90, 154, 106, 0.12);
+  --success-soft: rgb(90, 154, 106, 0.12);
   --danger: #c45c5c;
-  --danger-soft: rgba(196, 92, 92, 0.1);
+  --danger-soft: rgb(196, 92, 92, 0.1);
 
   // Tab themes — Recurring (orange/amber)
   --recurring: #d97706;
   --recurring-accent: #f59e0b;
   --recurring-dark: #b45309;
-  --recurring-soft: rgba(245, 158, 11, 0.15);
-  --recurring-col-bg: rgba(217, 119, 6, 0.03);
-  --recurring-card-bg: rgba(255, 237, 213, 0.6);
-  --recurring-card-border: rgba(245, 158, 11, 0.2);
+  --recurring-soft: rgb(245, 158, 11, 0.15);
+  --recurring-col-bg: rgb(217, 119, 6, 0.03);
+  --recurring-card-bg: rgb(255, 237, 213, 0.6);
+  --recurring-card-border: rgb(245, 158, 11, 0.2);
 
   // Tab themes — Events (maroon)
   --events: #9b2c2c;
   --events-hover: #7b2323;
-  --events-soft: rgba(155, 44, 44, 0.15);
+  --events-soft: rgb(155, 44, 44, 0.15);
 
   // Tab themes — Shopping (purple/pink)
   --shopping-needs: #9b6fc0;
   --shopping-wants: #e07090;
-  --shopping-col-bg: rgba(142, 68, 173, 0.03);
-  --shopping-soft: rgba(180, 140, 220, 0.15);
-  --shopping-card-bg: rgba(232, 221, 255, 0.5);
-  --shopping-card-border: rgba(168, 130, 230, 0.2);
+  --shopping-col-bg: rgb(142, 68, 173, 0.03);
+  --shopping-soft: rgb(180, 140, 220, 0.15);
+  --shopping-card-bg: rgb(232, 221, 255, 0.5);
+  --shopping-card-border: rgb(168, 130, 230, 0.2);
 
   // Tab themes — Grocery (green)
   --grocery: #27ae60;
   --grocery-text: #5a9e65;
   --grocery-accent: #78be82;
-  --grocery-col-bg: rgba(39, 174, 96, 0.03);
-  --grocery-soft: rgba(120, 190, 130, 0.15);
-  --grocery-card-bg: rgba(220, 252, 231, 0.5);
-  --grocery-card-border: rgba(74, 180, 110, 0.2);
+  --grocery-col-bg: rgb(39, 174, 96, 0.03);
+  --grocery-soft: rgb(120, 190, 130, 0.15);
+  --grocery-card-bg: rgb(220, 252, 231, 0.5);
+  --grocery-card-border: rgb(74, 180, 110, 0.2);
 
   --border: #e2dbd2;
   --border-strong: #cfc5b8;
@@ -61,12 +61,13 @@
   --radius: 10px;
   --radius-lg: 14px;
 
-  --shadow-sm: 0 1px 3px rgba(61, 46, 31, 0.06);
-  --shadow: 0 2px 8px rgba(61, 46, 31, 0.08);
-  --shadow-lg: 0 4px 16px rgba(61, 46, 31, 0.1);
+  --shadow-sm: 0 1px 3px rgb(61, 46, 31, 0.06);
+  --shadow: 0 2px 8px rgb(61, 46, 31, 0.08);
+  --shadow-lg: 0 4px 16px rgb(61, 46, 31, 0.1);
 
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --font-sans:
+    "Inter", -apple-system, blinkmacsystemfont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", monospace;
 
   --transition: 180ms ease;
   --transition-slow: 300ms ease;
@@ -86,55 +87,57 @@
 
   --accent: #a988c8;
   --accent-hover: #bb9ed8;
-  --accent-soft: rgba(169, 136, 200, 0.15);
+  --accent-soft: rgb(169, 136, 200, 0.15);
   --accent-text: #1a1410;
 
   --success: #6aab7a;
-  --success-soft: rgba(106, 171, 122, 0.15);
+  --success-soft: rgb(106, 171, 122, 0.15);
   --danger: #d46b6b;
-  --danger-soft: rgba(212, 107, 107, 0.12);
+  --danger-soft: rgb(212, 107, 107, 0.12);
 
   // Tab themes — Recurring
   --recurring: #d97706;
   --recurring-accent: #f59e0b;
   --recurring-dark: #f59e0b;
-  --recurring-soft: rgba(245, 158, 11, 0.15);
-  --recurring-col-bg: rgba(217, 119, 6, 0.05);
-  --recurring-card-bg: rgba(245, 158, 11, 0.06);
-  --recurring-card-border: rgba(245, 158, 11, 0.15);
+  --recurring-soft: rgb(245, 158, 11, 0.15);
+  --recurring-col-bg: rgb(217, 119, 6, 0.05);
+  --recurring-card-bg: rgb(245, 158, 11, 0.06);
+  --recurring-card-border: rgb(245, 158, 11, 0.15);
 
   // Tab themes — Events
   --events: #9b2c2c;
   --events-hover: #c44040;
-  --events-soft: rgba(155, 44, 44, 0.15);
+  --events-soft: rgb(155, 44, 44, 0.15);
 
   // Tab themes — Shopping
   --shopping-needs: #b088d0;
   --shopping-wants: #e07090;
-  --shopping-col-bg: rgba(142, 68, 173, 0.05);
-  --shopping-soft: rgba(180, 140, 220, 0.15);
-  --shopping-card-bg: rgba(168, 130, 230, 0.06);
-  --shopping-card-border: rgba(168, 130, 230, 0.15);
+  --shopping-col-bg: rgb(142, 68, 173, 0.05);
+  --shopping-soft: rgb(180, 140, 220, 0.15);
+  --shopping-card-bg: rgb(168, 130, 230, 0.06);
+  --shopping-card-border: rgb(168, 130, 230, 0.15);
 
   // Tab themes — Grocery
   --grocery: #27ae60;
   --grocery-text: #6aab7a;
   --grocery-accent: #78be82;
-  --grocery-col-bg: rgba(39, 174, 96, 0.05);
-  --grocery-soft: rgba(120, 190, 130, 0.15);
-  --grocery-card-bg: rgba(74, 180, 110, 0.06);
-  --grocery-card-border: rgba(74, 180, 110, 0.15);
+  --grocery-col-bg: rgb(39, 174, 96, 0.05);
+  --grocery-soft: rgb(120, 190, 130, 0.15);
+  --grocery-card-bg: rgb(74, 180, 110, 0.06);
+  --grocery-card-border: rgb(74, 180, 110, 0.15);
 
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
+  --border: rgb(255, 255, 255, 0.08);
+  --border-strong: rgb(255, 255, 255, 0.14);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgb(0, 0, 0, 0.2);
+  --shadow: 0 2px 8px rgb(0, 0, 0, 0.25);
+  --shadow-lg: 0 4px 16px rgb(0, 0, 0, 0.3);
 }
 
 // ── Base Reset ──
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -143,27 +146,27 @@
 html {
   font-family: var(--font-sans);
   font-size: 16px;
-  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-tap-highlight-color: transparent;
+  line-height: 1.5;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
   min-height: 100dvh;
-  width: 100%;
   overflow-x: hidden;
+  width: 100%;
 }
 
 button {
-  font: inherit;
-  color: inherit;
   background: none;
-  border: none;
+  border: 0;
+  color: inherit;
   cursor: pointer;
+  font: inherit;
 
   &:disabled {
     cursor: default;
@@ -171,11 +174,13 @@ button {
   }
 }
 
-input, textarea, select {
-  font: inherit;
-  color: inherit;
+input,
+textarea,
+select {
   background: none;
-  border: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
   outline: none;
 }
 
@@ -186,13 +191,13 @@ a {
 
 // ── Utility classes ──
 .visually-hidden {
-  position: absolute;
-  width: 1px;
+  border: 0;
+  clip-path: inset(50%);
   height: 1px;
-  padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  padding: 0;
+  position: absolute;
   white-space: nowrap;
-  border: 0;
+  width: 1px;
 }

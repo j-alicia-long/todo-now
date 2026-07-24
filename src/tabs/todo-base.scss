@@ -1,13 +1,13 @@
 // ── Material Symbols ──
 .material-symbols-outlined {
   font-size: 20px;
-  line-height: 1;
-  vertical-align: middle;
   font-variation-settings:
     "FILL" 0,
     "wght" 400,
     "GRAD" 0,
     "opsz" 20;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .card-action-btn .material-symbols-outlined,
@@ -28,57 +28,57 @@
 }
 
 .todo-page {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 20px 16px env(safe-area-inset-bottom, 16px);
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  margin: 0 auto;
+  max-width: 1200px;
+  min-height: 100dvh;
   overflow-x: hidden;
+  padding: 20px 16px env(safe-area-inset-bottom, 16px);
+  width: 100%;
 }
 
 // ── Header ──
 .todo-header {
-  display: flex;
   align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
   justify-content: space-between;
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
 
   h1 {
+    align-items: center;
+    display: flex;
     font-size: 1.5rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
-    display: flex;
-    align-items: center;
     gap: 8px;
+    letter-spacing: -0.02em;
 
     .material-symbols-outlined {
-      font-size: 1.4rem;
       color: var(--success);
+      font-size: 1.4rem;
     }
   }
 }
 
 .header-actions {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 8px;
 }
 
 .theme-toggle {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius);
-  display: flex;
   align-items: center;
-  justify-content: center;
+  border-radius: var(--radius);
   color: var(--text-secondary);
+  display: flex;
+  height: 36px;
+  justify-content: center;
   transition:
     background var(--transition),
     color var(--transition);
+  width: 36px;
 
   &:hover {
     background: var(--bg-hover);
@@ -88,27 +88,27 @@
 
 // ── View Tabs ──
 .view-tabs {
+  background: var(--bg-sunken);
+  border-radius: var(--radius);
   display: flex;
   gap: 4px;
   margin-bottom: 12px;
-  background: var(--bg-sunken);
-  border-radius: var(--radius);
   padding: 3px;
 }
 
 .view-tab {
-  flex: 1;
-  padding: 8px 16px;
+  align-items: center;
+  background: transparent;
   border-radius: calc(var(--radius) - 2px);
+  color: var(--text-secondary);
+  display: flex;
+  flex: 1;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-secondary);
-  background: transparent;
-  transition: all var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 6px;
+  justify-content: center;
+  padding: 8px 16px;
+  transition: all var(--transition);
 
   &:hover {
     color: var(--text);
@@ -116,23 +116,23 @@
 
   &.active {
     background: var(--bg-raised);
-    color: var(--text);
     box-shadow: var(--shadow-sm);
+    color: var(--text);
   }
 }
 
 .tab-count {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  background: var(--accent-soft);
   border-radius: 999px;
+  color: var(--accent);
+  display: inline-flex;
   font-size: 0.68rem;
   font-weight: 700;
-  background: var(--accent-soft);
-  color: var(--accent);
+  height: 18px;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0 5px;
 }
 
 // ── Add Task ──
@@ -143,12 +143,12 @@
 }
 
 .add-task-input {
-  flex: 1;
-  padding: 10px 14px;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  flex: 1;
   font-size: 0.95rem;
+  padding: 10px 14px;
   transition:
     border-color var(--transition),
     box-shadow var(--transition);
@@ -164,12 +164,12 @@
 }
 
 .add-task-btn {
-  padding: 10px 16px;
   background: var(--accent);
-  color: var(--accent-text);
   border-radius: var(--radius);
-  font-weight: 600;
+  color: var(--accent-text);
   font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px 16px;
   transition:
     background var(--transition),
     transform var(--transition);
@@ -186,38 +186,38 @@
 // ── Board ──
 .board {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
   flex: 1;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr 1fr;
   min-height: 0;
 }
 
 // ── Column ──
 .board-column {
-  background: rgba(61, 46, 31, 0.03);
+  background: rgb(61, 46, 31, 0.03);
+  border: 2px solid transparent;
   border-radius: var(--radius-lg);
-  padding: 12px;
   display: flex;
   flex-direction: column;
   min-height: 200px;
+  padding: 12px;
   transition:
     background var(--transition),
     box-shadow var(--transition);
-  border: 2px solid transparent;
 
   .dark & {
-    background: rgba(240, 232, 221, 0.03);
+    background: rgb(240, 232, 221, 0.03);
   }
 
   &.drag-over {
-    border-color: var(--accent);
     background: var(--accent-soft);
+    border-color: var(--accent);
   }
 }
 
 .column-header {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 8px;
   padding: 4px 4px 12px;
 
@@ -248,22 +248,22 @@
 .column-title {
   font-size: 0.9rem;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .column-count {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  background: var(--border);
   border-radius: 999px;
+  color: var(--text-secondary);
+  display: inline-flex;
   font-size: 0.7rem;
   font-weight: 600;
-  background: var(--border);
-  color: var(--text-secondary);
+  height: 20px;
+  justify-content: center;
+  min-width: 20px;
+  padding: 0 6px;
 }
 
 .done-group {
@@ -273,45 +273,45 @@
 }
 
 .done-group-label {
+  color: var(--text-secondary);
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-secondary);
-  padding: 4px 4px 0;
   opacity: 0.7;
+  padding: 4px 4px 0;
+  text-transform: uppercase;
 }
 
 .column-cards {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
   overflow-y: auto;
   scrollbar-width: thin;
 }
 
 .column-empty {
-  text-align: center;
-  padding: 32px 16px;
   color: var(--text-tertiary);
   font-size: 0.82rem;
   font-style: italic;
+  padding: 32px 16px;
+  text-align: center;
 }
 
 // ── Card ──
 .task-card {
   background: var(--bg-raised);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px;
   box-shadow: var(--shadow-sm);
   cursor: grab;
+  padding: 12px;
+  position: relative;
   touch-action: none;
   transition:
     box-shadow var(--transition),
     opacity var(--transition);
-  border: 1px solid var(--border);
-  position: relative;
 
   &:hover {
     box-shadow: var(--shadow);
@@ -347,65 +347,65 @@
 
 // ── Card Delete Button ──
 .card-delete-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-sm);
-  display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  line-height: 1;
-  color: var(--text-tertiary);
   background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
   cursor: pointer;
-  transition: all var(--transition);
+  display: flex;
+  font-size: 1.1rem;
+  height: 22px;
+  justify-content: center;
+  line-height: 1;
   opacity: 0.4;
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  transition: all var(--transition);
+  width: 22px;
   z-index: 2;
 
   &:hover {
-    opacity: 1;
     background: var(--danger-soft);
     color: var(--danger);
+    opacity: 1;
   }
 }
 
 // ── Card Header with Checkbox ──
 .card-header {
-  display: flex;
   align-items: flex-start;
+  display: flex;
   gap: 8px;
   margin-bottom: 8px;
 }
 
 .card-checkbox {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  margin-top: 1px;
   cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  height: 20px;
+  justify-content: center;
+  margin-top: 1px;
+  width: 20px;
 
   input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
     height: 0;
+    opacity: 0;
+    position: absolute;
+    width: 0;
   }
 
   .checkmark {
-    display: block;
-    width: 18px;
-    height: 18px;
-    border-radius: var(--radius-sm);
-    border: 2px solid var(--border-strong);
     background: transparent;
-    transition: all var(--transition);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    display: block;
+    height: 18px;
     position: relative;
+    transition: all var(--transition);
+    width: 18px;
   }
 
   input:checked + .checkmark {
@@ -413,15 +413,15 @@
     border-color: var(--success);
 
     &::after {
-      content: "";
-      position: absolute;
-      left: 4px;
-      top: 1px;
-      width: 5px;
-      height: 9px;
       border: solid white;
       border-width: 0 2px 2px 0;
+      content: "";
+      height: 9px;
+      left: 4px;
+      position: absolute;
+      top: 1px;
       transform: rotate(45deg);
+      width: 5px;
     }
   }
 
@@ -431,15 +431,15 @@
 }
 
 .card-title {
+  flex: 1;
   font-size: 0.88rem;
   font-weight: 500;
   line-height: 1.4;
-  word-break: break-word;
-  flex: 1;
+  overflow-wrap: break-word;
 
   &.done {
-    text-decoration: line-through;
     opacity: 0.5;
+    text-decoration: line-through;
   }
 
   &.trashed {
@@ -448,29 +448,29 @@
 }
 
 .card-title-edit {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  color: var(--text);
+  flex: 1;
+  font-family: inherit;
   font-size: 0.88rem;
   font-weight: 500;
   line-height: 1.4;
-  flex: 1;
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  padding: 2px 6px;
-  background: var(--bg-raised);
-  color: var(--text);
-  outline: none;
-  font-family: inherit;
   min-width: 0;
+  outline: none;
+  padding: 2px 6px;
 
   &:focus {
     border-color: var(--recurring-accent);
-    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 0 2px rgb(245, 158, 11, 0.15);
   }
 }
 
 // ── Card Row (tags + actions inline) ──
 .card-row {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 8px;
   margin-left: 28px;
 }
@@ -478,12 +478,12 @@
 // ── Card Tags ──
 .card-tags {
   display: flex;
+  flex: 1;
   flex-wrap: wrap;
   gap: 4px;
-  flex: 1;
+  justify-content: flex-end;
   min-width: 0;
   position: relative;
-  justify-content: flex-end;
 
   .card-tag.due-red,
   .card-tag.due-orange,
@@ -495,10 +495,10 @@
 }
 
 .card-tag {
+  border-radius: 999px;
   font-size: 0.68rem;
   font-weight: 500;
   padding: 1px 7px;
-  border-radius: 999px;
   text-transform: capitalize;
 
   &.tappable {
@@ -506,8 +506,8 @@
     transition: all var(--transition);
 
     &:hover {
-      filter: brightness(0.9);
       box-shadow: 0 0 0 1px var(--border-strong);
+      filter: brightness(0.9);
     }
   }
 
@@ -516,7 +516,7 @@
     color: var(--text-secondary);
 
     &.area-orange {
-      background: rgba(230, 150, 50, 0.12);
+      background: rgb(230, 150, 50, 0.12);
       color: #c07818;
       .dark & {
         color: #e0a040;
@@ -524,7 +524,7 @@
     }
 
     &.area-green {
-      background: rgba(80, 170, 80, 0.12);
+      background: rgb(80, 170, 80, 0.12);
       color: #3d8b3d;
       .dark & {
         color: #6cc06c;
@@ -532,7 +532,7 @@
     }
 
     &.area-purple {
-      background: rgba(160, 120, 210, 0.12);
+      background: rgb(160, 120, 210, 0.12);
       color: #8b5fc0;
       .dark & {
         color: #b48cdc;
@@ -540,7 +540,7 @@
     }
 
     &.area-blue {
-      background: rgba(80, 140, 210, 0.12);
+      background: rgb(80, 140, 210, 0.12);
       color: #3878b0;
       .dark & {
         color: #6aace0;
@@ -548,7 +548,7 @@
     }
 
     &.area-teal {
-      background: rgba(60, 180, 170, 0.12);
+      background: rgb(60, 180, 170, 0.12);
       color: #2a908a;
       .dark & {
         color: #50c8c0;
@@ -556,7 +556,7 @@
     }
 
     &.area-pink {
-      background: rgba(210, 110, 150, 0.12);
+      background: rgb(210, 110, 150, 0.12);
       color: #c05a80;
       .dark & {
         color: #e08aaa;
@@ -565,7 +565,7 @@
   }
 
   &.recurring-day-tag {
-    background: rgba(245, 158, 11, 0.12);
+    background: rgb(245, 158, 11, 0.12);
     color: var(--recurring-dark);
     font-weight: 600;
   }
@@ -592,62 +592,62 @@
   &.due-orange,
   &.due-yellow,
   &.due-green {
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border-width: 1px;
-    border-style: solid;
     border-radius: 4px;
+    border-style: solid;
+    border-width: 1px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    text-transform: uppercase;
   }
 
   &.due-red {
     background: #fde8e8;
-    color: #d03030;
     border-color: #f5c4c4;
+    color: #d03030;
 
     .dark & {
-      background: rgba(220, 60, 60, 0.2);
+      background: rgb(220, 60, 60, 0.2);
+      border-color: rgb(220, 60, 60, 0.4);
       color: #f08080;
-      border-color: rgba(220, 60, 60, 0.4);
     }
   }
 
   &.due-orange {
     background: #fef0e0;
-    color: #d07010;
     border-color: #f5d8b0;
+    color: #d07010;
 
     .dark & {
-      background: rgba(230, 150, 50, 0.2);
+      background: rgb(230, 150, 50, 0.2);
+      border-color: rgb(230, 150, 50, 0.35);
       color: #f0b050;
-      border-color: rgba(230, 150, 50, 0.35);
     }
   }
 
   &.due-yellow {
     background: #fdf8dd;
-    color: #a89400;
     border-color: #f0e6a0;
+    color: #a89400;
     font-weight: 900;
 
     .dark & {
-      background: rgba(200, 180, 40, 0.22);
+      background: rgb(200, 180, 40, 0.22);
+      border-color: rgb(200, 180, 40, 0.45);
       color: #e8d430;
-      border-color: rgba(200, 180, 40, 0.45);
     }
   }
 
   &.due-green {
     background: #e6f6ec;
-    color: #1e8a40;
     border-color: #b8e4c8;
+    color: #1e8a40;
 
     .dark & {
-      background: rgba(40, 170, 90, 0.18);
+      background: rgb(40, 170, 90, 0.18);
+      border-color: rgb(40, 170, 90, 0.35);
       color: #70d090;
-      border-color: rgba(40, 170, 90, 0.35);
     }
   }
 }
@@ -655,28 +655,28 @@
 // ── Due date "add" button ──
 .card-tag.due-none {
   background: var(--bg-sunken);
+  border: 1px dashed var(--border);
   color: var(--text-tertiary);
   font-size: 0.7rem;
-  border: 1px dashed var(--border);
 }
 
 .card-due-subtext {
-  font-size: 0.7rem;
   color: var(--text-tertiary);
-  pointer-events: none;
+  font-size: 0.7rem;
   margin-right: auto;
+  pointer-events: none;
 }
 
 // ── Date Picker Modal ──
 .date-picker-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(2px);
+  background: rgb(0, 0, 0, 0.35);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 200;
 }
 
 .date-picker-modal {
@@ -684,9 +684,9 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 16px;
-  min-width: 280px;
   max-width: 320px;
+  min-width: 280px;
+  padding: 16px;
 
   .react-aria-Calendar {
     width: 100%;
@@ -694,29 +694,29 @@
 }
 
 .date-picker-header {
-  display: flex;
   align-items: center;
+  display: flex;
   justify-content: space-between;
   margin-bottom: 12px;
 }
 
 .date-picker-heading {
+  color: var(--text);
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--text);
 }
 
 .date-picker-nav {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
   border-radius: var(--radius);
+  color: var(--text-secondary);
+  display: flex;
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  height: 32px;
+  justify-content: center;
   transition: all var(--transition);
+  width: 32px;
 
   &:hover {
     background: var(--bg-hover);
@@ -730,32 +730,32 @@
 }
 
 .react-aria-CalendarGrid {
-  width: 100%;
   border-collapse: collapse;
   height: 236px;
+  width: 100%;
 }
 
 .react-aria-CalendarHeaderCell {
-  padding: 4px 0;
+  color: var(--text-tertiary);
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--text-tertiary);
+  padding: 4px 0;
   text-align: center;
   text-transform: uppercase;
 }
 
 .react-aria-CalendarCell {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  margin: 0 auto;
   border-radius: 50%;
-  font-size: 0.82rem;
   color: var(--text);
   cursor: pointer;
+  display: flex;
+  font-size: 0.82rem;
+  height: 34px;
+  justify-content: center;
+  margin: 0 auto;
   transition: all var(--transition);
+  width: 34px;
 
   &:hover:not([data-selected]):not([data-today]) {
     background: var(--bg-hover);
@@ -768,26 +768,26 @@
 
   &[data-selected] {
     background: var(--accent) !important;
-    color: white !important;
-    font-weight: 700;
     box-shadow:
       0 0 0 2px var(--accent),
-      0 2px 8px rgba(0, 0, 0, 0.15);
+      0 2px 8px rgb(0, 0, 0, 0.15);
+    color: white !important;
+    font-weight: 700;
   }
 
   &[data-today] {
-    font-weight: 700;
     background: var(--accent-soft) !important;
     box-shadow: inset 0 0 0 2px var(--accent);
     color: var(--accent) !important;
+    font-weight: 700;
   }
 
   &[data-today][data-selected] {
     background: var(--accent) !important;
-    color: white !important;
     box-shadow:
       0 0 0 2px var(--accent),
-      0 2px 8px rgba(0, 0, 0, 0.15);
+      0 2px 8px rgb(0, 0, 0, 0.15);
+    color: white !important;
   }
 
   &[data-unavailable],
@@ -798,16 +798,16 @@
 }
 
 .date-picker-clear {
-  display: block;
-  width: 100%;
-  margin-top: 8px;
-  padding: 8px;
   border-radius: var(--radius);
+  color: var(--danger);
+  display: block;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--danger);
+  margin-top: 8px;
+  padding: 8px;
   text-align: center;
   transition: all var(--transition);
+  width: 100%;
 
   &:hover {
     background: var(--danger-soft);
@@ -820,16 +820,16 @@
 }
 
 .add-date-btn {
-  display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 10px;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text-secondary);
-  font-size: 0.82rem;
   cursor: pointer;
+  display: flex;
+  font-size: 0.82rem;
+  gap: 4px;
+  padding: 8px 10px;
   transition: all var(--transition);
   white-space: nowrap;
 
@@ -843,9 +843,9 @@
   }
 
   &.has-date {
+    background: var(--accent-soft);
     border-color: var(--accent);
     color: var(--accent);
-    background: var(--accent-soft);
   }
 }
 
@@ -855,17 +855,17 @@
 }
 
 .date-picker-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 200;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 16px;
-  min-width: 280px;
   max-width: 320px;
+  min-width: 280px;
+  padding: 16px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 200;
 
   .react-aria-Calendar {
     width: 100%;
@@ -873,49 +873,49 @@
 }
 
 .recurring-date-btn {
-  height: 38px;
   border-color: var(--border);
+  height: 38px;
 }
 
 // ── Tag Anchor (positions dropdown relative to the tag) ──
 .tag-anchor {
-  position: relative;
   display: inline-flex;
+  position: relative;
 }
 
 // ── Tag Select Dropdown ──
 .tag-select {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 4px;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
-  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   margin-top: 4px;
+  min-width: 120px;
+  padding: 4px;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 50;
 
   &.tag-select-above {
-    top: auto;
     bottom: 100%;
-    margin-top: 0;
     margin-bottom: 4px;
+    margin-top: 0;
+    top: auto;
   }
 }
 
 .tag-option {
-  padding: 6px 10px;
   border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   font-size: 0.78rem;
   font-weight: 500;
+  padding: 6px 10px;
   text-align: left;
   text-transform: capitalize;
-  color: var(--text-secondary);
   transition: all var(--transition);
 
   &:hover {
@@ -932,28 +932,28 @@
 
 // ── Card Action Buttons ──
 .card-actions {
-  display: flex;
-  gap: 4px;
   align-items: center;
+  display: flex;
   flex-shrink: 0;
+  gap: 4px;
 }
 
 .card-action-btn {
-  display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 4px 8px;
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
   font-size: 0.72rem;
   font-weight: 600;
+  gap: 3px;
+  padding: 4px 8px;
   transition: all var(--transition);
-  cursor: pointer;
 
   &.move-right,
   &.move-left {
-    padding: 4px 8px;
     background: var(--bg-sunken);
     color: var(--text-secondary);
+    padding: 4px 8px;
 
     &:hover {
       background: var(--accent-soft);
@@ -962,9 +962,9 @@
   }
 
   &.archive {
-    padding: 4px 8px;
     background: var(--bg-sunken);
     color: var(--text-tertiary);
+    padding: 4px 8px;
 
     &:hover {
       background: var(--bg-hover);
@@ -1016,15 +1016,15 @@
 // ── Trash ──
 .trash-list {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
   padding-bottom: 40px;
 }
 
 .trash-meta {
-  font-size: 0.72rem;
   color: var(--text-tertiary);
+  font-size: 0.72rem;
   margin-bottom: 8px;
   margin-left: 4px;
 }
@@ -1032,20 +1032,20 @@
 // ── Future List ──
 .future-list {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
   padding-bottom: 40px;
 }
 
 .future-empty {
-  text-align: center;
-  padding: 64px 24px;
   color: var(--text-tertiary);
+  padding: 64px 24px;
+  text-align: center;
 
   .future-empty-icon {
-    font-size: 2.5rem;
     display: block;
+    font-size: 2.5rem;
     margin-bottom: 12px;
   }
 
@@ -1056,9 +1056,9 @@
   }
 
   .future-empty-hint {
+    color: var(--text-tertiary);
     font-size: 0.82rem;
     font-weight: 400;
-    color: var(--text-tertiary);
   }
 }
 
@@ -1074,8 +1074,8 @@
 }
 
 .settings-desc {
-  font-size: 0.82rem;
   color: var(--text-tertiary);
+  font-size: 0.82rem;
   margin-bottom: 20px;
 }
 
@@ -1086,14 +1086,14 @@
 }
 
 .settings-toggle {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  border-radius: var(--radius);
   background: var(--bg-raised);
   border: 1px solid var(--border);
+  border-radius: var(--radius);
   cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 14px;
   transition: background var(--transition);
 
   &:hover {
@@ -1113,20 +1113,20 @@
 }
 
 .toggle-desc {
-  font-size: 0.75rem;
   color: var(--text-tertiary);
+  font-size: 0.75rem;
 }
 
 .toggle-switch {
-  width: 44px;
-  height: 24px;
-  border-radius: 999px;
   background: var(--bg-sunken);
   border: 1px solid var(--border);
-  position: relative;
+  border-radius: 999px;
   cursor: pointer;
-  transition: all var(--transition);
   flex-shrink: 0;
+  height: 24px;
+  position: relative;
+  transition: all var(--transition);
+  width: 44px;
 
   &.on {
     background: var(--accent);
@@ -1135,15 +1135,15 @@
 }
 
 .toggle-knob {
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
   background: white;
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  height: 18px;
+  left: 2px;
   position: absolute;
   top: 2px;
-  left: 2px;
   transition: transform var(--transition);
-  box-shadow: var(--shadow-sm);
+  width: 18px;
 
   .on & {
     transform: translateX(20px);
@@ -1152,24 +1152,24 @@
 
 // ── Loading ──
 .loading-state {
-  text-align: center;
-  padding: 48px 24px;
   color: var(--text-tertiary);
   font-size: 0.9rem;
+  padding: 48px 24px;
+  text-align: center;
 }
 
 // ── Sidebar Toggle ──
 .sidebar-toggle {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius);
-  display: flex;
   align-items: center;
-  justify-content: center;
+  border-radius: var(--radius);
   color: var(--text-secondary);
+  display: flex;
+  height: 36px;
+  justify-content: center;
   transition:
     background var(--transition),
     color var(--transition);
+  width: 36px;
 
   &:hover {
     background: var(--bg-hover);
@@ -1177,32 +1177,32 @@
   }
 
   svg {
-    width: 20px;
     height: 20px;
+    width: 20px;
   }
 }
 
 // ── Sidebar Drawer ──
 .sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(2px);
+  background: rgb(0, 0, 0, 0.35);
   display: flex;
+  inset: 0;
   justify-content: flex-end;
+  position: fixed;
+  z-index: 300;
 }
 
 .sidebar {
-  width: 340px;
-  max-width: 85vw;
-  height: 100%;
+  animation: sidebar-slide-in 0.2s ease-out;
   background: var(--bg);
   border-left: 1px solid var(--border);
+  box-shadow: -4px 0 24px rgb(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
-  animation: sidebar-slide-in 0.2s ease-out;
+  height: 100%;
+  max-width: 85vw;
+  width: 340px;
 }
 
 @keyframes sidebar-slide-in {
@@ -1215,11 +1215,11 @@
 }
 
 .sidebar-header {
-  display: flex;
   align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
   justify-content: space-between;
   padding: 16px 16px 12px;
-  border-bottom: 1px solid var(--border);
 
   h2 {
     font-size: 1.1rem;
@@ -1228,14 +1228,14 @@
 }
 
 .sidebar-close {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius);
-  display: flex;
   align-items: center;
-  justify-content: center;
+  border-radius: var(--radius);
   color: var(--text-secondary);
+  display: flex;
+  height: 32px;
+  justify-content: center;
   transition: all var(--transition);
+  width: 32px;
 
   &:hover {
     background: var(--bg-hover);
@@ -1243,30 +1243,30 @@
   }
 
   svg {
-    width: 18px;
     height: 18px;
+    width: 18px;
   }
 }
 
 .sidebar-nav {
+  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 8px;
-  border-bottom: 1px solid var(--border);
 }
 
 .sidebar-nav-item {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
   border-radius: var(--radius);
+  color: var(--text-secondary);
+  display: flex;
   font-size: 0.88rem;
   font-weight: 500;
-  color: var(--text-secondary);
-  transition: all var(--transition);
+  gap: 8px;
+  padding: 10px 12px;
   text-align: left;
+  transition: all var(--transition);
 
   &:hover {
     background: var(--bg-hover);
@@ -1281,18 +1281,18 @@
 }
 
 .sidebar-count {
-  margin-left: auto;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
+  align-items: center;
   background: var(--bg-sunken);
+  border-radius: 999px;
   color: var(--text-tertiary);
   display: inline-flex;
-  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  height: 20px;
   justify-content: center;
+  margin-left: auto;
+  min-width: 20px;
+  padding: 0 6px;
 }
 
 .sidebar-content {
@@ -1302,29 +1302,29 @@
 }
 
 .sidebar-empty {
-  text-align: center;
-  padding: 32px 16px;
   color: var(--text-tertiary);
   font-size: 0.85rem;
+  padding: 32px 16px;
+  text-align: center;
 }
 
 // ── Lightweight List Items (Shopping / Groceries) ──
 .simple-list {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
   padding-bottom: 40px;
 }
 
 .list-item {
-  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
   transition: all var(--transition);
 
   &.checked {
@@ -1337,30 +1337,30 @@
 }
 
 .list-checkbox {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
   cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
 
   input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
     height: 0;
+    opacity: 0;
+    position: absolute;
+    width: 0;
   }
 
   .checkmark {
-    display: block;
-    width: 18px;
-    height: 18px;
-    border-radius: var(--radius-sm);
-    border: 2px solid var(--border-strong);
     background: transparent;
-    transition: all var(--transition);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    display: block;
+    height: 18px;
     position: relative;
+    transition: all var(--transition);
+    width: 18px;
   }
 
   input:checked + .checkmark {
@@ -1368,15 +1368,15 @@
     border-color: var(--success);
 
     &::after {
-      content: "";
-      position: absolute;
-      left: 4px;
-      top: 1px;
-      width: 5px;
-      height: 9px;
       border: solid white;
       border-width: 0 2px 2px 0;
+      content: "";
+      height: 9px;
+      left: 4px;
+      position: absolute;
+      top: 1px;
       transform: rotate(45deg);
+      width: 5px;
     }
   }
 
@@ -1390,35 +1390,35 @@
   font-size: 0.88rem;
   font-weight: 500;
   line-height: 1.4;
-  word-break: break-word;
+  overflow-wrap: break-word;
 
   &.done {
-    text-decoration: line-through;
     opacity: 0.5;
+    text-decoration: line-through;
   }
 }
 
 .list-actions {
-  display: flex;
   align-items: center;
-  gap: 4px;
+  display: flex;
   flex-shrink: 0;
+  gap: 4px;
 }
 
 .list-action-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  display: flex;
   align-items: center;
-  justify-content: center;
+  border-radius: var(--radius-sm);
   color: var(--text-tertiary);
-  transition: all var(--transition);
+  display: flex;
   font-size: 1rem;
+  height: 28px;
+  justify-content: center;
+  transition: all var(--transition);
+  width: 28px;
 
   svg {
-    width: 14px;
     height: 14px;
+    width: 14px;
   }
 
   &:hover {
@@ -1443,49 +1443,49 @@
 
 // ── Two-row list item (shopping) ──
 .list-item.two-row {
-  flex-direction: column;
   align-items: stretch;
+  flex-direction: column;
   gap: 6px;
 }
 
 .list-item-main {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 10px;
 }
 
 .list-item-sub {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
+  display: flex;
   gap: 8px;
+  justify-content: space-between;
   padding-left: 30px; // aligns under the title (checkbox 20px + 10px gap)
 }
 
 .link-pills {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 4px;
   min-width: 0;
 }
 
 .link-pill {
-  display: inline-flex;
   align-items: center;
-  gap: 2px;
+  background: var(--shopping-soft);
+  border-radius: 999px;
+  color: var(--shopping-needs);
+  display: inline-flex;
   font-size: 0.68rem;
   font-weight: 500;
-  padding: 1px 4px 1px 7px;
-  border-radius: 999px;
-  background: var(--shopping-soft);
-  color: var(--shopping-needs);
+  gap: 2px;
   max-width: 160px;
+  padding: 1px 4px 1px 7px;
 
   a {
     color: inherit;
-    text-decoration: none;
     overflow: hidden;
+    text-decoration: none;
     text-overflow: ellipsis;
     white-space: nowrap;
 
@@ -1495,50 +1495,50 @@
   }
 
   .link-pill-remove {
-    display: flex;
     align-items: center;
-    justify-content: center;
-    width: 14px;
-    height: 14px;
     border-radius: 50%;
     color: inherit;
+    display: flex;
+    height: 14px;
+    justify-content: center;
     opacity: 0.6;
+    width: 14px;
 
     .material-symbols-outlined {
       font-size: 12px;
     }
 
     &:hover {
+      background: rgb(0, 0, 0, 0.08);
       opacity: 1;
-      background: rgba(0, 0, 0, 0.08);
     }
   }
 
   &.add {
     background: var(--bg-sunken);
-    color: var(--text-tertiary);
     border: 1px dashed var(--border);
-    padding: 1px 7px;
-    font-size: 0.7rem;
+    color: var(--text-tertiary);
     cursor: pointer;
+    font-size: 0.7rem;
+    padding: 1px 7px;
     transition: all var(--transition);
 
     &:hover {
-      color: var(--text-secondary);
       border-color: var(--border-strong);
+      color: var(--text-secondary);
     }
   }
 }
 
 .link-pill-input {
-  font-size: 0.7rem;
-  padding: 1px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--border-strong);
   background: var(--bg-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
   color: var(--text-primary);
-  width: 150px;
+  font-size: 0.7rem;
   outline: none;
+  padding: 1px 8px;
+  width: 150px;
 
   &:focus {
     border-color: var(--shopping-needs);
@@ -1552,12 +1552,12 @@
 }
 
 .shopping-count {
-  background: rgba(180, 140, 220, 0.2) !important;
+  background: rgb(180, 140, 220, 0.2) !important;
   color: var(--shopping-needs) !important;
 }
 
 .shopping-item {
-  border-left: 3px solid rgba(180, 140, 220, 0.5);
+  border-left: 3px solid rgb(180, 140, 220, 0.5);
 
   .list-checkbox input:checked + .checkmark {
     background: var(--shopping-needs);
@@ -1571,8 +1571,8 @@
 
 // ── Shopping Board Layout ──
 .shopping-board {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 16px;
   padding-bottom: 40px;
@@ -1580,33 +1580,33 @@
 
 .shopping-columns {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
   flex: 1;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr 1fr;
   min-height: 0;
 }
 
 .shopping-column {
+  background: var(--shopping-col-bg);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: var(--shopping-col-bg);
-  border-radius: var(--radius-lg);
-  padding: 12px;
   min-height: 200px;
+  padding: 12px;
 }
 
 .shopping-column-header {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 6px;
   padding: 4px 4px 8px;
 
   h3 {
     font-size: 0.85rem;
     font-weight: 700;
-    text-transform: uppercase;
     letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .column-count {
@@ -1621,7 +1621,7 @@
       color: var(--shopping-needs);
     }
     .column-count {
-      background: rgba(180, 140, 220, 0.2);
+      background: rgb(180, 140, 220, 0.2);
       color: var(--shopping-needs);
     }
   }
@@ -1634,7 +1634,7 @@
       color: var(--shopping-wants);
     }
     .column-count {
-      background: rgba(224, 112, 144, 0.15);
+      background: rgb(224, 112, 144, 0.15);
       color: var(--shopping-wants);
     }
   }
@@ -1647,7 +1647,7 @@
       color: var(--grocery);
     }
     .column-count {
-      background: rgba(39, 174, 96, 0.15);
+      background: rgb(39, 174, 96, 0.15);
       color: var(--grocery);
     }
   }
@@ -1660,12 +1660,12 @@
 }
 
 .grocery-count {
-  background: rgba(120, 190, 130, 0.2) !important;
+  background: rgb(120, 190, 130, 0.2) !important;
   color: var(--grocery-text) !important;
 }
 
 .grocery-item {
-  border-left: 3px solid rgba(120, 190, 130, 0.5);
+  border-left: 3px solid rgb(120, 190, 130, 0.5);
 
   .list-checkbox input:checked + .checkmark {
     background: var(--grocery-accent);
@@ -1679,26 +1679,26 @@
 
 // ── Grocery Board Layout ──
 .grocery-board {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 12px;
   padding-bottom: 40px;
 }
 
 .grocery-column {
+  background: var(--grocery-col-bg);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: var(--grocery-col-bg);
-  border-radius: var(--radius-lg);
-  padding: 12px;
   min-height: 200px;
+  padding: 12px;
 }
 
 .grocery-column-header {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 6px;
   padding: 4px 4px 8px;
 
@@ -1707,37 +1707,37 @@
   }
 
   h3 {
+    color: var(--grocery);
     font-size: 0.85rem;
     font-weight: 700;
-    text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--grocery);
+    text-transform: uppercase;
   }
 
   .column-count {
-    font-size: 0.65rem;
-    background: rgba(39, 174, 96, 0.15);
+    background: rgb(39, 174, 96, 0.15);
     color: var(--grocery);
+    font-size: 0.65rem;
   }
 }
 
 .clear-bought-btn {
-  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+  background: rgb(120, 190, 130, 0.12);
+  border: 1px solid rgb(120, 190, 130, 0.3);
   border-radius: 999px;
+  color: var(--grocery-text);
+  display: inline-flex;
   font-size: 0.72rem;
   font-weight: 600;
-  background: rgba(120, 190, 130, 0.12);
-  color: var(--grocery-text);
-  border: 1px solid rgba(120, 190, 130, 0.3);
-  transition: all var(--transition);
+  gap: 4px;
   margin-left: auto;
+  padding: 4px 10px;
+  transition: all var(--transition);
 
   &:hover {
-    background: rgba(120, 190, 130, 0.22);
-    border-color: rgba(120, 190, 130, 0.5);
+    background: rgb(120, 190, 130, 0.22);
+    border-color: rgb(120, 190, 130, 0.5);
   }
 
   .material-symbols-outlined {
@@ -1753,17 +1753,17 @@
 }
 
 .recurring-count {
-  background: rgba(245, 158, 11, 0.2) !important;
+  background: rgb(245, 158, 11, 0.2) !important;
   color: var(--recurring) !important;
 }
 
 .recurring-board {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  padding-bottom: 40px;
   align-items: start;
+  display: grid;
+  flex: 1;
+  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+  padding-bottom: 40px;
 }
 
 .recurring-left-col,
@@ -1774,17 +1774,17 @@
 }
 
 .recurring-section {
+  background: var(--recurring-col-bg);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: var(--recurring-col-bg);
-  border-radius: var(--radius-lg);
   padding: 12px;
 }
 
 .recurring-section-header {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 6px;
   padding: 4px 4px 8px;
 
@@ -1793,35 +1793,35 @@
   }
 
   h3 {
+    color: var(--recurring);
     font-size: 0.85rem;
     font-weight: 700;
-    text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--recurring);
+    text-transform: uppercase;
   }
 
   .column-count {
-    font-size: 0.65rem;
     background: var(--recurring-soft);
     color: var(--recurring);
+    font-size: 0.65rem;
   }
 }
 
 .recurring-progress {
-  display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  background: rgb(245, 158, 11, 0.12);
   border-radius: 999px;
+  color: var(--recurring);
+  display: inline-flex;
   font-size: 0.68rem;
   font-weight: 700;
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--recurring);
   margin-left: auto;
+  padding: 2px 8px;
 }
 
 .recurring-item {
-  display: flex;
   align-items: flex-start;
+  display: flex;
   gap: 8px;
   padding: 8px 10px;
 
@@ -1840,37 +1840,37 @@
 }
 
 .recurring-info {
-  flex: 1;
-  min-width: 0;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 3px;
+  min-width: 0;
 }
 
 .recurring-link-row {
-  display: flex;
   align-items: center;
+  display: flex;
   gap: 6px;
   margin-top: 2px;
 }
 
 .recurring-link-btn {
-  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+  background: rgb(245, 158, 11, 0.08);
+  border: 1px solid rgb(245, 158, 11, 0.2);
   border-radius: 6px;
+  color: var(--recurring);
+  display: inline-flex;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--recurring);
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  gap: 5px;
+  padding: 4px 10px;
   text-decoration: none;
   transition: all var(--transition);
 
   &:hover {
-    background: rgba(245, 158, 11, 0.16);
-    border-color: rgba(245, 158, 11, 0.4);
+    background: rgb(245, 158, 11, 0.16);
+    border-color: rgb(245, 158, 11, 0.4);
     color: var(--recurring-dark);
   }
 
@@ -1887,23 +1887,23 @@
 }
 
 .recurring-add-link-btn {
-  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
   background: transparent;
   border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--text-tertiary);
   cursor: pointer;
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 600;
+  gap: 4px;
+  padding: 3px 8px;
   transition: all var(--transition);
 
   &:hover {
+    background: rgb(245, 158, 11, 0.05);
+    border-color: rgb(245, 158, 11, 0.4);
     color: var(--recurring);
-    border-color: rgba(245, 158, 11, 0.4);
-    background: rgba(245, 158, 11, 0.05);
   }
 
   .link-btn-icon {
@@ -1912,15 +1912,15 @@
 }
 
 .recurring-edit-link-btn {
-  display: inline-flex;
   align-items: center;
-  padding: 2px;
-  border-radius: 4px;
   background: transparent;
-  border: none;
+  border: 0;
+  border-radius: 4px;
   color: var(--text-tertiary);
   cursor: pointer;
+  display: inline-flex;
   opacity: 0;
+  padding: 2px;
   transition: all var(--transition);
 
   .material-symbols-outlined {
@@ -1938,38 +1938,38 @@
 }
 
 .recurring-link-edit {
-  display: flex;
   align-items: center;
-  gap: 4px;
+  display: flex;
   flex: 1;
+  gap: 4px;
 }
 
 .link-edit-input {
-  flex: 1;
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(245, 158, 11, 0.4);
   background: var(--bg-raised);
+  border: 1px solid rgb(245, 158, 11, 0.4);
+  border-radius: 4px;
   color: var(--text);
+  flex: 1;
   font-size: 0.75rem;
   outline: none;
+  padding: 4px 8px;
 
   &:focus {
     border-color: var(--recurring-accent);
-    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 0 2px rgb(245, 158, 11, 0.15);
   }
 }
 
 .link-edit-save,
 .link-edit-cancel {
-  display: inline-flex;
   align-items: center;
-  padding: 2px;
-  border-radius: 4px;
   background: transparent;
-  border: none;
-  cursor: pointer;
+  border: 0;
+  border-radius: 4px;
   color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  padding: 2px;
 
   .material-symbols-outlined {
     font-size: 16px;
@@ -1985,43 +1985,43 @@
 }
 
 .recurring-meta {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  align-items: center;
 }
 
 .recurring-schedule-label {
-  display: inline-flex;
   align-items: center;
-  padding: 1px 6px;
+  background: rgb(245, 158, 11, 0.1);
   border-radius: 4px;
+  color: var(--recurring);
+  display: inline-flex;
   font-size: 0.68rem;
   font-weight: 600;
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--recurring);
+  padding: 1px 6px;
 }
 
 .recurring-day {
-  display: inline-flex;
   align-items: center;
-  padding: 1px 6px;
+  background: rgb(245, 158, 11, 0.12);
   border-radius: 4px;
+  color: var(--recurring);
+  display: inline-flex;
   font-size: 0.68rem;
   font-weight: 700;
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--recurring);
+  padding: 1px 6px;
 }
 
 .recurring-note {
-  font-size: 0.72rem;
   color: var(--text-secondary);
+  font-size: 0.72rem;
 }
 
 .recurring-last-done {
+  color: var(--text-secondary);
   font-size: 0.68rem;
   font-weight: 600;
-  color: var(--text-secondary);
 
   &.never {
     color: var(--text-tertiary);
@@ -2030,19 +2030,19 @@
 }
 
 .recurring-freq-select {
-  padding: 8px 10px;
-  border-radius: var(--radius);
   background: var(--bg-raised);
   border: 1px solid var(--border);
+  border-radius: var(--radius);
   color: var(--text);
+  cursor: pointer;
   font-size: 0.85rem;
   font-weight: 600;
-  cursor: pointer;
   outline: none;
+  padding: 8px 10px;
 
   &:focus {
     border-color: var(--recurring-accent);
-    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    box-shadow: 0 0 0 2px rgb(245, 158, 11, 0.2);
   }
 }
 
@@ -2064,18 +2064,18 @@
 }
 
 .recurring-extra-input {
-  flex: 1;
-  padding: 8px 12px;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
+  flex: 1;
   font-size: 0.82rem;
   outline: none;
+  padding: 8px 12px;
 
   &:focus {
     border-color: var(--recurring-accent);
-    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 0 2px rgb(245, 158, 11, 0.15);
   }
 
   &::placeholder {
@@ -2091,19 +2091,19 @@
 // ── Recurring Modal + FAB ──
 
 .recurring-board-tasks {
-  margin-bottom: 8px;
+  background: rgb(245, 158, 11, 0.06);
   border-left: 3px solid var(--recurring-accent);
   border-radius: 8px;
-  background: rgba(245, 158, 11, 0.06);
+  margin-bottom: 8px;
   padding: 4px 0;
 }
 
 .recurring-board-item {
-  display: flex;
   align-items: center;
+  display: flex;
+  font-size: 0.92rem;
   gap: 8px;
   padding: 8px 12px;
-  font-size: 0.92rem;
 }
 
 .recurring-board-title {
@@ -2133,12 +2133,12 @@
   }
 
   .recurring-link-btn {
+    background: rgb(155, 44, 44, 0.08);
+    border-color: rgb(155, 44, 44, 0.2);
     color: var(--events);
-    background: rgba(155, 44, 44, 0.08);
-    border-color: rgba(155, 44, 44, 0.2);
     &:hover {
-      background: rgba(155, 44, 44, 0.16);
-      border-color: rgba(155, 44, 44, 0.4);
+      background: rgb(155, 44, 44, 0.16);
+      border-color: rgb(155, 44, 44, 0.4);
       color: var(--events-hover);
     }
   }
@@ -2146,42 +2146,42 @@
   .recurring-add-link-btn {
     color: var(--events);
     &:hover {
-      background: rgba(155, 44, 44, 0.08);
+      background: rgb(155, 44, 44, 0.08);
       color: var(--events-hover);
     }
   }
 
   .recurring-schedule-label {
-    background: rgba(155, 44, 44, 0.1);
+    background: rgb(155, 44, 44, 0.1);
     color: var(--events);
   }
 
   .recurring-day {
-    background: rgba(155, 44, 44, 0.1);
+    background: rgb(155, 44, 44, 0.1);
     color: var(--events);
   }
 }
 
 .recurring-col-add-btn {
-  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  margin-bottom: 12px;
+  background: rgb(245, 158, 11, 0.08);
+  border: 1px dashed rgb(245, 158, 11, 0.3);
   border-radius: var(--radius);
+  color: var(--recurring);
+  cursor: pointer;
+  display: flex;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--recurring);
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px dashed rgba(245, 158, 11, 0.3);
-  cursor: pointer;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 12px;
+  padding: 8px 16px;
   transition: all var(--transition);
   width: 100%;
-  justify-content: center;
 
   &:hover {
     background: var(--recurring-soft);
-    border-color: rgba(245, 158, 11, 0.5);
+    border-color: rgb(245, 158, 11, 0.5);
   }
 
   .material-symbols-outlined {
@@ -2189,32 +2189,32 @@
   }
 
   &.events-add-btn {
+    background: rgb(155, 44, 44, 0.08);
+    border-color: rgb(155, 44, 44, 0.3);
     color: var(--events);
-    background: rgba(155, 44, 44, 0.08);
-    border-color: rgba(155, 44, 44, 0.3);
     &:hover {
       background: var(--events-soft);
-      border-color: rgba(155, 44, 44, 0.5);
+      border-color: rgb(155, 44, 44, 0.5);
     }
   }
 }
 
 .recurring-area-tag {
-  display: inline-block;
-  padding: 2px 8px;
+  background: var(--bg-sunken);
   border-radius: 10px;
+  color: var(--text-secondary);
+  display: inline-block;
   font-size: 0.72rem;
   font-weight: 500;
-  background: var(--bg-sunken);
-  color: var(--text-secondary);
+  padding: 2px 8px;
 }
 
 .recurring-due-tag {
-  display: inline-block;
-  padding: 2px 8px;
   border-radius: 10px;
+  display: inline-block;
   font-size: 0.72rem;
   font-weight: 500;
+  padding: 2px 8px;
 }
 
 .recurring-date-field {
@@ -2225,29 +2225,29 @@
 .recurring-done-group {
   .recurring-board-item {
     .recurring-board-title.done {
-      text-decoration: line-through;
       opacity: 0.6;
+      text-decoration: line-through;
     }
   }
 }
 
 .recurring-fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--recurring-accent);
-  color: white;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+  background: var(--recurring-accent);
+  border: 0;
+  border-radius: 50%;
+  bottom: 24px;
+  box-shadow: 0 4px 16px rgb(245, 158, 11, 0.4);
+  color: white;
   cursor: pointer;
+  display: flex;
+  height: 56px;
+  justify-content: center;
+  position: fixed;
+  right: 24px;
   transition: all var(--transition);
+  width: 56px;
   z-index: 100;
-  border: none;
 
   .material-symbols-outlined {
     font-size: 28px;
@@ -2255,8 +2255,8 @@
 
   &:hover {
     background: var(--recurring);
+    box-shadow: 0 6px 20px rgb(245, 158, 11, 0.5);
     transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
   }
 
   &:active {
@@ -2265,25 +2265,25 @@
 }
 
 .recurring-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 400;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
+  background: rgb(0, 0, 0, 0.4);
+  display: flex;
+  inset: 0;
+  justify-content: center;
   padding: 16px;
+  position: fixed;
+  z-index: 400;
 }
 
 .recurring-modal {
+  animation: modal-pop 0.2s ease-out;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  width: 100%;
   max-width: 420px;
-  animation: modal-pop 0.2s ease-out;
+  width: 100%;
 }
 
 @keyframes modal-pop {
@@ -2298,16 +2298,16 @@
 }
 
 .recurring-modal-header {
-  display: flex;
   align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
   justify-content: space-between;
   padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--border);
 
   h3 {
+    color: var(--recurring);
     font-size: 1rem;
     font-weight: 700;
-    color: var(--recurring);
   }
 
   .event-modal & h3 {
@@ -2316,17 +2316,17 @@
 }
 
 .recurring-modal-close {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius);
-  display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
   background: transparent;
-  border: none;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
   cursor: pointer;
+  display: flex;
+  height: 32px;
+  justify-content: center;
   transition: all var(--transition);
+  width: 32px;
 
   &:hover {
     background: var(--bg-hover);
@@ -2342,17 +2342,17 @@
 }
 
 .recurring-modal-input {
-  width: 100%;
-  padding: 10px 14px;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
   font-size: 0.9rem;
   outline: none;
+  padding: 10px 14px;
   transition:
     border-color var(--transition),
     box-shadow var(--transition);
+  width: 100%;
 
   &::placeholder {
     color: var(--text-tertiary);
@@ -2360,50 +2360,50 @@
 
   &:focus {
     border-color: var(--recurring-accent);
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 0 3px rgb(245, 158, 11, 0.15);
   }
 
   .event-modal &:focus {
     border-color: var(--events);
-    box-shadow: 0 0 0 3px rgba(155, 44, 44, 0.15);
+    box-shadow: 0 0 0 3px rgb(155, 44, 44, 0.15);
   }
 }
 
 .recurring-modal-select {
-  width: 100%;
-  padding: 10px 14px;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
-  font-size: 0.9rem;
   cursor: pointer;
+  font-size: 0.9rem;
   outline: none;
+  padding: 10px 14px;
+  width: 100%;
 
   &:focus {
     border-color: var(--recurring-accent);
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 0 3px rgb(245, 158, 11, 0.15);
   }
 
   .event-modal &:focus {
     border-color: var(--events);
-    box-shadow: 0 0 0 3px rgba(155, 44, 44, 0.15);
+    box-shadow: 0 0 0 3px rgb(155, 44, 44, 0.15);
   }
 }
 
 .recurring-modal-submit {
-  padding: 12px 16px;
   background: var(--recurring-accent);
-  color: white;
-  border: none;
+  border: 0;
   border-radius: var(--radius);
-  font-weight: 700;
-  font-size: 0.95rem;
+  color: white;
   cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-top: 4px;
+  padding: 12px 16px;
   transition:
     background var(--transition),
     transform var(--transition);
-  margin-top: 4px;
 
   &:hover {
     background: var(--recurring);
@@ -2431,13 +2431,13 @@
 }
 
 .recurrence-picker {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: var(--radius);
-  background: var(--bg);
-  border: 1px solid var(--border);
 }
 
 .recurrence-section {
@@ -2447,49 +2447,49 @@
 }
 
 .recurrence-label {
+  color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-secondary);
 }
 
 .recurrence-repeat-row {
+  align-items: center;
   display: flex;
   gap: 8px;
-  align-items: center;
 }
 
 .recurrence-number-input {
-  width: 64px;
-  padding: 8px 10px;
-  border-radius: var(--radius);
   background: var(--bg-raised);
   border: 1px solid var(--border);
+  border-radius: var(--radius);
   color: var(--text);
   font-size: 0.9rem;
   font-weight: 600;
-  text-align: center;
   outline: none;
+  padding: 8px 10px;
+  text-align: center;
+  width: 64px;
 
   &:focus {
     border-color: var(--recurring-accent);
-    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 0 2px rgb(245, 158, 11, 0.15);
   }
 }
 
 .recurrence-unit-select {
-  flex: 1;
-  padding: 8px 10px;
-  border-radius: var(--radius);
   background: var(--bg-raised);
   border: 1px solid var(--border);
+  border-radius: var(--radius);
   color: var(--text);
-  font-size: 0.9rem;
   cursor: pointer;
+  flex: 1;
+  font-size: 0.9rem;
   outline: none;
+  padding: 8px 10px;
 
   &:focus {
     border-color: var(--recurring-accent);
-    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 0 2px rgb(245, 158, 11, 0.15);
   }
 }
 
@@ -2499,27 +2499,27 @@
 }
 
 .recurrence-day-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--text-secondary);
   background: white;
   border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text-secondary);
   cursor: pointer;
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  height: 36px;
+  justify-content: center;
   transition: all 0.15s ease;
+  width: 36px;
 
   .dark & {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgb(255, 255, 255, 0.12);
   }
 
   &:hover {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.3);
+    background: rgb(245, 158, 11, 0.1);
+    border-color: rgb(245, 158, 11, 0.3);
     color: var(--recurring);
   }
 
@@ -2537,62 +2537,61 @@
 }
 
 .recurrence-row {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
   color: var(--text);
+  display: flex;
+  font-size: 0.85rem;
+  gap: 8px;
 }
 
 .recurrence-radio-row {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
   color: var(--text);
   cursor: pointer;
+  display: flex;
+  font-size: 0.85rem;
+  gap: 8px;
 
   input[type="radio"] {
     appearance: none;
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 2px solid var(--border-strong);
     background: var(--bg-raised);
+    border: 2px solid var(--border-strong);
+    border-radius: 50%;
     cursor: pointer;
+    height: 16px;
     position: relative;
+    width: 16px;
 
     &:checked {
-      border-color: var(--recurring-accent);
       background: var(--bg-raised);
+      border-color: var(--recurring-accent);
 
       &::after {
+        background: var(--recurring-accent);
+        border-radius: 50%;
         content: "";
+        height: 8px;
+        left: 2px;
         position: absolute;
         top: 2px;
-        left: 2px;
         width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--recurring-accent);
       }
     }
   }
 }
 
 .recurrence-date-input {
-  padding: 6px 10px;
-  border-radius: var(--radius);
   background: var(--bg-raised);
   border: 1px solid var(--border);
+  border-radius: var(--radius);
   color: var(--text);
   font-size: 0.82rem;
   outline: none;
+  padding: 6px 10px;
 
   &:disabled {
-    opacity: 0.4;
     cursor: not-allowed;
+    opacity: 0.4;
   }
 
   &:focus {
@@ -2601,20 +2600,20 @@
 }
 
 .recurrence-occurrence-input {
-  width: 60px;
-  padding: 6px 8px;
-  border-radius: var(--radius);
   background: var(--bg-raised);
   border: 1px solid var(--border);
+  border-radius: var(--radius);
   color: var(--text);
   font-size: 0.82rem;
   font-weight: 600;
-  text-align: center;
   outline: none;
+  padding: 6px 8px;
+  text-align: center;
+  width: 60px;
 
   &:disabled {
-    opacity: 0.4;
     cursor: not-allowed;
+    opacity: 0.4;
   }
 
   &:focus {
@@ -2623,8 +2622,8 @@
 }
 
 .recurrence-occurrence-label {
-  font-size: 0.82rem;
   color: var(--text-secondary);
+  font-size: 0.82rem;
 }
 
 // ── Mobile: always show delete on touch ──
@@ -2634,16 +2633,16 @@
   }
 
   .task-card {
-    touch-action: auto;
     cursor: default;
+    touch-action: auto;
   }
 }
 
 // ── Mobile: horizontal scroll board ──
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .todo-page {
-    padding: 16px 12px;
     max-width: 100vw;
+    padding: 16px 12px;
   }
 
   .todo-header h1 {
@@ -2651,13 +2650,13 @@
   }
 
   .board {
-    grid-template-columns: none;
     display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
     gap: 12px;
+    grid-template-columns: none;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
     padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
 
     scrollbar-width: none;
     &::-webkit-scrollbar {
@@ -2666,10 +2665,10 @@
   }
 
   .board-column {
-    min-width: 80vw;
-    max-width: 85vw;
-    scroll-snap-align: start;
     flex-shrink: 0;
+    max-width: 85vw;
+    min-width: 80vw;
+    scroll-snap-align: start;
   }
 
   .view-tabs {
@@ -2682,10 +2681,10 @@
   }
 
   .view-tab {
-    white-space: nowrap;
+    font-size: 0.8rem;
     min-width: 0;
     padding: 8px 12px;
-    font-size: 0.8rem;
+    white-space: nowrap;
   }
 
   .tab-label {
@@ -2705,13 +2704,13 @@
   }
 
   .shopping-columns {
-    grid-template-columns: none;
     display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
     gap: 12px;
+    grid-template-columns: none;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
     padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
 
     scrollbar-width: none;
     &::-webkit-scrollbar {
@@ -2720,14 +2719,14 @@
   }
 
   .shopping-column {
-    min-width: 80vw;
-    max-width: 85vw;
-    scroll-snap-align: start;
     flex-shrink: 0;
+    max-width: 85vw;
+    min-width: 80vw;
+    scroll-snap-align: start;
   }
 }
 
-@media (max-width: 480px) {
+@media (width <= 480px) {
   .board-column {
     min-width: 85vw;
   }
