@@ -1,38 +1,188 @@
-import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
-import { type Task, type TaskStatus } from "../domain/task-rules";
+import { useState } from "react";
+import { type RecurringCardActions } from "../components/BoardColumn";
+import { DatePickerDropdown } from "../components/DatePicker";
+import { type RecurringItemActions } from "../components/RecurringListItem";
 import {
-  useTasks,
-  useShopping,
+  type GroceryItemActions,
+  type ShoppingItemActions,
+} from "../components/ShoppingItems";
+import { type TaskActions } from "../components/TaskCard";
+import { Icon } from "../components/ui";
+import { type Task, type TaskStatus } from "../domain/task-rules";
+import { formatDueDate, formatHeadingDate } from "../lib/presentation";
+import {
   useGroceries,
   useRecurring,
   useSettings,
+  useShopping,
+  useTasks,
   type RecurringItem,
   type Settings,
 } from "../stores/hooks";
-import { Icon } from "../components/ui";
-import { DatePickerDropdown } from "../components/DatePicker";
-import { type TaskActions } from "../components/TaskCard";
-import { type RecurringCardActions } from "../components/BoardColumn";
-import {
-  type ShoppingItemActions,
-  type GroceryItemActions,
-} from "../components/ShoppingItems";
-import { type RecurringItemActions } from "../components/RecurringListItem";
 import { BoardTab } from "./BoardTab";
-import { ShoppingTab } from "./ShoppingTab";
 import { GroceriesTab } from "./GroceriesTab";
-import { RecurringTab } from "./RecurringTab";
 import { RecurringModal } from "./RecurringModal";
+import { RecurringTab } from "./RecurringTab";
+import { ShoppingTab } from "./ShoppingTab";
 import {
   SidebarDrawer,
   type SidebarDrawerActions,
   type SidebarPanel,
 } from "./SidebarDrawer";
-import { formatDueDate, formatHeadingDate } from "../lib/presentation";
 import "./TodoBase.scss";
 
 type ViewTab = "board" | "shopping" | "groceries" | "recurring";
+
+type TodoHeaderProps = {
+  resolvedTheme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
+  pushTheme: (theme: "light" | "dark") => void;
+  sidebarPanel: SidebarPanel | null;
+  setSidebarPanel: (panel: SidebarPanel | null) => void;
+};
+
+type ViewTabButtonProps = {
+  tab: ViewTab;
+  activeTab: ViewTab;
+  icon: string;
+  label: string;
+  onSelect: (tab: ViewTab) => void;
+  extraClassName?: string;
+  count?: number;
+  countClassName?: string;
+};
+
+type AddItemFormProps = {
+  viewTab: ViewTab;
+  newTitle: string;
+  setNewTitle: (title: string) => void;
+  addPlaceholder: string;
+  onSubmit: (e: React.FormEvent) => void;
+  newTaskDueDate: string | null;
+  showAddDatePicker: boolean;
+  onToggleDatePicker: () => void;
+  onSetNewTaskDueDate: (value: string | null) => void;
+  onCloseDatePicker: () => void;
+};
+
+const TodoHeader = ({
+  resolvedTheme,
+  setTheme,
+  pushTheme,
+  sidebarPanel,
+  setSidebarPanel,
+}: TodoHeaderProps) => (
+  <header className="todo-header">
+    <h1>
+      <Icon name="eco" /> {formatHeadingDate()}
+    </h1>
+    <div className="header-actions">
+      <button
+        className="theme-toggle"
+        onClick={() => {
+          const next = resolvedTheme === "dark" ? "light" : "dark";
+          setTheme(next);
+          pushTheme(next);
+        }}
+        aria-label="Toggle theme"
+      >
+        <Icon name={resolvedTheme === "dark" ? "light_mode" : "dark_mode"} />
+      </button>
+      <button
+        className="sidebar-toggle"
+        onClick={() => setSidebarPanel(sidebarPanel ? null : "settings")}
+        aria-label="Settings"
+      >
+        <Icon name="settings" />
+      </button>
+    </div>
+  </header>
+);
+
+const ViewTabButton = ({
+  tab,
+  activeTab,
+  icon,
+  label,
+  onSelect,
+  extraClassName,
+  count,
+  countClassName,
+}: ViewTabButtonProps) => (
+  <button
+    className={`view-tab ${extraClassName ?? ""} ${activeTab === tab ? "active" : ""}`.trim()}
+    onClick={() => onSelect(tab)}
+  >
+    <Icon name={icon} className="tab-icon" />
+    <span className="tab-label"> {label}</span>
+    {count && count > 0 ? (
+      <span className={`tab-count ${countClassName ?? ""}`.trim()}>
+        {count}
+      </span>
+    ) : null}
+  </button>
+);
+
+const AddItemForm = ({
+  viewTab,
+  newTitle,
+  setNewTitle,
+  addPlaceholder,
+  onSubmit,
+  newTaskDueDate,
+  showAddDatePicker,
+  onToggleDatePicker,
+  onSetNewTaskDueDate,
+  onCloseDatePicker,
+}: AddItemFormProps) => {
+  if (viewTab === "recurring") return null;
+
+  return (
+    <form className="add-task-form" onSubmit={onSubmit}>
+      <div className="add-form-main-row">
+        <input
+          className="add-task-input"
+          type="text"
+          placeholder={addPlaceholder}
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+        />
+        {viewTab === "board" && (
+          <div className="add-date-picker-wrapper">
+            <button
+              type="button"
+              className={`add-date-btn ${newTaskDueDate ? "has-date" : ""}`}
+              onClick={onToggleDatePicker}
+              title={
+                newTaskDueDate
+                  ? `Due: ${formatDueDate(newTaskDueDate)}`
+                  : "Set due date"
+              }
+            >
+              <Icon name="calendar_month" />
+              {newTaskDueDate && (
+                <span className="add-date-label">
+                  {formatDueDate(newTaskDueDate)}
+                </span>
+              )}
+            </button>
+            {showAddDatePicker && (
+              <DatePickerDropdown
+                value={newTaskDueDate}
+                onChange={onSetNewTaskDueDate}
+                onClose={onCloseDatePicker}
+              />
+            )}
+          </div>
+        )}
+        <button className="add-task-btn" type="submit">
+          Add
+        </button>
+      </div>
+    </form>
+  );
+};
 
 // Date/label helpers live in src/lib/presentation.ts;
 // toLocalDateKey lives in src/domain/recurrence.ts.
@@ -290,152 +440,108 @@ export default function TodoBase() {
 
   return (
     <div className="todo-page">
-      <header className="todo-header">
-        <h1>
-          <Icon name="eco" /> {formatHeadingDate()}
-        </h1>
-        <div className="header-actions">
-          <button
-            className="theme-toggle"
-            onClick={() => {
-              const next = resolvedTheme === "dark" ? "light" : "dark";
-              setTheme(next);
-              pushTheme(next);
-            }}
-            aria-label="Toggle theme"
-          >
-            <Icon
-              name={resolvedTheme === "dark" ? "light_mode" : "dark_mode"}
-            />
-          </button>
-          <button
-            className="sidebar-toggle"
-            onClick={() => setSidebarPanel(sidebarPanel ? null : "settings")}
-            aria-label="Settings"
-          >
-            <Icon name="settings" />
-          </button>
-        </div>
-      </header>
+      <TodoHeader
+        resolvedTheme={resolvedTheme}
+        setTheme={setTheme}
+        pushTheme={pushTheme}
+        sidebarPanel={sidebarPanel}
+        setSidebarPanel={setSidebarPanel}
+      />
 
       <div className="view-tabs">
-        <button
-          className={`view-tab ${viewTab === "board" ? "active" : ""}`}
-          onClick={() => setViewTab("board")}
-        >
-          <Icon name="dashboard" className="tab-icon" />
-          <span className="tab-label"> Board</span>
-        </button>
-        <button
-          className={`view-tab recurring-tab ${viewTab === "recurring" ? "active" : ""}`}
-          onClick={() => setViewTab("recurring")}
-        >
-          <Icon name="repeat" className="tab-icon" />
-          <span className="tab-label"> Recurring</span>{" "}
-          {recurringItems.length > 0 && (
-            <span className="tab-count recurring-count">
-              {recurringItems.length}
-            </span>
-          )}
-        </button>
-        <button
-          className={`view-tab shopping-tab ${viewTab === "shopping" ? "active" : ""}`}
-          onClick={() => setViewTab("shopping")}
-        >
-          <Icon name="shopping_bag" className="tab-icon" />
-          <span className="tab-label"> Shopping</span>{" "}
-          {shoppingCount > 0 && (
-            <span className="tab-count shopping-count">{shoppingCount}</span>
-          )}
-        </button>
-        <button
-          className={`view-tab grocery-tab ${viewTab === "groceries" ? "active" : ""}`}
-          onClick={() => setViewTab("groceries")}
-        >
-          <Icon name="grocery" className="tab-icon" />
-          <span className="tab-label"> Groceries</span>{" "}
-          {groceryItems.length > 0 && (
-            <span className="tab-count grocery-count">
-              {groceryItems.length}
-            </span>
-          )}
-        </button>
+        <ViewTabButton
+          tab="board"
+          activeTab={viewTab}
+          icon="dashboard"
+          label="Board"
+          onSelect={setViewTab}
+        />
+        <ViewTabButton
+          tab="recurring"
+          activeTab={viewTab}
+          icon="repeat"
+          label="Recurring"
+          onSelect={setViewTab}
+          extraClassName="recurring-tab"
+          count={recurringItems.length}
+          countClassName="recurring-count"
+        />
+        <ViewTabButton
+          tab="shopping"
+          activeTab={viewTab}
+          icon="shopping_bag"
+          label="Shopping"
+          onSelect={setViewTab}
+          extraClassName="shopping-tab"
+          count={shoppingCount}
+          countClassName="shopping-count"
+        />
+        <ViewTabButton
+          tab="groceries"
+          activeTab={viewTab}
+          icon="grocery"
+          label="Groceries"
+          onSelect={setViewTab}
+          extraClassName="grocery-tab"
+          count={groceryItems.length}
+          countClassName="grocery-count"
+        />
       </div>
 
-      {viewTab !== "recurring" && (
-        <form className="add-task-form" onSubmit={handleAddForm}>
-          <div className="add-form-main-row">
-            <input
-              className="add-task-input"
-              type="text"
-              placeholder={addPlaceholder}
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-            />
-            {viewTab === "board" && (
-              <div className="add-date-picker-wrapper">
-                <button
-                  type="button"
-                  className={`add-date-btn ${newTaskDueDate ? "has-date" : ""}`}
-                  onClick={() => setShowAddDatePicker(!showAddDatePicker)}
-                  title={
-                    newTaskDueDate
-                      ? `Due: ${formatDueDate(newTaskDueDate)}`
-                      : "Set due date"
-                  }
-                >
-                  <Icon name="calendar_month" />
-                  {newTaskDueDate && (
-                    <span className="add-date-label">
-                      {formatDueDate(newTaskDueDate)}
-                    </span>
-                  )}
-                </button>
-                {showAddDatePicker && (
-                  <DatePickerDropdown
-                    value={newTaskDueDate}
-                    onChange={(d) => setNewTaskDueDate(d)}
-                    onClose={() => setShowAddDatePicker(false)}
-                  />
-                )}
-              </div>
-            )}
-            <button className="add-task-btn" type="submit">
-              Add
-            </button>
-          </div>
-        </form>
-      )}
+      <AddItemForm
+        viewTab={viewTab}
+        newTitle={newTitle}
+        setNewTitle={setNewTitle}
+        addPlaceholder={addPlaceholder}
+        onSubmit={handleAddForm}
+        newTaskDueDate={newTaskDueDate}
+        showAddDatePicker={showAddDatePicker}
+        onToggleDatePicker={() => setShowAddDatePicker(!showAddDatePicker)}
+        onSetNewTaskDueDate={setNewTaskDueDate}
+        onCloseDatePicker={() => setShowAddDatePicker(false)}
+      />
 
-      {viewTab === "board" && (
-        <BoardTab
-          tasks={tasks}
-          taskActions={taskActions}
-          recurringItems={recurringItems}
-          recurringActions={recurringActions}
-          settings={settings}
-        />
-      )}
-
-      {viewTab === "shopping" && (
-        <ShoppingTab items={shoppingItems} actions={shoppingItemActions} />
-      )}
-
-      {viewTab === "groceries" && (
-        <GroceriesTab
-          items={groceryItems}
-          actions={groceryItemActions}
-          onClearBought={clearBoughtGroceries}
-        />
-      )}
-
-      {viewTab === "recurring" && (
-        <RecurringTab
-          items={recurringItems}
-          actions={recurringItemActions}
-          onAdd={(category) => setRecurringModal({ item: null, category })}
-        />
-      )}
+      {(() => {
+        switch (viewTab) {
+          case "board":
+            return (
+              <BoardTab
+                tasks={tasks}
+                taskActions={taskActions}
+                recurringItems={recurringItems}
+                recurringActions={recurringActions}
+                settings={settings}
+              />
+            );
+          case "shopping":
+            return (
+              <ShoppingTab
+                items={shoppingItems}
+                actions={shoppingItemActions}
+              />
+            );
+          case "groceries":
+            return (
+              <GroceriesTab
+                items={groceryItems}
+                actions={groceryItemActions}
+                onClearBought={clearBoughtGroceries}
+              />
+            );
+          case "recurring":
+            return (
+              <RecurringTab
+                items={recurringItems}
+                actions={recurringItemActions}
+                onAdd={(category) =>
+                  setRecurringModal({ item: null, category })
+                }
+              />
+            );
+          default:
+            return null;
+        }
+      })()}
 
       {recurringModal && (
         <RecurringModal
