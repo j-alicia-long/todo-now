@@ -10,6 +10,9 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 Codebase quality pass: extracted domain logic, added tooling, deepened the data layer.
 
+- Deepened the server with a generic per-family resource module: one `createResourceRoutes` call per list family replaces twenty near-identical CRUD handlers; persistence behind an injected `ListStore` seam, family rules as pure `construct`/`applyUpdate`/`applyRemove` hooks with writable-field whitelists; server.ts 730 → 270 lines; route + family-config tests (15 new) ([`0e1188a`](https://github.com/j-alicia-long/todo-now/commit/0e1188a))
+- Dropped the retired `priority` field from Tasks (schema, whitelist, fixtures, dead styles) with a read-migration stripping stored rows; the Matrix will start all Tasks Unsorted ([`8d393f0`](https://github.com/j-alicia-long/todo-now/commit/8d393f0))
+
 - Reworked recurrence scheduling: due dates land on the occurrence day, new `showEarlyDays` field controls Board lead time (defaults 14d long-term / 0d weekly), and completing a long-term item auto-advances its dueDate with endsOn/endsAfter enforcement ([`7b7d971`](https://github.com/j-alicia-long/todo-now/commit/7b7d971))
 - Split the page into one component per view: `src/pages/` → `src/tabs/`, TodoPage → TodoBase (a ~460-line controller), with BoardTab (owns drag-and-drop), ShoppingTab, GroceriesTab, RecurringTab, RecurringModal (owns its form state), and SidebarDrawer each deriving their own view slices
 - Decomposed TodoPage (~2,900 → ~1,225 lines) into `src/components/`: shared UI primitives and presentation helpers, then Board cards, then list rows and settings; components with 3+ callbacks take narrow action-handle objects (`TaskActions`, `RecurringCardActions`, `ShoppingItemActions`, …) instead of prop drilling ([`68080f7`](https://github.com/j-alicia-long/todo-now/commit/68080f7))
