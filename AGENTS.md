@@ -12,9 +12,10 @@ React PWA hosted as a Zo Site. Jennifer's personal task/shopping/grocery manager
 
 ## Architecture
 
-- Frontend: single-page app in `src/pages/TodoPage.tsx` (~1500 lines) + `TodoPage.scss` (~1600 lines)
+- Frontend: single-page app in `src/pages/TodoPage.tsx` (~2900 lines) + `TodoPage.scss` (~1600 lines)
 - Backend: `server.ts` with CRUD routes for `/api/tasks`, `/api/shopping`, `/api/groceries`, `/api/recurring`, `/api/settings`, `/api/archive`
 - Domain: `src/domain/task-rules.ts` — pure Task lifecycle rules (status transitions, due-date auto-promote, trash purge) shared by server and client; the `Task` type lives here. Tested via `bun test` (`src/domain/task-rules.test.ts`).
+- Stores: `src/stores/` — client data layer. `transport.ts` (narrow HTTP seam, swappable in tests), `entity-store.ts` (generic list store: fetch, optimistic update, refetch-reconcile on error), `hooks.ts` (per-family hooks: `useTasks`, `useShopping`, `useGroceries`, `useRecurring`, `useSettings`; entity types live here). TodoPage composes these hooks and keeps only cross-family coordination (e.g. completing a shopping-sourced task toggles the source item). Tested via `bun test` (`src/stores/entity-store.test.ts`, in-memory transport + happy-dom).
 - Data: JSON files in `data/` (gitignored — contains personal data)
 
 ## Tabs
