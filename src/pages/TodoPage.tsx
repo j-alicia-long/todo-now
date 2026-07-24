@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/components/theme-provider";
 import {
   DndContext,
@@ -22,99 +22,24 @@ import {
   Button as AriaButton,
 } from "react-aria-components";
 import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
+import { type Task, type TaskStatus } from "../domain/task-rules";
 import {
-  applyStatusChange,
-  type Task,
-  type TaskStatus,
-} from "../domain/task-rules";
+  useTasks,
+  useShopping,
+  useGroceries,
+  useRecurring,
+  useSettings,
+  isWeeklyRecurring,
+  type ShoppingItem,
+  type GroceryItem,
+  type RecurringItem,
+  type Settings,
+} from "../stores/hooks";
 import "./TodoPage.scss";
 
 type ViewTab = "board" | "shopping" | "groceries" | "recurring";
 type SidebarPanel =
   "todo-archive" | "todo-trash" | "shopping-archive" | "settings" | null;
-
-type ShoppingItem = {
-  id: string;
-  title: string;
-  done: boolean;
-  archived: boolean;
-  category: "want" | "need";
-  links: string[];
-  createdAt: string;
-  doneAt: string | null;
-};
-
-type GroceryItem = {
-  id: string;
-  title: string;
-  done: boolean;
-  createdAt: string;
-};
-
-type RecurringItem = {
-  id: string;
-  title: string;
-  frequency: "weekly" | "long-term";
-  dayOfWeek: number | null;
-  repeatEvery: number;
-  repeatUnit: "day" | "week" | "month" | "year";
-  repeatDays: number[];
-  endsType: "never" | "on" | "after";
-  endsOn: string | null;
-  endsAfter: number | null;
-  note: string;
-  link: string;
-  completedThisWeek: boolean;
-  lastCompletedAt: string | null;
-  dueDate: string | null;
-  area: string;
-  createdAt: string;
-  category: "task" | "reference";
-};
-
-type Settings = {
-  showArea: boolean;
-};
-
-const DEFAULT_SETTINGS: Settings = {
-  showArea: true,
-};
-
-type SyncedSettings = Settings & { theme?: "light" | "dark" };
-
-const loadSettingsLocal = (): Settings => {
-  try {
-    const raw = localStorage.getItem("todo-settings");
-    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch {
-    // corrupt localStorage entry — fall back to defaults
-  }
-  return { ...DEFAULT_SETTINGS };
-};
-
-const saveSettingsLocal = (s: Settings) => {
-  localStorage.setItem("todo-settings", JSON.stringify(s));
-};
-
-const fetchSettingsFromServer = async (): Promise<SyncedSettings | null> => {
-  try {
-    const res = await fetch("/api/settings", {
-      headers: { Accept: "application/json" },
-    });
-    if (res.ok) return await res.json();
-  } catch {
-    // network error — treat as no synced settings
-  }
-  return null;
-};
-
-const pushSettingsToServer = (s: SyncedSettings) => {
-  fetch("/api/settings", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(s),
-  }).catch(() => {});
-};
 
 const AREA_LABELS: Record<string, string> = {
   "life-admin": "Life Admin",
@@ -1709,11 +1634,21 @@ const SettingsView = ({
 // ── Main Page ──
 
 export default function TodoPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>([]);
-  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>([]);
-  const [recurringItems, setRecurringItems] = useState<RecurringItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { theme, setTheme } = useTheme();
+  const tasksStore = useTasks();
+  const shopping = useShopping();
+  const groceries = useGroceries();
+  const recurring = useRecurring();
+  const {
+    settings,
+    toggle: toggleSettingKey,
+    pushTheme,
+  } = useSettings({ onServerTheme: setTheme });
+  const tasks = tasksStore.tasks;
+  const shoppingItems = shopping.items;
+  const groceryItems = groceries.items;
+  const recurringItems = recurring.items;
+  const loading = !tasksStore.loaded;
   const [newTitle, setNewTitle] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState<string | null>(null);
   const [showAddDatePicker, setShowAddDatePicker] = useState(false);
@@ -1745,8 +1680,6 @@ export default function TodoPage() {
   const [showRecurringDatePicker, setShowRecurringDatePicker] = useState(false);
   const [recurringAddArea, setRecurringAddArea] = useState("");
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(null);
-  const [settings, setSettings] = useState<Settings>(loadSettingsLocal);
-  const { theme, setTheme } = useTheme();
 
   const resolvedTheme =
     theme === "system"
@@ -1763,119 +1696,23 @@ export default function TodoPage() {
       : [useSensor(PointerSensor, { activationConstraint: { distance: 8 } })])
   );
 
-  const fetchTasks = useCallback(async () => {
-    try {
-      const res = await fetch("/api/tasks", {
-        headers: { Accept: "application/json" },
-      });
-      const data = await res.json();
-      setTasks(data);
-    } catch (e) {
-      console.error("Failed to fetch tasks:", e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchShopping = useCallback(async () => {
-    try {
-      const res = await fetch("/api/shopping", {
-        headers: { Accept: "application/json" },
-      });
-      setShoppingItems(await res.json());
-    } catch (e) {
-      console.error("Failed to fetch shopping:", e);
-    }
-  }, []);
-
-  const fetchGroceries = useCallback(async () => {
-    try {
-      const res = await fetch("/api/groceries", {
-        headers: { Accept: "application/json" },
-      });
-      setGroceryItems(await res.json());
-    } catch (e) {
-      console.error("Failed to fetch groceries:", e);
-    }
-  }, []);
-
-  const fetchRecurring = useCallback(async () => {
-    try {
-      const res = await fetch("/api/recurring", {
-        headers: { Accept: "application/json" },
-      });
-      setRecurringItems(await res.json());
-    } catch (e) {
-      console.error("Failed to fetch recurring:", e);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTasks();
-    fetchShopping();
-    fetchGroceries();
-    fetchRecurring();
-  }, [fetchTasks, fetchShopping, fetchGroceries, fetchRecurring]);
-
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        fetchTasks();
-        fetchShopping();
-        fetchGroceries();
-        fetchRecurring();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibility);
-  }, [fetchTasks, fetchShopping, fetchGroceries, fetchRecurring]);
-
-  useEffect(() => {
-    fetchSettingsFromServer().then((serverSettings) => {
-      if (!serverSettings) return;
-      const { theme: serverTheme, ...labelSettings } = serverSettings;
-      const merged = { ...DEFAULT_SETTINGS, ...labelSettings } as Settings;
-      setSettings(merged);
-      saveSettingsLocal(merged);
-      if (serverTheme) setTheme(serverTheme);
-    });
-  }, []);
-
   const toggleSetting = (key: keyof Settings) => {
-    setSettings((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      saveSettingsLocal(next);
-      pushSettingsToServer({
-        ...next,
-        theme: resolvedTheme as "light" | "dark",
-      });
-      return next;
-    });
+    toggleSettingKey(key, resolvedTheme as "light" | "dark");
   };
 
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
     const title = newTitle.trim();
     if (!title) return;
-    const status: TaskStatus = "this-week";
-    try {
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ title, status, dueDate: newTaskDueDate }),
-      });
-      const task = await res.json();
-      setTasks((prev) => [...prev, task]);
-      setNewTitle("");
-      setNewTaskDueDate(null);
-      setShowAddDatePicker(false);
-    } catch (e) {
-      console.error("Failed to add task:", e);
-    }
+    const task = await tasksStore.add({
+      title,
+      status: "this-week" satisfies TaskStatus,
+      dueDate: newTaskDueDate,
+    });
+    if (!task) return;
+    setNewTitle("");
+    setNewTaskDueDate(null);
+    setShowAddDatePicker(false);
   };
 
   const addTaskFromList = async (
@@ -1883,107 +1720,34 @@ export default function TodoPage() {
     source: string,
     sourceItemId: string
   ) => {
-    try {
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          status: "this-week",
-          source,
-          sourceItemId,
-        }),
-      });
-      const task = await res.json();
-      setTasks((prev) => [...prev, task]);
-    } catch (e) {
-      console.error("Failed to add task from list:", e);
-    }
+    await tasksStore.add({ title, status: "this-week", source, sourceItemId });
   };
 
   const changeStatus = async (id: string, status: TaskStatus) => {
     const task = tasks.find((t) => t.id === id);
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id ? applyStatusChange(t, { status }, new Date()) : t
-      )
-    );
-    try {
-      await fetch(`/api/tasks/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ status }),
-      });
-      if (status === "done" && task?.sourceItemId) {
-        if (task.source === "shopping") toggleShoppingItem(task.sourceItemId);
-        else if (task.source === "grocery")
-          toggleGroceryItem(task.sourceItemId);
-      }
-    } catch (e) {
-      console.error("Failed to update task:", e);
-      fetchTasks();
+    const ok = await tasksStore.changeStatus(id, status);
+    // Cross-family effect: completing a task spawned from a list item
+    // marks the source item done too.
+    if (ok && status === "done" && task?.sourceItemId) {
+      if (task.source === "shopping") toggleShoppingItem(task.sourceItemId);
+      else if (task.source === "grocery") toggleGroceryItem(task.sourceItemId);
     }
   };
 
   const updateTask = async (id: string, fields: Partial<Task>) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...fields } : t))
-    );
-    try {
-      await fetch(`/api/tasks/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(fields),
-      });
-    } catch (e) {
-      console.error("Failed to update task:", e);
-      fetchTasks();
-    }
+    await tasksStore.update(id, fields);
   };
 
   const deleteTask = async (id: string) => {
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? applyStatusChange(t, { status: "trashed" }, new Date())
-          : t
-      )
-    );
-    try {
-      await fetch(`/api/tasks/${id}`, {
-        method: "DELETE",
-        headers: { Accept: "application/json" },
-      });
-    } catch (e) {
-      console.error("Failed to delete task:", e);
-      fetchTasks();
-    }
+    await tasksStore.trash(id);
   };
 
   const restoreTask = async (id: string) => {
-    changeStatus(id, "this-week");
+    tasksStore.restore(id);
   };
 
   const permanentDelete = async (id: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-    try {
-      await fetch(`/api/tasks/${id}?permanent=true`, {
-        method: "DELETE",
-        headers: { Accept: "application/json" },
-      });
-    } catch (e) {
-      console.error("Failed to permanently delete:", e);
-      fetchTasks();
-    }
+    await tasksStore.removePermanently(id);
   };
 
   // ── Shopping CRUD ──
@@ -1992,134 +1756,32 @@ export default function TodoPage() {
     e.preventDefault();
     const title = newTitle.trim();
     if (!title) return;
-    try {
-      const res = await fetch("/api/shopping", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ title, category: "need" }),
-      });
-      const item = await res.json();
-      setShoppingItems((prev) => [...prev, item]);
-      setNewTitle("");
-    } catch (e) {
-      console.error("Failed to add shopping item:", e);
-    }
+    const item = await shopping.add(title);
+    if (item) setNewTitle("");
   };
 
   const toggleShoppingItem = async (id: string) => {
-    setShoppingItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, done: !i.done } : i))
-    );
-    const item = shoppingItems.find((i) => i.id === id);
-    if (!item) return;
-    try {
-      await fetch(`/api/shopping/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ done: !item.done }),
-      });
-    } catch (e) {
-      console.error("Failed to toggle shopping item:", e);
-      fetchShopping();
-    }
+    await shopping.toggle(id);
   };
 
   const archiveShoppingItem = async (id: string) => {
-    setShoppingItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, archived: true } : i))
-    );
-    try {
-      await fetch(`/api/shopping/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ archived: true }),
-      });
-    } catch (e) {
-      console.error("Failed to archive shopping item:", e);
-      fetchShopping();
-    }
+    await shopping.setArchived(id, true);
   };
 
   const unarchiveShoppingItem = async (id: string) => {
-    setShoppingItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, archived: false } : i))
-    );
-    try {
-      await fetch(`/api/shopping/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ archived: false }),
-      });
-    } catch (e) {
-      console.error("Failed to unarchive shopping item:", e);
-      fetchShopping();
-    }
+    await shopping.setArchived(id, false);
   };
 
   const deleteShoppingItem = async (id: string) => {
-    setShoppingItems((prev) => prev.filter((i) => i.id !== id));
-    try {
-      await fetch(`/api/shopping/${id}`, {
-        method: "DELETE",
-        headers: { Accept: "application/json" },
-      });
-    } catch (e) {
-      console.error("Failed to delete shopping item:", e);
-      fetchShopping();
-    }
+    await shopping.remove(id);
   };
 
   const updateShoppingLinks = async (id: string, links: string[]) => {
-    setShoppingItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, links } : i))
-    );
-    try {
-      await fetch(`/api/shopping/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ links }),
-      });
-    } catch (e) {
-      console.error("Failed to update shopping links:", e);
-      fetchShopping();
-    }
+    await shopping.updateLinks(id, links);
   };
 
   const changeShoppingCategory = async (id: string) => {
-    const item = shoppingItems.find((i) => i.id === id);
-    if (!item) return;
-    const newCategory = item.category === "need" ? "want" : "need";
-    setShoppingItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, category: newCategory } : i))
-    );
-    try {
-      await fetch(`/api/shopping/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ category: newCategory }),
-      });
-    } catch (e) {
-      console.error("Failed to change shopping category:", e);
-      fetchShopping();
-    }
+    await shopping.toggleCategory(id);
   };
 
   // ── Grocery CRUD ──
@@ -2128,68 +1790,20 @@ export default function TodoPage() {
     e.preventDefault();
     const title = newTitle.trim();
     if (!title) return;
-    try {
-      const res = await fetch("/api/groceries", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ title }),
-      });
-      const item = await res.json();
-      setGroceryItems((prev) => [...prev, item]);
-      setNewTitle("");
-    } catch (e) {
-      console.error("Failed to add grocery item:", e);
-    }
+    const item = await groceries.add(title);
+    if (item) setNewTitle("");
   };
 
   const toggleGroceryItem = async (id: string) => {
-    setGroceryItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, done: !i.done } : i))
-    );
-    const item = groceryItems.find((i) => i.id === id);
-    if (!item) return;
-    try {
-      await fetch(`/api/groceries/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ done: !item.done }),
-      });
-    } catch (e) {
-      console.error("Failed to toggle grocery item:", e);
-      fetchGroceries();
-    }
+    await groceries.toggle(id);
   };
 
   const deleteGroceryItem = async (id: string) => {
-    setGroceryItems((prev) => prev.filter((i) => i.id !== id));
-    try {
-      await fetch(`/api/groceries/${id}`, {
-        method: "DELETE",
-        headers: { Accept: "application/json" },
-      });
-    } catch (e) {
-      console.error("Failed to delete grocery item:", e);
-      fetchGroceries();
-    }
+    await groceries.remove(id);
   };
 
   const clearBoughtGroceries = async () => {
-    setGroceryItems((prev) => prev.filter((i) => !i.done));
-    try {
-      await fetch("/api/groceries/clear-bought", {
-        method: "DELETE",
-        headers: { Accept: "application/json" },
-      });
-    } catch (e) {
-      console.error("Failed to clear bought groceries:", e);
-      fetchGroceries();
-    }
+    await groceries.clearBought();
   };
 
   // ── Recurring CRUD ──
@@ -2276,114 +1890,24 @@ export default function TodoPage() {
       updateRecurringItem(editingRecurringId, fields as Partial<RecurringItem>);
       closeRecurringModal();
     } else {
-      try {
-        const res = await fetch("/api/recurring", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify(fields),
-        });
-        const item = await res.json();
-        setRecurringItems((prev) => [...prev, item]);
-        closeRecurringModal();
-      } catch (e) {
-        console.error("Failed to add recurring item:", e);
-      }
+      const item = await recurring.add(fields);
+      if (item) closeRecurringModal();
     }
   };
 
   const toggleRecurringItem = async (id: string) => {
-    const item = recurringItems.find((i) => i.id === id);
-    if (!item) return;
-    const itemIsWeekly =
-      item.repeatUnit === "week" &&
-      item.repeatEvery === 1 &&
-      item.frequency !== "long-term";
-    if (itemIsWeekly) {
-      const next = !item.completedThisWeek;
-      setRecurringItems((prev) =>
-        prev.map((i) =>
-          i.id === id
-            ? {
-                ...i,
-                completedThisWeek: next,
-                lastCompletedAt: next
-                  ? new Date().toISOString()
-                  : i.lastCompletedAt,
-              }
-            : i
-        )
-      );
-      try {
-        await fetch(`/api/recurring/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ completedThisWeek: next }),
-        });
-      } catch (e) {
-        console.error("Failed to toggle recurring:", e);
-        fetchRecurring();
-      }
-    } else {
-      setRecurringItems((prev) =>
-        prev.map((i) =>
-          i.id === id ? { ...i, lastCompletedAt: new Date().toISOString() } : i
-        )
-      );
-      try {
-        await fetch(`/api/recurring/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ done: true }),
-        });
-      } catch (e) {
-        console.error("Failed to mark recurring done:", e);
-        fetchRecurring();
-      }
-    }
+    await recurring.toggle(id);
   };
 
   const deleteRecurringItem = async (id: string) => {
-    setRecurringItems((prev) => prev.filter((i) => i.id !== id));
-    try {
-      await fetch(`/api/recurring/${id}`, {
-        method: "DELETE",
-        headers: { Accept: "application/json" },
-      });
-    } catch (e) {
-      console.error("Failed to delete recurring:", e);
-      fetchRecurring();
-    }
+    await recurring.remove(id);
   };
 
   const updateRecurringItem = async (
     id: string,
     fields: Partial<RecurringItem>
   ) => {
-    setRecurringItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, ...fields } : i))
-    );
-    try {
-      await fetch(`/api/recurring/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(fields),
-      });
-    } catch (e) {
-      console.error("Failed to update recurring:", e);
-      fetchRecurring();
-    }
+    await recurring.update(id, fields);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -2419,10 +1943,7 @@ export default function TodoPage() {
   );
   const boughtGroceries = groceryItems.filter((i) => i.done);
   const unboughtGroceries = groceryItems.filter((i) => !i.done);
-  const isWeeklyItem = (i: RecurringItem) =>
-    i.repeatUnit === "week" &&
-    i.repeatEvery === 1 &&
-    i.frequency !== "long-term";
+  const isWeeklyItem = isWeeklyRecurring;
   const allTasks = recurringItems.filter((i) => i.category === "task");
   const allReferences = recurringItems.filter(
     (i) => i.category === "reference"
@@ -2498,7 +2019,7 @@ export default function TodoPage() {
             onClick={() => {
               const next = resolvedTheme === "dark" ? "light" : "dark";
               setTheme(next);
-              pushSettingsToServer({ ...settings, theme: next });
+              pushTheme(next);
             }}
             aria-label="Toggle theme"
           >
