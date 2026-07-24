@@ -511,21 +511,6 @@
     }
   }
 
-  &.priority-high {
-    background: var(--danger-soft);
-    color: var(--danger);
-  }
-
-  &.priority-medium {
-    background: var(--accent-soft);
-    color: var(--accent);
-  }
-
-  &.priority-low {
-    background: var(--bg-sunken);
-    color: var(--text-tertiary);
-  }
-
   &.area {
     background: var(--bg-sunken);
     color: var(--text-secondary);

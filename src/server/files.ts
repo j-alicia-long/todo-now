@@ -38,6 +38,8 @@ const writeJson = async (path: string, value: unknown): Promise<void> => {
 type LegacyTaskRecord = Omit<Task, "status"> & {
   status?: string;
   done?: boolean;
+  /** Retired 2026-07: replaced by binary Importance (see CONTEXT.md). */
+  priority?: string;
 };
 
 export const readTasks = async (): Promise<Task[]> => {
@@ -66,6 +68,10 @@ export const readTasks = async (): Promise<Task[]> => {
       if (t.source === "shopping" || t.source === "grocery") {
         needsMigration = true;
       }
+    }
+    if ("priority" in t) {
+      needsMigration = true;
+      delete t.priority;
     }
     return t as Task;
   });

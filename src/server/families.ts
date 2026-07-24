@@ -25,21 +25,12 @@ const newId = () => crypto.randomUUID().slice(0, 8);
 // ?permanent=true.
 
 export const tasksFamily: FamilyConfig<Task> = {
-  writable: [
-    "title",
-    "status",
-    "priority",
-    "effort",
-    "decisionLoad",
-    "area",
-    "dueDate",
-  ],
+  writable: ["title", "status", "effort", "decisionLoad", "area", "dueDate"],
   construct: (body, now) => ({
     id: newId(),
     title: (body.title as string) || "Untitled",
     done: false,
     status: (body.status as TaskStatus) || "this-week",
-    priority: (body.priority as Task["priority"]) || "medium",
     effort: (body.effort as Task["effort"]) || "medium",
     decisionLoad: (body.decisionLoad as Task["decisionLoad"]) || "medium",
     area: (body.area as string) || "life-admin",

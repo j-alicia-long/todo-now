@@ -83,7 +83,6 @@ const makeTask = (overrides: Partial<Task> = {}): Task => ({
   title: "A task",
   status: "this-week",
   done: false,
-  priority: "medium",
   effort: "medium",
   decisionLoad: "medium",
   area: "",

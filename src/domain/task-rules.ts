@@ -11,7 +11,6 @@ export type Task = {
   title: string;
   done: boolean;
   status: TaskStatus;
-  priority: "high" | "medium" | "low";
   effort: "low" | "medium" | "high";
   decisionLoad: "low" | "medium" | "high";
   area: string;
