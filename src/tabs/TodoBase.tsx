@@ -1,90 +1,43 @@
 import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
 import { type Task, type TaskStatus } from "../domain/task-rules";
-import {
-  boardWeeklyItems,
-  deriveFirstDueDate,
-  upcomingLongTermItems,
-} from "../domain/recurrence";
 import {
   useTasks,
   useShopping,
   useGroceries,
   useRecurring,
   useSettings,
-  isWeeklyRecurring,
   type RecurringItem,
   type Settings,
 } from "../stores/hooks";
 import { Icon } from "../components/ui";
 import { DatePickerDropdown } from "../components/DatePicker";
-import { TaskCard, type TaskActions } from "../components/TaskCard";
-import { FutureTaskCard } from "../components/FutureTaskCard";
-import { TrashCard } from "../components/TrashCard";
+import { type TaskActions } from "../components/TaskCard";
+import { type RecurringCardActions } from "../components/BoardColumn";
 import {
-  BoardColumn,
-  type RecurringCardActions,
-} from "../components/BoardColumn";
-import {
-  ShoppingListItem,
-  ShoppingDoneItem,
-  GroceryListItem,
   type ShoppingItemActions,
   type GroceryItemActions,
 } from "../components/ShoppingItems";
+import { type RecurringItemActions } from "../components/RecurringListItem";
+import { BoardTab } from "./BoardTab";
+import { ShoppingTab } from "./ShoppingTab";
+import { GroceriesTab } from "./GroceriesTab";
+import { RecurringTab } from "./RecurringTab";
+import { RecurringModal } from "./RecurringModal";
 import {
-  RecurringListItem,
-  type RecurringItemActions,
-} from "../components/RecurringListItem";
-import { SettingsView } from "../components/SettingsView";
-import {
-  AREA_OPTIONS,
-  DAY_LETTERS,
-  REPEAT_UNITS,
-  formatDueDate,
-  formatHeadingDate,
-  sortTasks,
-} from "../lib/presentation";
+  SidebarDrawer,
+  type SidebarDrawerActions,
+  type SidebarPanel,
+} from "./SidebarDrawer";
+import { formatDueDate, formatHeadingDate } from "../lib/presentation";
 import "./TodoBase.scss";
 
 type ViewTab = "board" | "shopping" | "groceries" | "recurring";
-type SidebarPanel =
-  "todo-archive" | "todo-trash" | "shopping-archive" | "settings" | null;
-
-const BOARD_COLUMNS: {
-  id: TaskStatus;
-  title: string;
-  icon: string;
-  colorClass: string;
-}[] = [
-  {
-    id: "this-week",
-    title: "This Week",
-    icon: "bolt",
-    colorClass: "col-purple",
-  },
-  {
-    id: "this-month",
-    title: "This Month",
-    icon: "date_range",
-    colorClass: "col-purple",
-  },
-  { id: "done", title: "Done", icon: "check_circle", colorClass: "col-green" },
-];
 
 // Date/label helpers live in src/lib/presentation.ts;
 // toLocalDateKey lives in src/domain/recurrence.ts.
 
-// ── Main Page ──
+// ── Controller ──
 
 export default function TodoBase() {
   const { theme, setTheme } = useTheme();
@@ -105,35 +58,14 @@ export default function TodoBase() {
   const [newTitle, setNewTitle] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState<string | null>(null);
   const [showAddDatePicker, setShowAddDatePicker] = useState(false);
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [viewTab, setViewTab] = useState<ViewTab>("board");
-  const [recurringAddLink, setRecurringAddLink] = useState("");
-  const [recurringAddNote, setRecurringAddNote] = useState("");
-  const [recurringAddDay, setRecurringAddDay] = useState<number | null>(null);
-  const [showRecurringModal, setShowRecurringModal] = useState(false);
-  const [editingRecurringId, setEditingRecurringId] = useState<string | null>(
-    null
-  );
-  const [recurringAddCategory, setRecurringAddCategory] = useState<
-    "task" | "reference"
-  >("task");
-  const [recurringAddRepeatEvery, setRecurringAddRepeatEvery] = useState(1);
-  const [recurringAddRepeatUnit, setRecurringAddRepeatUnit] = useState<
-    "day" | "week" | "month" | "year"
-  >("week");
-  const [recurringAddRepeatDays, setRecurringAddRepeatDays] = useState<
-    number[]
-  >([]);
-  const [recurringAddEndsType, setRecurringAddEndsType] = useState<
-    "never" | "on" | "after"
-  >("never");
-  const [recurringAddEndsOn, setRecurringAddEndsOn] = useState("");
-  const [recurringAddEndsAfter, setRecurringAddEndsAfter] = useState(13);
-  const [recurringAddDueDate, setRecurringAddDueDate] = useState("");
-  const [recurringAddShowEarly, setRecurringAddShowEarly] = useState("");
-  const [showRecurringDatePicker, setShowRecurringDatePicker] = useState(false);
-  const [recurringAddArea, setRecurringAddArea] = useState("");
-  const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(null);
+  // The modal mounts fresh on each open and owns its draft fields; the
+  // controller only tracks whether it's open and which item is being edited.
+  const [recurringModal, setRecurringModal] = useState<{
+    item: RecurringItem | null;
+    category: "task" | "reference";
+  } | null>(null);
+  const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel | null>(null);
 
   const resolvedTheme =
     theme === "system"
@@ -141,14 +73,6 @@ export default function TodoBase() {
         ? "dark"
         : "light"
       : theme;
-
-  const isTouchDevice =
-    typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
-  const sensors = useSensors(
-    ...(isTouchDevice
-      ? []
-      : [useSensor(PointerSensor, { activationConstraint: { distance: 8 } })])
-  );
 
   const toggleSetting = (key: keyof Settings) => {
     toggleSettingKey(key, resolvedTheme as "light" | "dark");
@@ -286,91 +210,17 @@ export default function TodoBase() {
 
   // ── Recurring CRUD ──
 
-  const closeRecurringModal = () => {
-    setShowRecurringModal(false);
-    setEditingRecurringId(null);
-    setNewTitle("");
-    setRecurringAddCategory("task");
-    setRecurringAddLink("");
-    setRecurringAddNote("");
-    setRecurringAddDay(null);
-    setRecurringAddRepeatEvery(1);
-    setRecurringAddRepeatUnit("week");
-    setRecurringAddRepeatDays([]);
-    setRecurringAddEndsType("never");
-    setRecurringAddEndsOn("");
-    setRecurringAddEndsAfter(13);
-    setRecurringAddDueDate("");
-    setRecurringAddShowEarly("");
-    setShowRecurringDatePicker(false);
-    setRecurringAddArea("");
-  };
-
   const openRecurringEdit = (item: RecurringItem) => {
-    setEditingRecurringId(item.id);
-    setNewTitle(item.title);
-    setRecurringAddCategory(item.category);
-    setRecurringAddLink(item.link);
-    setRecurringAddNote(item.note);
-    setRecurringAddDay(item.dayOfWeek);
-    setRecurringAddRepeatEvery(item.repeatEvery || 1);
-    setRecurringAddRepeatUnit(item.repeatUnit || "week");
-    setRecurringAddRepeatDays(item.repeatDays || []);
-    setRecurringAddEndsType(item.endsType || "never");
-    setRecurringAddEndsOn(item.endsOn || "");
-    setRecurringAddEndsAfter(item.endsAfter || 13);
-    setRecurringAddDueDate(item.dueDate || "");
-    setRecurringAddShowEarly(
-      item.showEarlyDays != null ? String(item.showEarlyDays) : ""
-    );
-    setRecurringAddArea(item.area || "");
-    setShowRecurringModal(true);
+    setRecurringModal({ item, category: item.category });
   };
 
-  const handleRecurringSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const title = newTitle.trim();
-    if (!title) return;
-    const isEvent = recurringAddCategory === "reference";
-    const effectiveDay = isEvent
-      ? recurringAddDay
-      : recurringAddRepeatDays.length > 0
-        ? recurringAddRepeatDays[0]
-        : recurringAddDay;
-    let dueDate: string | null = recurringAddDueDate || null;
-    if (!dueDate && effectiveDay != null && !isEvent) {
-      dueDate = deriveFirstDueDate(effectiveDay, new Date());
-    }
-    const fields: Record<string, unknown> = {
-      title,
-      frequency: "weekly",
-      category: recurringAddCategory,
-      link: recurringAddLink.trim(),
-      note: recurringAddNote.trim(),
-      dayOfWeek: effectiveDay,
-      dueDate,
-      area: recurringAddArea || "",
-    };
-    if (!isEvent) {
-      fields.repeatEvery = recurringAddRepeatEvery;
-      fields.repeatUnit = recurringAddRepeatUnit;
-      fields.repeatDays = recurringAddRepeatDays;
-      fields.endsType = recurringAddEndsType;
-      fields.endsOn = recurringAddEndsType === "on" ? recurringAddEndsOn : null;
-      fields.endsAfter =
-        recurringAddEndsType === "after" ? recurringAddEndsAfter : null;
-      fields.showEarlyDays =
-        recurringAddShowEarly.trim() === ""
-          ? null
-          : Math.max(0, parseInt(recurringAddShowEarly) || 0);
-    }
-
-    if (editingRecurringId) {
-      updateRecurringItem(editingRecurringId, fields as Partial<RecurringItem>);
-      closeRecurringModal();
+  const submitRecurring = async (fields: Partial<RecurringItem>) => {
+    if (recurringModal?.item) {
+      updateRecurringItem(recurringModal.item.id, fields);
+      setRecurringModal(null);
     } else {
       const item = await recurring.add(fields);
-      if (item) closeRecurringModal();
+      if (item) setRecurringModal(null);
     }
   };
 
@@ -402,66 +252,18 @@ export default function TodoBase() {
     edit: openRecurringEdit,
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const task = tasks.find((t) => t.id === event.active.id);
-    setActiveTask(task || null);
+  const sidebarActions: SidebarDrawerActions = {
+    navigate: setSidebarPanel,
+    close: () => setSidebarPanel(null),
+    restoreTask,
+    permanentDeleteTask: permanentDelete,
+    unarchiveShoppingItem,
+    deleteShoppingItem,
+    toggleSetting,
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveTask(null);
-    const { active, over } = event;
-    if (!over) return;
-    const taskId = active.id as string;
-    const targetColumn = over.id as TaskStatus;
-    const task = tasks.find((t) => t.id === taskId);
-    if (!task || task.status === targetColumn) return;
-    changeStatus(taskId, targetColumn);
-  };
-
-  const tasksByStatus = (status: TaskStatus) =>
-    tasks.filter((t) => t.status === status);
-  const futureTasks = tasksByStatus("future");
-  const trashedTasks = tasksByStatus("trashed");
-  const activeShoppingItems = shoppingItems.filter(
-    (i) => !i.archived && !i.done
-  );
-  const doneShoppingItems = shoppingItems.filter((i) => !i.archived && i.done);
-  const archivedShoppingItems = shoppingItems.filter((i) => i.archived);
-  const shoppingNeeds = activeShoppingItems.filter(
-    (i) => i.category === "need"
-  );
-  const shoppingWants = activeShoppingItems.filter(
-    (i) => i.category === "want"
-  );
-  const boughtGroceries = groceryItems.filter((i) => i.done);
-  const unboughtGroceries = groceryItems.filter((i) => !i.done);
-  const isWeeklyItem = isWeeklyRecurring;
-  const allTasks = recurringItems.filter((i) => i.category === "task");
-  const allReferences = recurringItems.filter(
-    (i) => i.category === "reference"
-  );
-  const weeklyTasks = allTasks.filter(isWeeklyItem);
-  const boardWeeklyTasks = boardWeeklyItems(weeklyTasks, new Date());
-  const unitOrder: Record<string, number> = {
-    day: 0,
-    week: 1,
-    month: 2,
-    year: 3,
-  };
-  const longTermTasks = allTasks
-    .filter((i) => !isWeeklyItem(i))
-    .sort(
-      (a, b) => (unitOrder[a.repeatUnit] ?? 9) - (unitOrder[b.repeatUnit] ?? 9)
-    );
-  const weeklyDoneCount = weeklyTasks.filter((i) => i.completedThisWeek).length;
-  const upcomingLongTerm = upcomingLongTermItems(longTermTasks, new Date());
-  const allBoardRecurring = [...boardWeeklyTasks, ...upcomingLongTerm];
-  const boardRecurringTasks = allBoardRecurring.filter(
-    (i) => !i.completedThisWeek
-  );
-  const boardRecurringDone = allBoardRecurring.filter(
-    (i) => i.completedThisWeek
-  );
+  // Tab badge counts (each tab derives its own view slices internally).
+  const shoppingCount = shoppingItems.filter((i) => !i.archived).length;
 
   if (loading) {
     return (
@@ -542,10 +344,8 @@ export default function TodoBase() {
         >
           <Icon name="shopping_bag" className="tab-icon" />
           <span className="tab-label"> Shopping</span>{" "}
-          {activeShoppingItems.length + doneShoppingItems.length > 0 && (
-            <span className="tab-count shopping-count">
-              {activeShoppingItems.length + doneShoppingItems.length}
-            </span>
+          {shoppingCount > 0 && (
+            <span className="tab-count shopping-count">{shoppingCount}</span>
           )}
         </button>
         <button
@@ -608,617 +408,53 @@ export default function TodoBase() {
       )}
 
       {viewTab === "board" && (
-        <DndContext
-          sensors={sensors}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="board">
-            {BOARD_COLUMNS.map((col) => (
-              <BoardColumn
-                key={col.id}
-                id={col.id}
-                title={col.title}
-                icon={col.icon}
-                colorClass={col.colorClass}
-                tasks={tasksByStatus(col.id)}
-                taskActions={taskActions}
-                settings={settings}
-                recurring={
-                  col.id === "this-week"
-                    ? { items: boardRecurringTasks, actions: recurringActions }
-                    : col.id === "done"
-                      ? { items: boardRecurringDone, actions: recurringActions }
-                      : undefined
-                }
-              />
-            ))}
-          </div>
-          <DragOverlay>
-            {activeTask ? (
-              <TaskCard
-                task={activeTask}
-                actions={{
-                  changeStatus: () => {},
-                  update: () => {},
-                  trash: () => {},
-                }}
-                settings={settings}
-                isDragOverlay
-              />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+        <BoardTab
+          tasks={tasks}
+          taskActions={taskActions}
+          recurringItems={recurringItems}
+          recurringActions={recurringActions}
+          settings={settings}
+        />
       )}
 
       {viewTab === "shopping" && (
-        <div className="shopping-board">
-          <div className="shopping-columns">
-            <div className="shopping-column">
-              <div className="shopping-column-header needs-header">
-                <Icon name="priority_high" className="column-icon" />
-                <h3>Needs</h3>
-                <span className="column-count">{shoppingNeeds.length}</span>
-              </div>
-              {shoppingNeeds.length === 0 ? (
-                <div className="column-empty">No items needed right now</div>
-              ) : (
-                shoppingNeeds.map((item) => (
-                  <ShoppingListItem
-                    key={item.id}
-                    item={item}
-                    actions={shoppingItemActions}
-                  />
-                ))
-              )}
-            </div>
-            <div className="shopping-column">
-              <div className="shopping-column-header wants-header">
-                <Icon name="favorite" className="column-icon" />
-                <h3>Wants</h3>
-                <span className="column-count">{shoppingWants.length}</span>
-              </div>
-              {shoppingWants.length === 0 ? (
-                <div className="column-empty">No wishlist items</div>
-              ) : (
-                shoppingWants.map((item) => (
-                  <ShoppingListItem
-                    key={item.id}
-                    item={item}
-                    actions={shoppingItemActions}
-                  />
-                ))
-              )}
-            </div>
-            <div className="shopping-column">
-              <div className="shopping-column-header done-header">
-                <Icon name="check_circle" className="column-icon" />
-                <h3>Done</h3>
-                <span className="column-count">{doneShoppingItems.length}</span>
-              </div>
-              {doneShoppingItems.length === 0 ? (
-                <div className="column-empty">Nothing bought yet</div>
-              ) : (
-                doneShoppingItems.map((item) => (
-                  <ShoppingDoneItem
-                    key={item.id}
-                    item={item}
-                    onUndone={toggleShoppingItem}
-                    onDelete={deleteShoppingItem}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+        <ShoppingTab items={shoppingItems} actions={shoppingItemActions} />
       )}
 
       {viewTab === "groceries" && (
-        <div className="grocery-board">
-          <div className="grocery-column">
-            <div className="grocery-column-header">
-              <Icon name="shopping_cart" className="column-icon" />
-              <h3>Groceries</h3>
-              <span className="column-count">{unboughtGroceries.length}</span>
-              {boughtGroceries.length > 0 && (
-                <button
-                  className="clear-bought-btn"
-                  onClick={clearBoughtGroceries}
-                >
-                  <Icon name="delete_sweep" /> Clear {boughtGroceries.length}{" "}
-                  bought
-                </button>
-              )}
-            </div>
-            {groceryItems.length === 0 ? (
-              <div className="column-empty">Grocery list is empty</div>
-            ) : (
-              <>
-                {unboughtGroceries.map((item) => (
-                  <GroceryListItem
-                    key={item.id}
-                    item={item}
-                    actions={groceryItemActions}
-                  />
-                ))}
-                {boughtGroceries.map((item) => (
-                  <GroceryListItem
-                    key={item.id}
-                    item={item}
-                    actions={groceryItemActions}
-                  />
-                ))}
-              </>
-            )}
-          </div>
-        </div>
+        <GroceriesTab
+          items={groceryItems}
+          actions={groceryItemActions}
+          onClearBought={clearBoughtGroceries}
+        />
       )}
 
       {viewTab === "recurring" && (
-        <div className="recurring-board">
-          <div className="recurring-left-col">
-            <button
-              className="recurring-col-add-btn"
-              onClick={() => {
-                setRecurringAddCategory("task");
-                setShowRecurringModal(true);
-              }}
-            >
-              <Icon name="add" /> Add Task
-            </button>
-            <div className="recurring-section">
-              <div className="recurring-section-header">
-                <Icon name="check_circle" className="column-icon" />
-                <h3>Weekly Tasks</h3>
-                {weeklyTasks.length > 0 && (
-                  <span className="recurring-progress">
-                    {weeklyDoneCount}/{weeklyTasks.length} done
-                  </span>
-                )}
-              </div>
-              {weeklyTasks.length === 0 ? (
-                <div className="column-empty">No weekly tasks yet</div>
-              ) : (
-                weeklyTasks.map((item) => (
-                  <RecurringListItem
-                    key={item.id}
-                    item={item}
-                    actions={recurringItemActions}
-                  />
-                ))
-              )}
-            </div>
-            {longTermTasks.length > 0 && (
-              <div className="recurring-section long-term-section">
-                <div className="recurring-section-header">
-                  <Icon name="event_repeat" className="column-icon" />
-                  <h3>Long-term</h3>
-                  <span className="column-count">{longTermTasks.length}</span>
-                </div>
-                {longTermTasks.map((item) => (
-                  <RecurringListItem
-                    key={item.id}
-                    item={item}
-                    actions={recurringItemActions}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="recurring-right-col">
-            <button
-              className="recurring-col-add-btn events-add-btn"
-              onClick={() => {
-                setRecurringAddCategory("reference");
-                setShowRecurringModal(true);
-              }}
-            >
-              <Icon name="add" /> Add Event / Class
-            </button>
-            <div className="recurring-section events-section">
-              <div className="recurring-section-header">
-                <Icon name="event" className="column-icon" />
-                <h3>Events & Classes</h3>
-                <span className="column-count">{allReferences.length}</span>
-              </div>
-              {allReferences.length === 0 ? (
-                <div className="column-empty">No events or classes yet</div>
-              ) : (
-                allReferences.map((item) => (
-                  <RecurringListItem
-                    key={item.id}
-                    item={item}
-                    actions={recurringItemActions}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+        <RecurringTab
+          items={recurringItems}
+          actions={recurringItemActions}
+          onAdd={(category) => setRecurringModal({ item: null, category })}
+        />
       )}
 
-      {showRecurringModal && (
-        <div className="recurring-modal-overlay" onClick={closeRecurringModal}>
-          <div
-            className={`recurring-modal ${recurringAddCategory === "reference" ? "event-modal" : ""}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="recurring-modal-header">
-              <h3>
-                {editingRecurringId
-                  ? recurringAddCategory === "reference"
-                    ? "Edit Event / Class"
-                    : "Edit Recurring Task"
-                  : recurringAddCategory === "reference"
-                    ? "Add Event / Class"
-                    : "Add Recurring Task"}
-              </h3>
-              <button
-                className="recurring-modal-close"
-                onClick={closeRecurringModal}
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-            <form
-              className="recurring-modal-form"
-              onSubmit={handleRecurringSubmit}
-            >
-              <input
-                className="recurring-modal-input"
-                type="text"
-                placeholder={
-                  recurringAddCategory === "reference"
-                    ? "Event or class name..."
-                    : "What do you do regularly?"
-                }
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                autoFocus
-              />
-
-              <div className="recurring-modal-row">
-                <select
-                  className="recurring-modal-select"
-                  value={recurringAddArea}
-                  onChange={(e) => setRecurringAddArea(e.target.value)}
-                >
-                  <option value="">Area (optional)</option>
-                  {AREA_OPTIONS.map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                <div className="add-date-picker-wrapper">
-                  <button
-                    type="button"
-                    className={`add-date-btn recurring-date-btn ${recurringAddDueDate ? "has-date" : ""}`}
-                    onClick={() =>
-                      setShowRecurringDatePicker(!showRecurringDatePicker)
-                    }
-                    title={
-                      recurringAddDueDate
-                        ? `Due: ${formatDueDate(recurringAddDueDate)}`
-                        : "Set due date"
-                    }
-                  >
-                    <Icon name="calendar_month" />
-                    {recurringAddDueDate ? (
-                      <span className="add-date-label">
-                        {formatDueDate(recurringAddDueDate)}
-                      </span>
-                    ) : (
-                      <span className="add-date-label">Date</span>
-                    )}
-                  </button>
-                  {showRecurringDatePicker && (
-                    <DatePickerDropdown
-                      value={recurringAddDueDate || null}
-                      onChange={(d) => setRecurringAddDueDate(d || "")}
-                      onClose={() => setShowRecurringDatePicker(false)}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {recurringAddCategory === "task" && (
-                <div className="recurrence-picker">
-                  <div className="recurrence-section">
-                    <label className="recurrence-label">Repeat every</label>
-                    <div className="recurrence-repeat-row">
-                      <input
-                        className="recurrence-number-input"
-                        type="number"
-                        min={1}
-                        max={99}
-                        value={recurringAddRepeatEvery}
-                        onChange={(e) =>
-                          setRecurringAddRepeatEvery(
-                            Math.max(1, parseInt(e.target.value) || 1)
-                          )
-                        }
-                      />
-                      <select
-                        className="recurrence-unit-select"
-                        value={recurringAddRepeatUnit}
-                        onChange={(e) =>
-                          setRecurringAddRepeatUnit(
-                            e.target.value as "day" | "week" | "month" | "year"
-                          )
-                        }
-                      >
-                        {REPEAT_UNITS.map((u) => (
-                          <option key={u} value={u}>
-                            {recurringAddRepeatEvery === 1 ? u : u + "s"}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {recurringAddRepeatUnit === "week" && (
-                    <div className="recurrence-section">
-                      <label className="recurrence-label">Repeat on</label>
-                      <div className="recurrence-days-row">
-                        {DAY_LETTERS.map((letter, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            className={`recurrence-day-btn ${recurringAddRepeatDays.includes(idx) ? "active" : ""}`}
-                            onClick={() => {
-                              setRecurringAddRepeatDays((prev) =>
-                                prev.includes(idx)
-                                  ? prev.filter((d) => d !== idx)
-                                  : [...prev, idx].sort()
-                              );
-                            }}
-                          >
-                            {letter}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="recurrence-section">
-                    <label className="recurrence-label">Ends</label>
-                    <div className="recurrence-ends-options">
-                      <label className="recurrence-radio-row">
-                        <input
-                          type="radio"
-                          name="ends"
-                          checked={recurringAddEndsType === "never"}
-                          onChange={() => setRecurringAddEndsType("never")}
-                        />
-                        <span>Never</span>
-                      </label>
-                      <label className="recurrence-radio-row">
-                        <input
-                          type="radio"
-                          name="ends"
-                          checked={recurringAddEndsType === "on"}
-                          onChange={() => setRecurringAddEndsType("on")}
-                        />
-                        <span>On</span>
-                        <input
-                          type="date"
-                          className="recurrence-date-input"
-                          value={recurringAddEndsOn}
-                          onChange={(e) => {
-                            setRecurringAddEndsOn(e.target.value);
-                            setRecurringAddEndsType("on");
-                          }}
-                          disabled={recurringAddEndsType !== "on"}
-                        />
-                      </label>
-                      <label className="recurrence-radio-row">
-                        <input
-                          type="radio"
-                          name="ends"
-                          checked={recurringAddEndsType === "after"}
-                          onChange={() => setRecurringAddEndsType("after")}
-                        />
-                        <span>After</span>
-                        <input
-                          type="number"
-                          className="recurrence-occurrence-input"
-                          min={1}
-                          value={recurringAddEndsAfter}
-                          onChange={(e) => {
-                            setRecurringAddEndsAfter(
-                              Math.max(1, parseInt(e.target.value) || 1)
-                            );
-                            setRecurringAddEndsType("after");
-                          }}
-                          disabled={recurringAddEndsType !== "after"}
-                        />
-                        <span className="recurrence-occurrence-label">
-                          occurrences
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="recurrence-section">
-                    <label className="recurrence-label">Show on board</label>
-                    <div className="recurrence-row">
-                      <input
-                        type="number"
-                        className="recurrence-occurrence-input"
-                        min={0}
-                        placeholder={
-                          recurringAddRepeatUnit === "week" &&
-                          recurringAddRepeatEvery === 1
-                            ? "0"
-                            : "14"
-                        }
-                        value={recurringAddShowEarly}
-                        onChange={(e) =>
-                          setRecurringAddShowEarly(e.target.value)
-                        }
-                      />
-                      <span className="recurrence-occurrence-label">
-                        days early
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <input
-                className="recurring-modal-input"
-                type="url"
-                placeholder="Link (optional) — e.g. schedule page, group chat"
-                value={recurringAddLink}
-                onChange={(e) => setRecurringAddLink(e.target.value)}
-              />
-              <input
-                className="recurring-modal-input"
-                type="text"
-                placeholder="Note (optional)"
-                value={recurringAddNote}
-                onChange={(e) => setRecurringAddNote(e.target.value)}
-              />
-              <button className="recurring-modal-submit" type="submit">
-                {editingRecurringId ? "Save" : "Add"}
-              </button>
-            </form>
-          </div>
-        </div>
+      {recurringModal && (
+        <RecurringModal
+          item={recurringModal.item}
+          category={recurringModal.category}
+          onSubmit={submitRecurring}
+          onClose={() => setRecurringModal(null)}
+        />
       )}
 
       {sidebarPanel && (
-        <div className="sidebar-overlay" onClick={() => setSidebarPanel(null)}>
-          <div className="sidebar" onClick={(e) => e.stopPropagation()}>
-            <div className="sidebar-header">
-              <h2>Settings</h2>
-              <button
-                className="sidebar-close"
-                onClick={() => setSidebarPanel(null)}
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-            <nav className="sidebar-nav">
-              <button
-                className={`sidebar-nav-item ${sidebarPanel === "todo-archive" ? "active" : ""}`}
-                onClick={() => setSidebarPanel("todo-archive")}
-              >
-                <Icon name="inventory_2" /> Todo Archive{" "}
-                {futureTasks.length > 0 && (
-                  <span className="sidebar-count">{futureTasks.length}</span>
-                )}
-              </button>
-              <button
-                className={`sidebar-nav-item ${sidebarPanel === "todo-trash" ? "active" : ""}`}
-                onClick={() => setSidebarPanel("todo-trash")}
-              >
-                <Icon name="delete" /> Todo Trash{" "}
-                {trashedTasks.length > 0 && (
-                  <span className="sidebar-count">{trashedTasks.length}</span>
-                )}
-              </button>
-              <button
-                className={`sidebar-nav-item ${sidebarPanel === "shopping-archive" ? "active" : ""}`}
-                onClick={() => setSidebarPanel("shopping-archive")}
-              >
-                <Icon name="archive" /> Shopping Archive{" "}
-                {archivedShoppingItems.length > 0 && (
-                  <span className="sidebar-count">
-                    {archivedShoppingItems.length}
-                  </span>
-                )}
-              </button>
-              <button
-                className={`sidebar-nav-item ${sidebarPanel === "settings" ? "active" : ""}`}
-                onClick={() => setSidebarPanel("settings")}
-              >
-                <Icon name="tune" /> Display Settings
-              </button>
-            </nav>
-            <div className="sidebar-content">
-              {sidebarPanel === "todo-archive" && (
-                <div className="future-list">
-                  {futureTasks.length === 0 ? (
-                    <div className="sidebar-empty">
-                      No archived tasks. Use the archive button on cards to save
-                      ideas for later.
-                    </div>
-                  ) : (
-                    sortTasks(futureTasks).map((task) => (
-                      <FutureTaskCard
-                        key={task.id}
-                        task={task}
-                        actions={taskActions}
-                        settings={settings}
-                      />
-                    ))
-                  )}
-                </div>
-              )}
-              {sidebarPanel === "todo-trash" && (
-                <div className="trash-list">
-                  {trashedTasks.length === 0 ? (
-                    <div className="sidebar-empty">
-                      Trash is empty. Deleted tasks appear here for 30 days.
-                    </div>
-                  ) : (
-                    trashedTasks.map((task) => (
-                      <TrashCard
-                        key={task.id}
-                        task={task}
-                        onRestore={restoreTask}
-                        onPermanentDelete={permanentDelete}
-                      />
-                    ))
-                  )}
-                </div>
-              )}
-              {sidebarPanel === "shopping-archive" && (
-                <div className="simple-list shopping-list">
-                  {archivedShoppingItems.length === 0 ? (
-                    <div className="sidebar-empty">
-                      No archived shopping items.
-                    </div>
-                  ) : (
-                    archivedShoppingItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className={`list-item shopping-item archived ${item.done ? "checked" : ""}`}
-                      >
-                        <span
-                          className={`list-title ${item.done ? "done" : ""}`}
-                        >
-                          {item.title}
-                        </span>
-                        <div className="list-actions">
-                          <button
-                            className="list-action-btn"
-                            onClick={() => unarchiveShoppingItem(item.id)}
-                            title="Restore"
-                          >
-                            <Icon name="undo" />
-                          </button>
-                          <button
-                            className="list-action-btn delete"
-                            onClick={() => deleteShoppingItem(item.id)}
-                            title="Delete"
-                          >
-                            <Icon name="close" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-              {sidebarPanel === "settings" && (
-                <SettingsView settings={settings} onToggle={toggleSetting} />
-              )}
-            </div>
-          </div>
-        </div>
+        <SidebarDrawer
+          panel={sidebarPanel}
+          tasks={tasks}
+          shoppingItems={shoppingItems}
+          taskActions={taskActions}
+          settings={settings}
+          actions={sidebarActions}
+        />
       )}
     </div>
   );
