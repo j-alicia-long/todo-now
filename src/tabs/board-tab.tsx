@@ -18,11 +18,11 @@ import {
   type RecurringItem,
 } from "../domain/recurrence";
 import { type Settings } from "../stores/hooks";
-import { TaskCard, type TaskActions } from "../components/TaskCard";
+import { TaskCard, type TaskActions } from "../components/task-card";
 import {
   BoardColumn,
   type RecurringCardActions,
-} from "../components/BoardColumn";
+} from "../components/board-column";
 
 const BOARD_COLUMNS: {
   id: TaskStatus;

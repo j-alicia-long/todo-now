@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { type Task } from "../domain/task-rules";
 import { type Settings } from "../stores/hooks";
 import { Icon, TagSelect } from "./ui";
-import { DatePickerModal } from "./DatePicker";
-import { type TaskActions } from "./TaskCard";
+import { DatePickerModal } from "./date-picker";
+import { type TaskActions } from "./task-card";
 import {
   AREA_COLORS,
   AREA_LABELS,

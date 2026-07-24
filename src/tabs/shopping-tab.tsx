@@ -6,7 +6,7 @@ import {
   ShoppingListItem,
   ShoppingDoneItem,
   type ShoppingItemActions,
-} from "../components/ShoppingItems";
+} from "../components/shopping-items";
 
 export const ShoppingTab = ({
   items,

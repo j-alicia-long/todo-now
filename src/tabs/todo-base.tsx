@@ -1,13 +1,13 @@
 import { useTheme } from "@/components/theme-provider";
 import { useState } from "react";
-import { type RecurringCardActions } from "../components/BoardColumn";
-import { DatePickerDropdown } from "../components/DatePicker";
-import { type RecurringItemActions } from "../components/RecurringListItem";
+import { type RecurringCardActions } from "../components/board-column";
+import { DatePickerDropdown } from "../components/date-picker";
+import { type RecurringItemActions } from "../components/recurring-list-item";
 import {
   type GroceryItemActions,
   type ShoppingItemActions,
-} from "../components/ShoppingItems";
-import { type TaskActions } from "../components/TaskCard";
+} from "../components/shopping-items";
+import { type TaskActions } from "../components/task-card";
 import { Icon } from "../components/ui";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import { formatDueDate, formatHeadingDate } from "../lib/presentation";
@@ -20,17 +20,17 @@ import {
   type RecurringItem,
   type Settings,
 } from "../stores/hooks";
-import { BoardTab } from "./BoardTab";
-import { GroceriesTab } from "./GroceriesTab";
-import { RecurringModal } from "./RecurringModal";
-import { RecurringTab } from "./RecurringTab";
-import { ShoppingTab } from "./ShoppingTab";
+import { BoardTab } from "./board-tab";
+import { GroceriesTab } from "./groceries-tab";
+import { RecurringModal } from "./recurring-modal";
+import { RecurringTab } from "./recurring-tab";
+import { ShoppingTab } from "./shopping-tab";
 import {
   SidebarDrawer,
   type SidebarDrawerActions,
   type SidebarPanel,
-} from "./SidebarDrawer";
-import "./TodoBase.scss";
+} from "./sidebar-drawer";
+import "./todo-base.scss";
 
 type ViewTab = "board" | "shopping" | "groceries" | "recurring";
 
@@ -189,7 +189,7 @@ const AddItemForm = ({
 
 // ── Controller ──
 
-export default function TodoBase() {
+const TodoBase = () => {
   const { theme, setTheme } = useTheme();
   const tasksStore = useTasks();
   const shopping = useShopping();
@@ -564,4 +564,6 @@ export default function TodoBase() {
       )}
     </div>
   );
-}
+};
+
+export default TodoBase;

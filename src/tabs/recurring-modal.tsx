@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { deriveFirstDueDate, type RecurringItem } from "../domain/recurrence";
 import { Icon } from "../components/ui";
-import { DatePickerDropdown } from "../components/DatePicker";
+import { DatePickerDropdown } from "../components/date-picker";
 import {
   AREA_OPTIONS,
   DAY_LETTERS,

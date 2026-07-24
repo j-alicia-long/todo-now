@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
+import App from "./app";
 import "./styles.scss";
 
 // AI agents: read README.md for navigation and contribution guidance.

@@ -5,7 +5,7 @@ import { Icon } from "../components/ui";
 import {
   GroceryListItem,
   type GroceryItemActions,
-} from "../components/ShoppingItems";
+} from "../components/shopping-items";
 
 export const GroceriesTab = ({
   items,

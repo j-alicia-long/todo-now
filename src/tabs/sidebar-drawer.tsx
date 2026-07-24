@@ -4,10 +4,10 @@
 import { type Task } from "../domain/task-rules";
 import { type ShoppingItem, type Settings } from "../stores/hooks";
 import { Icon } from "../components/ui";
-import { FutureTaskCard } from "../components/FutureTaskCard";
-import { TrashCard } from "../components/TrashCard";
-import { SettingsView } from "../components/SettingsView";
-import { type TaskActions } from "../components/TaskCard";
+import { FutureTaskCard } from "../components/future-task-card";
+import { TrashCard } from "../components/trash-card";
+import { SettingsView } from "../components/settings-view";
+import { type TaskActions } from "../components/task-card";
 import { sortTasks } from "../lib/presentation";
 
 export type SidebarPanel =

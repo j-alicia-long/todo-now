@@ -1,8 +1,8 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import TodoBase from "./tabs/TodoBase";
+import TodoBase from "./tabs/todo-base";
 import { ThemeProvider } from "@/components/theme-provider";
 
-export default function App() {
+const App = () => {
   return (
     <ThemeProvider defaultTheme="light">
       <BrowserRouter basename="/todo">
@@ -12,4 +12,6 @@ export default function App() {
       </BrowserRouter>
     </ThemeProvider>
   );
-}
+};
+
+export default App;

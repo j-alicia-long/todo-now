@@ -5,7 +5,7 @@ import { Icon } from "../components/ui";
 import {
   RecurringListItem,
   type RecurringItemActions,
-} from "../components/RecurringListItem";
+} from "../components/recurring-list-item";
 
 const UNIT_ORDER: Record<string, number> = {
   day: 0,

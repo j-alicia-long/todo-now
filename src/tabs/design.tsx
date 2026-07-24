@@ -63,7 +63,7 @@ const Section = ({
  * live in one place. Use it as the reference when building pages, and keep it
  * updated when you add or change a kit component.
  */
-export default function DesignKitDemo() {
+const DesignKitDemo = () => {
   const [view, setView] = useState<"grid" | "list" | "detail">("grid");
 
   return (
@@ -281,4 +281,6 @@ export default function DesignKitDemo() {
       </div>
     </main>
   );
-}
+};
+
+export default DesignKitDemo;

@@ -6,7 +6,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import { type Settings } from "../stores/hooks";
 import { Icon, TagSelect } from "./ui";
-import { DatePickerModal } from "./DatePicker";
+import { DatePickerModal } from "./date-picker";
 import {
   AREA_COLORS,
   AREA_LABELS,
