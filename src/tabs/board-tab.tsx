@@ -62,15 +62,16 @@ export const BoardTab = ({
 
   const isTouchDevice =
     typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
-  const sensors = useSensors(
-    ...(isTouchDevice
-      ? []
-      : [useSensor(PointerSensor, { activationConstraint: { distance: 8 } })])
-  );
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: { distance: 8 },
+  });
+  // useSensors filters out null — lets us skip the sensor without calling
+  // the hook conditionally (which would break the Rules of Hooks).
+  const sensors = useSensors(isTouchDevice ? null : pointerSensor);
 
   const handleDragStart = (event: DragStartEvent) => {
     const task = tasks.find((t) => t.id === event.active.id);
-    setActiveTask(task || null);
+    setActiveTask(task ?? null);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {

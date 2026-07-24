@@ -27,20 +27,20 @@ export const RecurringModal = ({
   const [title, setTitle] = useState(item?.title ?? "");
   const [link, setLink] = useState(item?.link ?? "");
   const [note, setNote] = useState(item?.note ?? "");
-  const [area, setArea] = useState(item?.area || "");
-  const [dueDate, setDueDate] = useState(item?.dueDate || "");
-  const [repeatEvery, setRepeatEvery] = useState(item?.repeatEvery || 1);
+  const [area, setArea] = useState(item?.area ?? "");
+  const [dueDate, setDueDate] = useState(item?.dueDate ?? "");
+  const [repeatEvery, setRepeatEvery] = useState(item?.repeatEvery ?? 1);
   const [repeatUnit, setRepeatUnit] = useState<
     "day" | "week" | "month" | "year"
-  >(item?.repeatUnit || "week");
+  >(item?.repeatUnit ?? "week");
   const [repeatDays, setRepeatDays] = useState<number[]>(
-    item?.repeatDays || []
+    item?.repeatDays ?? []
   );
   const [endsType, setEndsType] = useState<"never" | "on" | "after">(
-    item?.endsType || "never"
+    item?.endsType ?? "never"
   );
-  const [endsOn, setEndsOn] = useState(item?.endsOn || "");
-  const [endsAfter, setEndsAfter] = useState(item?.endsAfter || 13);
+  const [endsOn, setEndsOn] = useState(item?.endsOn ?? "");
+  const [endsAfter, setEndsAfter] = useState(item?.endsAfter ?? 13);
   const [showEarly, setShowEarly] = useState(
     item?.showEarlyDays != null ? String(item.showEarlyDays) : ""
   );
@@ -153,7 +153,7 @@ export const RecurringModal = ({
               {showDatePicker && (
                 <DatePickerDropdown
                   value={dueDate || null}
-                  onChange={(d) => setDueDate(d || "")}
+                  onChange={(d) => setDueDate(d ?? "")}
                   onClose={() => setShowDatePicker(false)}
                 />
               )}
@@ -199,6 +199,7 @@ export const RecurringModal = ({
                   <div className="recurrence-days-row">
                     {DAY_LETTERS.map((letter, idx) => (
                       <button
+                        // eslint-disable-next-line @eslint-react/no-array-index-key -- idx IS the day-of-week identity; the 7-day list is static
                         key={idx}
                         type="button"
                         className={`recurrence-day-btn ${repeatDays.includes(idx) ? "active" : ""}`}

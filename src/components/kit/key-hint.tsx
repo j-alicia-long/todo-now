@@ -47,6 +47,7 @@ export const KeyHint = ({ display, className, size = "sm" }: KeyHintProps) => {
     <span className={cn("inline-flex items-center gap-1", className)}>
       {tokens.map((token, index) => (
         <kbd
+          // eslint-disable-next-line @eslint-react/no-array-index-key -- tokens are bare strings (duplicates possible) derived statically from `display`; never reordered
           key={`${token}-${index}`}
           className={cn(
             "inline-flex select-none items-center justify-center rounded-md border border-border/60 bg-muted/70 font-sans font-medium leading-none text-muted-foreground",

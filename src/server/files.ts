@@ -164,7 +164,7 @@ export const readRecurring = async (): Promise<RecurringItem[]> => {
       note: i.note || "",
       link: i.link || "",
       completedThisWeek: i.completedThisWeek || false,
-      lastCompletedAt: i.lastCompletedAt || null,
+      lastCompletedAt: i.lastCompletedAt ?? null,
       createdAt: i.createdAt,
       dueDate: i.dueDate ?? null,
       showEarlyDays: i.showEarlyDays ?? null,

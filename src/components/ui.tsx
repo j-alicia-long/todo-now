@@ -10,7 +10,7 @@ export const Icon = ({
   name: string;
   className?: string;
 }) => (
-  <span className={`material-symbols-outlined ${className || ""}`}>{name}</span>
+  <span className={`material-symbols-outlined ${className ?? ""}`}>{name}</span>
 );
 
 export const LinkPills = ({
@@ -40,6 +40,7 @@ export const LinkPills = ({
   return (
     <div className="link-pills">
       {links.map((url, i) => (
+        // eslint-disable-next-line @eslint-react/no-array-index-key -- links are bare strings (possible duplicates) removed by position; no stable id exists
         <span key={`${url}-${i}`} className="link-pill">
           <a href={url} target="_blank" rel="noopener noreferrer" title={url}>
             {linkLabel(url)}
@@ -119,7 +120,7 @@ export const TagSelect = <T extends string>({
   return (
     <div
       ref={ref}
-      className={`tag-select ${above ? "tag-select-above" : ""} ${className || ""}`}
+      className={`tag-select ${above ? "tag-select-above" : ""} ${className ?? ""}`}
     >
       {options.map((opt) => (
         <button

@@ -201,15 +201,14 @@ export const BoardColumn = ({
                         actions={recurring.actions}
                       />
                     ))}
-                  {taskGroup &&
-                    taskGroup.tasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        actions={taskActions}
-                        settings={settings}
-                      />
-                    ))}
+                  {taskGroup?.tasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      actions={taskActions}
+                      settings={settings}
+                    />
+                  ))}
                 </div>
               );
             });

@@ -41,6 +41,12 @@ Terms used in architecture discussions, reviews, and this file. Domain terms liv
 Board → Recurring → Shopping → Groceries
 Sidebar drawer: Todo Archive, Todo Trash, Shopping Archive, Settings
 
+## Code conventions
+
+- Shared conventions come from [j-alicia-long/web-config](https://github.com/j-alicia-long/web-config) (a bun git dependency):
+  - ESLint preset: `eslint.config.js` spreads `@j-alicia-long/web-config/eslint` (machine-checkable rules)
+  - Agent skill: `.github/skills/web-conventions/` (judgment calls) — a committed copy; re-sync after updating the dependency with `bun run sync-skills`
+
 ## Visual conventions
 
 - Board columns: This Week (orange tint), This Month (purple tint), Done (green tint) — pastel backgrounds
