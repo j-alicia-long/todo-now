@@ -7,9 +7,7 @@ import { cn } from "@/lib/utils";
  */
 export const SPINNER_FRAMES = {
   bounce: Array.from("⠃⠋⠉⠙⠘⠚⠒⠖⠆⠦⠤⠴⠰⠲⠒⠓"),
-  wave: Array.from(
-    "⣿⣾⣷⣯⣽⣟⣻⢿⡿⡟⡏⡇⢇⢣⢱⢸⡸⡜⡎⡇⣇⣧⣷⣿⣾⣼⣸⣘⣨⣈⣀⢄⡠⠤⠔⠢⠒⠑⠊⠉⠑⠕⠗⠖⠴⢴⢔⢜⢕⢝⢟⡻⡫⡛⡿",
-  ),
+  wave: Array.from("⣿⣾⣷⣯⣽⣟⣻⢿⡿⡟⡏⡇⢇⢣⢱⢸⡸⡜⡎⡇⣇⣧⣷⣿⣾⣼⣸⣘⣨⣈⣀⢄⡠⠤⠔⠢⠒⠑⠊⠉⠑⠕⠗⠖⠴⢴⢔⢜⢕⢝⢟⡻⡫⡛⡿"),
 } as const;
 
 export type SpinnerVariant = keyof typeof SPINNER_FRAMES;
@@ -23,18 +21,18 @@ const VARIANT_OFFSET: Record<SpinnerVariant, string | undefined> = {
   wave: "translateY(-0.09em)",
 };
 
-function useSpinnerFrame(length: number, fps: number): number {
+const useSpinnerFrame = (length: number, fps: number): number => {
   const [index, setIndex] = useState(0);
   useEffect(() => {
     if (length <= 0 || fps <= 0) return;
     const id = window.setInterval(
       () => setIndex((prev) => (prev + 1) % length),
-      1000 / fps,
+      1000 / fps
     );
     return () => window.clearInterval(id);
   }, [length, fps]);
   return index;
-}
+};
 
 export type SpinnerProps = {
   /** Which looping animation to play. */
@@ -54,13 +52,13 @@ export type SpinnerProps = {
  * text, and pills, or scales up as a decorative loader.
  * Demo: `/_design`.
  */
-export function Spinner({
+export const Spinner = ({
   variant = "bounce",
   fps = 8,
   size,
   label = "Loading",
   className,
-}: SpinnerProps) {
+}: SpinnerProps) => {
   const frames = SPINNER_FRAMES[variant];
   const index = useSpinnerFrame(frames.length, fps);
   const style: CSSProperties = { fontWeight: 700 };
@@ -74,10 +72,10 @@ export function Spinner({
       style={style}
       className={cn(
         "inline-block align-middle font-mono leading-none tabular-nums",
-        className,
+        className
       )}
     >
       <span aria-hidden>{frames[index]}</span>
     </span>
   );
-}
+};

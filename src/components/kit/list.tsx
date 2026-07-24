@@ -40,51 +40,51 @@ export type ListProps<T extends object> = {
  * interactive lists (pickers, selectable rows, action lists).
  * Demo: `/_design`.
  */
-export function List<T extends object>({
+export const List = <T extends object>({
   className,
   children,
   items,
   viewportClassName = "max-h-80",
   ...props
-}: ListProps<T>) {
-  return (
-    <div
-      className={cn(
-        "overflow-y-auto rounded-xl border border-border bg-card",
-        viewportClassName,
-        className,
-      )}
+}: ListProps<T>) => (
+  <div
+    className={cn(
+      "overflow-y-auto rounded-xl border border-border bg-card",
+      viewportClassName,
+      className
+    )}
+  >
+    <ListBox
+      {...props}
+      items={items}
+      className="flex flex-col gap-0.5 p-1 outline-none"
     >
-      <ListBox
-        {...props}
-        items={items}
-        className="flex flex-col gap-0.5 p-1 outline-none"
-      >
-        {children as never}
-      </ListBox>
-    </div>
-  );
-}
+      {children as never}
+    </ListBox>
+  </div>
+);
 
 /** A single row. `id` is required; pass `textValue` when children aren't plain text (powers type-ahead). */
-export function ListItem({ className, children, ...props }: ListBoxItemProps) {
-  return (
-    <ListBoxItem
-      {...props}
-      className={cn(
-        "group flex select-none items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none transition-colors",
-        "data-[hovered=true]:bg-muted/60 data-[hovered=true]:text-foreground",
-        "data-[focused=true]:bg-muted/60 data-[focused=true]:text-foreground",
-        "data-[selected=true]:bg-muted data-[selected=true]:font-medium data-[selected=true]:text-foreground",
-        "data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-ring",
-        "data-[disabled=true]:opacity-50",
-        className,
-      )}
-    >
-      {children}
-    </ListBoxItem>
-  );
-}
+export const ListItem = ({
+  className,
+  children,
+  ...props
+}: ListBoxItemProps) => (
+  <ListBoxItem
+    {...props}
+    className={cn(
+      "group flex select-none items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none transition-colors",
+      "data-[hovered=true]:bg-muted/60 data-[hovered=true]:text-foreground",
+      "data-[focused=true]:bg-muted/60 data-[focused=true]:text-foreground",
+      "data-[selected=true]:bg-muted data-[selected=true]:font-medium data-[selected=true]:text-foreground",
+      "data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-inset data-[focus-visible=true]:ring-ring",
+      "data-[disabled=true]:opacity-50",
+      className
+    )}
+  >
+    {children}
+  </ListBoxItem>
+);
 
 export type ListSectionProps = {
   title?: ReactNode;
@@ -93,15 +93,17 @@ export type ListSectionProps = {
 };
 
 /** A titled group of rows. Sections are skipped by type-ahead and arrow nav. */
-export function ListSection({ title, className, children }: ListSectionProps) {
-  return (
-    <ListBoxSection className={cn("pb-1", className)}>
-      {title != null && (
-        <Header className="px-3 pb-1 pt-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          {title}
-        </Header>
-      )}
-      {children}
-    </ListBoxSection>
-  );
-}
+export const ListSection = ({
+  title,
+  className,
+  children,
+}: ListSectionProps) => (
+  <ListBoxSection className={cn("pb-1", className)}>
+    {title != null && (
+      <Header className="px-3 pb-1 pt-3 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        {title}
+      </Header>
+    )}
+    {children}
+  </ListBoxSection>
+);

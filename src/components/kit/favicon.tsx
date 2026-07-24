@@ -17,7 +17,7 @@ export type FaviconProps = {
   className?: string;
 };
 
-function faviconSrc({
+const faviconSrc = ({
   domain,
   iconify,
   size,
@@ -25,13 +25,13 @@ function faviconSrc({
   domain: string;
   iconify?: string;
   size: number;
-}): string {
+}): string => {
   if (iconify) {
     const [prefix, name] = iconify.split(":");
     return `https://api.iconify.design/${prefix}/${name}.svg`;
   }
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${size * 2}`;
-}
+};
 
 /**
  * A brand mark for a site/service — the live favicon by domain, with a globe
@@ -39,13 +39,13 @@ function faviconSrc({
  * (link lists, integrations), future-proof as logos change.
  * Demo: `/_design`.
  */
-export function Favicon({
+export const Favicon = ({
   domain,
   iconify,
   size = 20,
   label,
   className,
-}: FaviconProps) {
+}: FaviconProps) => {
   const [error, setError] = useState(false);
   // Reset the failure state when the source changes by adjusting state during
   // render — React's recommended alternative to a reset effect.
@@ -74,4 +74,4 @@ export function Favicon({
       onError={() => setError(true)}
     />
   );
-}
+};

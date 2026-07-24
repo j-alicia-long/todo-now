@@ -47,13 +47,13 @@ export interface ThemedSurfaceProps extends HTMLAttributes<HTMLDivElement> {
  * preview that carries its own palette, a callout tinted off a brand color.
  * Demo: `/_design`.
  */
-export function ThemedSurface({
+export const ThemedSurface = ({
   overrides,
   className,
   style,
   children,
   ...rest
-}: ThemedSurfaceProps) {
+}: ThemedSurfaceProps) => {
   const themeVars: Record<string, string> = {};
   for (const [token, value] of Object.entries(overrides)) {
     if (value !== undefined) {
@@ -70,4 +70,4 @@ export function ThemedSurface({
       {children}
     </div>
   );
-}
+};

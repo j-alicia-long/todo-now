@@ -31,22 +31,20 @@ export type TooltipProps = {
  * popovers, so tooltips look and behave the same across the site.
  * Demo: `/_design`.
  */
-export function Tooltip({
+export const Tooltip = ({
   label,
   side = "top",
   align = "center",
   sideOffset = 6,
   delay = 300,
   children,
-}: TooltipProps) {
-  return (
-    <TooltipProvider delay={delay}>
-      <TooltipRoot>
-        <TooltipTrigger render={children} />
-        <TooltipContent side={side} align={align} sideOffset={sideOffset}>
-          {label}
-        </TooltipContent>
-      </TooltipRoot>
-    </TooltipProvider>
-  );
-}
+}: TooltipProps) => (
+  <TooltipProvider delay={delay}>
+    <TooltipRoot>
+      <TooltipTrigger render={children} />
+      <TooltipContent side={side} align={align} sideOffset={sideOffset}>
+        {label}
+      </TooltipContent>
+    </TooltipRoot>
+  </TooltipProvider>
+);

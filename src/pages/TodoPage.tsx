@@ -6,7 +6,6 @@ import {
   useDroppable,
   useDraggable,
   PointerSensor,
-  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -31,7 +30,8 @@ import {
 import "./TodoPage.scss";
 
 type ViewTab = "board" | "shopping" | "groceries" | "recurring";
-type SidebarPanel = "todo-archive" | "todo-trash" | "shopping-archive" | "settings" | null;
+type SidebarPanel =
+  "todo-archive" | "todo-trash" | "shopping-archive" | "settings" | null;
 
 type ShoppingItem = {
   id: string;
@@ -82,33 +82,39 @@ const DEFAULT_SETTINGS: Settings = {
 
 type SyncedSettings = Settings & { theme?: "light" | "dark" };
 
-function loadSettingsLocal(): Settings {
+const loadSettingsLocal = (): Settings => {
   try {
     const raw = localStorage.getItem("todo-settings");
     if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch {}
+  } catch {
+    // corrupt localStorage entry — fall back to defaults
+  }
   return { ...DEFAULT_SETTINGS };
-}
+};
 
-function saveSettingsLocal(s: Settings) {
+const saveSettingsLocal = (s: Settings) => {
   localStorage.setItem("todo-settings", JSON.stringify(s));
-}
+};
 
-async function fetchSettingsFromServer(): Promise<SyncedSettings | null> {
+const fetchSettingsFromServer = async (): Promise<SyncedSettings | null> => {
   try {
-    const res = await fetch("/api/settings", { headers: { Accept: "application/json" } });
+    const res = await fetch("/api/settings", {
+      headers: { Accept: "application/json" },
+    });
     if (res.ok) return await res.json();
-  } catch {}
+  } catch {
+    // network error — treat as no synced settings
+  }
   return null;
-}
+};
 
-function pushSettingsToServer(s: SyncedSettings) {
+const pushSettingsToServer = (s: SyncedSettings) => {
   fetch("/api/settings", {
     method: "PUT",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(s),
   }).catch(() => {});
-}
+};
 
 const AREA_LABELS: Record<string, string> = {
   "life-admin": "Life Admin",
@@ -129,90 +135,124 @@ const AREA_COLORS: Record<string, string> = {
 };
 
 const AREA_OPTIONS = Object.entries(AREA_LABELS);
-const BOARD_COLUMNS: { id: TaskStatus; title: string; icon: string; colorClass: string }[] = [
-  { id: "this-week", title: "This Week", icon: "bolt", colorClass: "col-purple" },
-  { id: "this-month", title: "This Month", icon: "date_range", colorClass: "col-purple" },
+const BOARD_COLUMNS: {
+  id: TaskStatus;
+  title: string;
+  icon: string;
+  colorClass: string;
+}[] = [
+  {
+    id: "this-week",
+    title: "This Week",
+    icon: "bolt",
+    colorClass: "col-purple",
+  },
+  {
+    id: "this-month",
+    title: "This Month",
+    icon: "date_range",
+    colorClass: "col-purple",
+  },
   { id: "done", title: "Done", icon: "check_circle", colorClass: "col-green" },
 ];
 
 // Local-timezone YYYY-MM-DD key (toISOString would use UTC and shift dates in the evening)
-function toLocalDateKey(d: Date): string {
+const toLocalDateKey = (d: Date): string => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
-}
+};
 
-function getDaysLeft(date: string): number {
+const getDaysLeft = (date: string): number => {
   const d = new Date(date + "T00:00:00");
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const due = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return Math.round((due.getTime() - today.getTime()) / 86400000);
-}
+};
 
-function formatDueDate(date: string): string {
+const formatDueDate = (date: string): string => {
   const diff = getDaysLeft(date);
   if (diff < 0) return `${Math.abs(diff)}d overdue`;
   if (diff === 0) return "Today";
   if (diff === 1) return "1 day";
   return `${diff} days`;
-}
+};
 
-function formatDueDateFull(date: string): string {
+const formatDueDateFull = (date: string): string => {
   const d = new Date(date + "T00:00:00");
-  return "Due: " + d.toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" });
-}
+  return (
+    "Due: " +
+    d.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })
+  );
+};
 
-function dueUrgencyClass(date: string): string {
+const dueUrgencyClass = (date: string): string => {
   const diff = getDaysLeft(date);
   if (diff <= 2) return "due-red";
   if (diff <= 4) return "due-orange";
   if (diff <= 7) return "due-yellow";
   return "due-green";
-}
+};
 
-function sortTasks(tasks: Task[]): Task[] {
-  return [...tasks].sort((a, b) => {
+const sortTasks = (tasks: Task[]): Task[] =>
+  [...tasks].sort((a, b) => {
     if (a.dueDate && !b.dueDate) return -1;
     if (!a.dueDate && b.dueDate) return 1;
     if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
     return 0;
   });
-}
 
-function daysAgo(isoDate: string): string {
+const daysAgo = (isoDate: string): string => {
   const d = Math.round((Date.now() - new Date(isoDate).getTime()) / 86400000);
   if (d === 0) return "today";
   if (d === 1) return "1 day ago";
   return `${d} days ago`;
-}
+};
 
 // ── Material Design Icon ──
 
-function Icon({ name, className }: { name: string; className?: string }) {
-  return <span className={`material-symbols-outlined ${className || ""}`}>{name}</span>;
-}
+const Icon = ({ name, className }: { name: string; className?: string }) => (
+  <span className={`material-symbols-outlined ${className || ""}`}>{name}</span>
+);
 
-function formatHeadingDate(): string {
-  return new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-}
+const formatHeadingDate = (): string =>
+  new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
 // ── Lightweight List Items ──
 
-function linkLabel(url: string): string {
+const linkLabel = (url: string): string => {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {
     return url;
   }
-}
+};
 
-function LinkPills({ links, onChange }: { links: string[]; onChange: (links: string[]) => void }) {
+const LinkPills = ({
+  links,
+  onChange,
+}: {
+  links: string[];
+  onChange: (links: string[]) => void;
+}) => {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { if (adding) inputRef.current?.focus(); }, [adding]);
+  useEffect(() => {
+    if (adding) inputRef.current?.focus();
+  }, [adding]);
 
   const commit = () => {
     const raw = draft.trim();
@@ -228,8 +268,14 @@ function LinkPills({ links, onChange }: { links: string[]; onChange: (links: str
     <div className="link-pills">
       {links.map((url, i) => (
         <span key={`${url}-${i}`} className="link-pill">
-          <a href={url} target="_blank" rel="noopener noreferrer" title={url}>{linkLabel(url)}</a>
-          <button className="link-pill-remove" onClick={() => onChange(links.filter((_, j) => j !== i))} title="Remove link">
+          <a href={url} target="_blank" rel="noopener noreferrer" title={url}>
+            {linkLabel(url)}
+          </a>
+          <button
+            className="link-pill-remove"
+            onClick={() => onChange(links.filter((_, j) => j !== i))}
+            title="Remove link"
+          >
             <Icon name="close" />
           </button>
         </span>
@@ -243,18 +289,26 @@ function LinkPills({ links, onChange }: { links: string[]; onChange: (links: str
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
-            if (e.key === "Enter") { e.preventDefault(); commit(); }
-            if (e.key === "Escape") { setDraft(""); setAdding(false); }
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit();
+            }
+            if (e.key === "Escape") {
+              setDraft("");
+              setAdding(false);
+            }
           }}
         />
       ) : (
-        <button className="link-pill add" onClick={() => setAdding(true)}>+ link</button>
+        <button className="link-pill add" onClick={() => setAdding(true)}>
+          + link
+        </button>
       )}
     </div>
   );
-}
+};
 
-function ShoppingListItem({
+const ShoppingListItem = ({
   item,
   onToggle,
   onArchive,
@@ -270,10 +324,15 @@ function ShoppingListItem({
   onMove: (id: string) => void;
   onAddToBoard: (title: string, source: string, sourceItemId: string) => void;
   onUpdateLinks: (id: string, links: string[]) => void;
-}) {
+}) => {
   const [addedToBoard, setAddedToBoard] = useState(false);
   const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (addedTimer.current) clearTimeout(addedTimer.current); }, []);
+  useEffect(
+    () => () => {
+      if (addedTimer.current) clearTimeout(addedTimer.current);
+    },
+    []
+  );
 
   const handleAddToBoard = () => {
     onAddToBoard(item.title, "shopping", item.id);
@@ -283,36 +342,67 @@ function ShoppingListItem({
   };
 
   return (
-    <div className={`list-item shopping-item two-row ${item.done ? "checked" : ""}`}>
+    <div
+      className={`list-item shopping-item two-row ${item.done ? "checked" : ""}`}
+    >
       <div className="list-item-main">
         <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
-          <input type="checkbox" checked={item.done} onChange={() => onToggle(item.id)} />
+          <input
+            type="checkbox"
+            checked={item.done}
+            onChange={() => onToggle(item.id)}
+          />
           <span className="checkmark" />
         </label>
-        <span className={`list-title ${item.done ? "done" : ""}`}>{item.title}</span>
+        <span className={`list-title ${item.done ? "done" : ""}`}>
+          {item.title}
+        </span>
         <div className="list-actions">
-          <button className="list-action-btn" onClick={() => onArchive(item.id)} title="Archive">
+          <button
+            className="list-action-btn"
+            onClick={() => onArchive(item.id)}
+            title="Archive"
+          >
             <Icon name="archive" />
           </button>
-          <button className="list-action-btn delete" onClick={() => onDelete(item.id)} title="Delete"><Icon name="close" /></button>
+          <button
+            className="list-action-btn delete"
+            onClick={() => onDelete(item.id)}
+            title="Delete"
+          >
+            <Icon name="close" />
+          </button>
         </div>
       </div>
       <div className="list-item-sub">
-        <LinkPills links={item.links || []} onChange={(links) => onUpdateLinks(item.id, links)} />
+        <LinkPills
+          links={item.links || []}
+          onChange={(links) => onUpdateLinks(item.id, links)}
+        />
         <div className="list-actions">
-          <button className={`list-action-btn ${addedToBoard ? "added" : ""}`} onClick={handleAddToBoard} title={addedToBoard ? "Added to Board" : "Add to Board"}>
+          <button
+            className={`list-action-btn ${addedToBoard ? "added" : ""}`}
+            onClick={handleAddToBoard}
+            title={addedToBoard ? "Added to Board" : "Add to Board"}
+          >
             <Icon name={addedToBoard ? "check" : "dashboard"} />
           </button>
-          <button className="list-action-btn" onClick={() => onMove(item.id)} title={item.category === "need" ? "Move to Wants" : "Move to Needs"}>
-            <Icon name={item.category === "need" ? "chevron_right" : "chevron_left"} />
+          <button
+            className="list-action-btn"
+            onClick={() => onMove(item.id)}
+            title={item.category === "need" ? "Move to Wants" : "Move to Needs"}
+          >
+            <Icon
+              name={item.category === "need" ? "chevron_right" : "chevron_left"}
+            />
           </button>
         </div>
       </div>
     </div>
   );
-}
+};
 
-function ShoppingDoneItem({
+const ShoppingDoneItem = ({
   item,
   onUndone,
   onDelete,
@@ -320,22 +410,26 @@ function ShoppingDoneItem({
   item: ShoppingItem;
   onUndone: (id: string) => void;
   onDelete: (id: string) => void;
-}) {
-  return (
-    <div className="list-item shopping-item checked">
-      <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
-        <input type="checkbox" checked onChange={() => onUndone(item.id)} />
-        <span className="checkmark" />
-      </label>
-      <span className="list-title done">{item.title}</span>
-      <div className="list-actions">
-        <button className="list-action-btn delete" onClick={() => onDelete(item.id)} title="Delete"><Icon name="close" /></button>
-      </div>
+}) => (
+  <div className="list-item shopping-item checked">
+    <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
+      <input type="checkbox" checked onChange={() => onUndone(item.id)} />
+      <span className="checkmark" />
+    </label>
+    <span className="list-title done">{item.title}</span>
+    <div className="list-actions">
+      <button
+        className="list-action-btn delete"
+        onClick={() => onDelete(item.id)}
+        title="Delete"
+      >
+        <Icon name="close" />
+      </button>
     </div>
-  );
-}
+  </div>
+);
 
-function GroceryListItem({
+const GroceryListItem = ({
   item,
   onToggle,
   onDelete,
@@ -345,27 +439,41 @@ function GroceryListItem({
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onAddToBoard: (title: string, source: string, sourceItemId: string) => void;
-}) {
-  return (
-    <div className={`list-item grocery-item ${item.done ? "checked" : ""}`}>
-      <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
-        <input type="checkbox" checked={item.done} onChange={() => onToggle(item.id)} />
-        <span className="checkmark" />
-      </label>
-      <span className={`list-title ${item.done ? "done" : ""}`}>{item.title}</span>
-      <div className="list-actions">
-        <button className="list-action-btn" onClick={() => onAddToBoard(item.title, "grocery", item.id)} title="Add to Board">
-          <Icon name="dashboard" />
-        </button>
-        <button className="list-action-btn delete" onClick={() => onDelete(item.id)} title="Delete"><Icon name="close" /></button>
-      </div>
+}) => (
+  <div className={`list-item grocery-item ${item.done ? "checked" : ""}`}>
+    <label className="list-checkbox" onClick={(e) => e.stopPropagation()}>
+      <input
+        type="checkbox"
+        checked={item.done}
+        onChange={() => onToggle(item.id)}
+      />
+      <span className="checkmark" />
+    </label>
+    <span className={`list-title ${item.done ? "done" : ""}`}>
+      {item.title}
+    </span>
+    <div className="list-actions">
+      <button
+        className="list-action-btn"
+        onClick={() => onAddToBoard(item.title, "grocery", item.id)}
+        title="Add to Board"
+      >
+        <Icon name="dashboard" />
+      </button>
+      <button
+        className="list-action-btn delete"
+        onClick={() => onDelete(item.id)}
+        title="Delete"
+      >
+        <Icon name="close" />
+      </button>
     </div>
-  );
-}
+  </div>
+);
 
 // ── Inline Tag Editor ──
 
-function TagSelect<T extends string>({
+const TagSelect = <T extends string>({
   value,
   options,
   labels,
@@ -379,14 +487,14 @@ function TagSelect<T extends string>({
   onChange: (v: T) => void;
   onClose: () => void;
   className?: string;
-}) {
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   const [above, setAbove] = useState(false);
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    }
+    };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [onClose]);
@@ -401,7 +509,10 @@ function TagSelect<T extends string>({
   }, []);
 
   return (
-    <div ref={ref} className={`tag-select ${above ? "tag-select-above" : ""} ${className || ""}`}>
+    <div
+      ref={ref}
+      className={`tag-select ${above ? "tag-select-above" : ""} ${className || ""}`}
+    >
       {options.map((opt) => (
         <button
           key={opt}
@@ -417,11 +528,11 @@ function TagSelect<T extends string>({
       ))}
     </div>
   );
-}
+};
 
 // ── Date Picker Modal ──
 
-function DatePickerModal({
+const DatePickerModal = ({
   value,
   onChange,
   onClose,
@@ -429,35 +540,55 @@ function DatePickerModal({
   value: string | null;
   onChange: (date: string | null) => void;
   onClose: () => void;
-}) {
+}) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const tz = getLocalTimeZone();
   const todayDate = today(tz);
   const calendarValue = value ? parseDate(value) : undefined;
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (overlayRef.current && !overlayRef.current.contains(e.target as Node)) {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        overlayRef.current &&
+        !overlayRef.current.contains(e.target as Node)
+      ) {
         onClose();
       }
-    }
+    };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [onClose]);
 
   return (
-    <div className="date-picker-overlay" onClick={(e) => { e.stopPropagation(); onClose(); }}>
-      <div className="date-picker-modal" ref={overlayRef} onClick={(e) => e.stopPropagation()}>
+    <div
+      className="date-picker-overlay"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClose();
+      }}
+    >
+      <div
+        className="date-picker-modal"
+        ref={overlayRef}
+        onClick={(e) => e.stopPropagation()}
+      >
         <Calendar
           aria-label="Due date"
           value={calendarValue}
-          onChange={(d) => { onChange(d.toString()); onClose(); }}
+          onChange={(d) => {
+            onChange(d.toString());
+            onClose();
+          }}
           minValue={todayDate}
         >
           <header className="date-picker-header">
-            <AriaButton slot="previous" className="date-picker-nav">‹</AriaButton>
+            <AriaButton slot="previous" className="date-picker-nav">
+              ‹
+            </AriaButton>
             <Heading className="date-picker-heading" />
-            <AriaButton slot="next" className="date-picker-nav">›</AriaButton>
+            <AriaButton slot="next" className="date-picker-nav">
+              ›
+            </AriaButton>
           </header>
           <CalendarGrid>
             <CalendarGridHeader>
@@ -469,16 +600,22 @@ function DatePickerModal({
           </CalendarGrid>
         </Calendar>
         {value && (
-          <button className="date-picker-clear" onClick={() => { onChange(null); onClose(); }}>
+          <button
+            className="date-picker-clear"
+            onClick={() => {
+              onChange(null);
+              onClose();
+            }}
+          >
             Clear date
           </button>
         )}
       </div>
     </div>
   );
-}
+};
 
-function DatePickerDropdown({
+const DatePickerDropdown = ({
   value,
   onChange,
   onClose,
@@ -486,34 +623,48 @@ function DatePickerDropdown({
   value: string | null;
   onChange: (date: string | null) => void;
   onClose: () => void;
-}) {
+}) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const tz = getLocalTimeZone();
   const todayDate = today(tz);
   const calendarValue = value ? parseDate(value) : undefined;
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         onClose();
       }
-    }
+    };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [onClose]);
 
   return (
-    <div className="date-picker-dropdown" ref={dropdownRef} onClick={(e) => e.stopPropagation()}>
+    <div
+      className="date-picker-dropdown"
+      ref={dropdownRef}
+      onClick={(e) => e.stopPropagation()}
+    >
       <Calendar
         aria-label="Due date"
         value={calendarValue}
-        onChange={(d) => { onChange(d.toString()); onClose(); }}
+        onChange={(d) => {
+          onChange(d.toString());
+          onClose();
+        }}
         minValue={todayDate}
       >
         <header className="date-picker-header">
-          <AriaButton slot="previous" className="date-picker-nav">‹</AriaButton>
+          <AriaButton slot="previous" className="date-picker-nav">
+            ‹
+          </AriaButton>
           <Heading className="date-picker-heading" />
-          <AriaButton slot="next" className="date-picker-nav">›</AriaButton>
+          <AriaButton slot="next" className="date-picker-nav">
+            ›
+          </AriaButton>
         </header>
         <CalendarGrid>
           <CalendarGridHeader>
@@ -525,17 +676,23 @@ function DatePickerDropdown({
         </CalendarGrid>
       </Calendar>
       {value && (
-        <button className="date-picker-clear" onClick={() => { onChange(null); onClose(); }}>
+        <button
+          className="date-picker-clear"
+          onClick={() => {
+            onChange(null);
+            onClose();
+          }}
+        >
           Clear date
         </button>
       )}
     </div>
   );
-}
+};
 
 // ── Task Card ──
 
-function TaskCard({
+const TaskCard = ({
   task,
   onStatusChange,
   onDelete,
@@ -549,18 +706,13 @@ function TaskCard({
   onUpdate: (id: string, fields: Partial<Task>) => void;
   settings: Settings;
   isDragOverlay?: boolean;
-}) {
+}) => {
   const [editingTag, setEditingTag] = useState<string | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const editInputRef = useRef<HTMLInputElement>(null);
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    isDragging,
-  } = useDraggable({ id: task.id, data: { task } });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id: task.id, data: { task } });
 
   useEffect(() => {
     if (isEditingTitle && editInputRef.current) {
@@ -594,8 +746,6 @@ function TaskCard({
   const ref = isDragOverlay ? undefined : setNodeRef;
   const dragProps = isDragOverlay ? {} : { ...attributes, ...listeners };
 
-  const hasTags = (settings.showArea || (task.dueDate));
-
   return (
     <div
       ref={ref}
@@ -605,7 +755,10 @@ function TaskCard({
     >
       <button
         className="card-delete-btn"
-        onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(task.id);
+        }}
         title="Delete"
         aria-label="Delete task"
       >
@@ -635,28 +788,45 @@ function TaskCard({
             onChange={(e) => setEditTitle(e.target.value)}
             onBlur={commitTitleEdit}
             onKeyDown={(e) => {
-              if (e.key === "Enter") { e.preventDefault(); commitTitleEdit(); }
-              if (e.key === "Escape") { setEditTitle(task.title); setIsEditingTitle(false); }
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commitTitleEdit();
+              }
+              if (e.key === "Escape") {
+                setEditTitle(task.title);
+                setIsEditingTitle(false);
+              }
             }}
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
           <span
             className={`card-title ${task.done ? "done" : ""}`}
-            onDoubleClick={(e) => { e.stopPropagation(); setEditTitle(task.title); setIsEditingTitle(true); }}
-          >{task.title}</span>
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              setEditTitle(task.title);
+              setIsEditingTitle(true);
+            }}
+          >
+            {task.title}
+          </span>
         )}
       </div>
 
       <div className="card-row">
         <div className="card-tags">
           {task.done && task.dueDate && (
-            <span className="card-due-subtext">{formatDueDateFull(task.dueDate)}</span>
+            <span className="card-due-subtext">
+              {formatDueDateFull(task.dueDate)}
+            </span>
           )}
           {!task.done && task.dueDate && (
             <span
               className={`card-tag ${dueUrgencyClass(task.dueDate)} tappable`}
-              onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "dueDate" ? null : "dueDate"); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingTag(editingTag === "dueDate" ? null : "dueDate");
+              }}
             >
               {formatDueDate(task.dueDate)}
             </span>
@@ -664,7 +834,10 @@ function TaskCard({
           {!task.done && !task.dueDate && (
             <span
               className="card-tag due-none tappable"
-              onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "dueDate" ? null : "dueDate"); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingTag(editingTag === "dueDate" ? null : "dueDate");
+              }}
             >
               + date
             </span>
@@ -680,7 +853,10 @@ function TaskCard({
             <span className="tag-anchor">
               <span
                 className={`card-tag area ${AREA_COLORS[task.area] || ""} tappable`}
-                onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "area" ? null : "area"); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingTag(editingTag === "area" ? null : "area");
+                }}
               >
                 {AREA_LABELS[task.area] || task.area}
               </span>
@@ -702,14 +878,20 @@ function TaskCard({
             <>
               <button
                 className="card-action-btn move-right"
-                onClick={(e) => { e.stopPropagation(); onStatusChange(task.id, "this-month"); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStatusChange(task.id, "this-month");
+                }}
                 title="Move to This Month"
               >
                 <Icon name="chevron_right" />
               </button>
               <button
                 className="card-action-btn archive"
-                onClick={(e) => { e.stopPropagation(); onStatusChange(task.id, "future"); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStatusChange(task.id, "future");
+                }}
                 title="File away to Future"
               >
                 <Icon name="archive" />
@@ -720,14 +902,20 @@ function TaskCard({
             <>
               <button
                 className="card-action-btn move-left"
-                onClick={(e) => { e.stopPropagation(); onStatusChange(task.id, "this-week"); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStatusChange(task.id, "this-week");
+                }}
                 title="Move to This Week"
               >
                 <Icon name="chevron_left" />
               </button>
               <button
                 className="card-action-btn archive"
-                onClick={(e) => { e.stopPropagation(); onStatusChange(task.id, "future"); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStatusChange(task.id, "future");
+                }}
                 title="File away to Future"
               >
                 <Icon name="archive" />
@@ -738,11 +926,11 @@ function TaskCard({
       </div>
     </div>
   );
-}
+};
 
 // ── Future Task Card ──
 
-function FutureTaskCard({
+const FutureTaskCard = ({
   task,
   onStatusChange,
   onDelete,
@@ -754,7 +942,7 @@ function FutureTaskCard({
   onDelete: (id: string) => void;
   onUpdate: (id: string, fields: Partial<Task>) => void;
   settings: Settings;
-}) {
+}) => {
   const [editingTag, setEditingTag] = useState<string | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
@@ -781,7 +969,10 @@ function FutureTaskCard({
     <div className="task-card future-card">
       <button
         className="card-delete-btn"
-        onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(task.id);
+        }}
         title="Delete"
         aria-label="Delete task"
       >
@@ -792,7 +983,10 @@ function FutureTaskCard({
           <input
             type="checkbox"
             checked={false}
-            onChange={(e) => { e.stopPropagation(); onStatusChange(task.id, "done"); }}
+            onChange={(e) => {
+              e.stopPropagation();
+              onStatusChange(task.id, "done");
+            }}
           />
           <span className="checkmark" />
         </label>
@@ -804,16 +998,28 @@ function FutureTaskCard({
             onChange={(e) => setEditTitle(e.target.value)}
             onBlur={commitTitleEdit}
             onKeyDown={(e) => {
-              if (e.key === "Enter") { e.preventDefault(); commitTitleEdit(); }
-              if (e.key === "Escape") { setEditTitle(task.title); setIsEditingTitle(false); }
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commitTitleEdit();
+              }
+              if (e.key === "Escape") {
+                setEditTitle(task.title);
+                setIsEditingTitle(false);
+              }
             }}
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
           <span
             className="card-title"
-            onDoubleClick={(e) => { e.stopPropagation(); setEditTitle(task.title); setIsEditingTitle(true); }}
-          >{task.title}</span>
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              setEditTitle(task.title);
+              setIsEditingTitle(true);
+            }}
+          >
+            {task.title}
+          </span>
         )}
       </div>
 
@@ -821,7 +1027,10 @@ function FutureTaskCard({
         {task.dueDate && (
           <span
             className={`card-tag ${dueUrgencyClass(task.dueDate)} tappable`}
-            onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "dueDate" ? null : "dueDate"); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditingTag(editingTag === "dueDate" ? null : "dueDate");
+            }}
           >
             {formatDueDate(task.dueDate)}
           </span>
@@ -829,7 +1038,10 @@ function FutureTaskCard({
         {!task.dueDate && (
           <span
             className="card-tag due-none tappable"
-            onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "dueDate" ? null : "dueDate"); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditingTag(editingTag === "dueDate" ? null : "dueDate");
+            }}
           >
             + date
           </span>
@@ -845,7 +1057,10 @@ function FutureTaskCard({
           <span className="tag-anchor">
             <span
               className={`card-tag area ${AREA_COLORS[task.area] || ""} tappable`}
-              onClick={(e) => { e.stopPropagation(); setEditingTag(editingTag === "area" ? null : "area"); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingTag(editingTag === "area" ? null : "area");
+              }}
             >
               {AREA_LABELS[task.area] || task.area}
             </span>
@@ -865,7 +1080,10 @@ function FutureTaskCard({
       <div className="card-actions">
         <button
           className="card-action-btn activate"
-          onClick={(e) => { e.stopPropagation(); onStatusChange(task.id, "this-week"); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onStatusChange(task.id, "this-week");
+          }}
           title="Move to This Week"
         >
           <Icon name="play_arrow" /> This Week
@@ -873,11 +1091,11 @@ function FutureTaskCard({
       </div>
     </div>
   );
-}
+};
 
 // ── Trash Card ──
 
-function TrashCard({
+const TrashCard = ({
   task,
   onRestore,
   onPermanentDelete,
@@ -885,66 +1103,90 @@ function TrashCard({
   task: Task;
   onRestore: (id: string) => void;
   onPermanentDelete: (id: string) => void;
-}) {
-  return (
-    <div className="task-card trash-card">
-      <div className="card-header">
-        <span className="card-title trashed">{task.title}</span>
-      </div>
-      {task.deletedAt && (
-        <div className="trash-meta">Deleted {daysAgo(task.deletedAt)}</div>
-      )}
-      <div className="card-actions">
-        <button
-          className="card-action-btn undo"
-          onClick={(e) => { e.stopPropagation(); onRestore(task.id); }}
-        >
-          <Icon name="undo" /> Restore
-        </button>
-        <button
-          className="card-action-btn delete-permanent"
-          onClick={(e) => { e.stopPropagation(); onPermanentDelete(task.id); }}
-        >
-          <Icon name="delete_forever" /> Delete forever
-        </button>
-      </div>
+}) => (
+  <div className="task-card trash-card">
+    <div className="card-header">
+      <span className="card-title trashed">{task.title}</span>
     </div>
-  );
-}
+    {task.deletedAt && (
+      <div className="trash-meta">Deleted {daysAgo(task.deletedAt)}</div>
+    )}
+    <div className="card-actions">
+      <button
+        className="card-action-btn undo"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRestore(task.id);
+        }}
+      >
+        <Icon name="undo" /> Restore
+      </button>
+      <button
+        className="card-action-btn delete-permanent"
+        onClick={(e) => {
+          e.stopPropagation();
+          onPermanentDelete(task.id);
+        }}
+      >
+        <Icon name="delete_forever" /> Delete forever
+      </button>
+    </div>
+  </div>
+);
 
 // ── Board Column ──
 
-function formatDateLabel(dateKey: string, todayStr: string): string {
+const formatDateLabel = (dateKey: string, todayStr: string): string => {
   if (dateKey === todayStr) return "Today";
   if (dateKey === "unknown") return "Earlier";
-  return new Date(dateKey + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-}
+  return new Date(dateKey + "T12:00:00").toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+};
 
-function groupDoneByDate(tasks: Task[]): { dateKey: string; label: string; tasks: Task[] }[] {
+const groupDoneByDate = (
+  tasks: Task[]
+): { dateKey: string; label: string; tasks: Task[] }[] => {
   const todayStr = toLocalDateKey(new Date());
   const groups = new Map<string, Task[]>();
   for (const t of tasks) {
-    const dateKey = t.completedAt ? toLocalDateKey(new Date(t.completedAt)) : "unknown";
+    const dateKey = t.completedAt
+      ? toLocalDateKey(new Date(t.completedAt))
+      : "unknown";
     if (!groups.has(dateKey)) groups.set(dateKey, []);
     groups.get(dateKey)!.push(t);
   }
   const sorted = [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-  return sorted.map(([dateKey, tasks]) => ({ dateKey, label: formatDateLabel(dateKey, todayStr), tasks }));
-}
+  return sorted.map(([dateKey, tasks]) => ({
+    dateKey,
+    label: formatDateLabel(dateKey, todayStr),
+    tasks,
+  }));
+};
 
-function groupRecurringDoneByDate(items: RecurringItem[]): { dateKey: string; label: string; items: RecurringItem[] }[] {
+const groupRecurringDoneByDate = (
+  items: RecurringItem[]
+): { dateKey: string; label: string; items: RecurringItem[] }[] => {
   const todayStr = toLocalDateKey(new Date());
   const groups = new Map<string, RecurringItem[]>();
   for (const item of items) {
-    const dateKey = item.lastCompletedAt ? toLocalDateKey(new Date(item.lastCompletedAt)) : "unknown";
+    const dateKey = item.lastCompletedAt
+      ? toLocalDateKey(new Date(item.lastCompletedAt))
+      : "unknown";
     if (!groups.has(dateKey)) groups.set(dateKey, []);
     groups.get(dateKey)!.push(item);
   }
   const sorted = [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-  return sorted.map(([dateKey, grpItems]) => ({ dateKey, label: formatDateLabel(dateKey, todayStr), items: grpItems }));
-}
+  return sorted.map(([dateKey, grpItems]) => ({
+    dateKey,
+    label: formatDateLabel(dateKey, todayStr),
+    items: grpItems,
+  }));
+};
 
-function BoardColumn({
+const BoardColumn = ({
   id,
   title,
   icon,
@@ -958,7 +1200,6 @@ function BoardColumn({
   onToggleRecurring,
   onDeleteRecurring,
   onUpdateRecurring,
-  onEditRecurring,
 }: {
   id: TaskStatus;
   title: string;
@@ -974,76 +1215,120 @@ function BoardColumn({
   onDeleteRecurring?: (id: string) => void;
   onUpdateRecurring?: (id: string, fields: Partial<RecurringItem>) => void;
   onEditRecurring?: (item: RecurringItem) => void;
-}) {
+}) => {
   const { setNodeRef, isOver } = useDroppable({ id });
-  const [editingRecurringDate, setEditingRecurringDate] = useState<string | null>(null);
+  const [editingRecurringDate, setEditingRecurringDate] = useState<
+    string | null
+  >(null);
 
   const displayTasks = tasks;
 
   const doneGroups = id === "done" ? groupDoneByDate(displayTasks) : null;
 
   return (
-    <div className={`board-column ${isOver ? "drag-over" : ""}`} ref={setNodeRef}>
+    <div
+      className={`board-column ${isOver ? "drag-over" : ""}`}
+      ref={setNodeRef}
+    >
       <div className={`column-header ${colorClass}`}>
         <Icon name={icon} className="column-icon" />
         <h2 className="column-title">{title}</h2>
         <span className="column-count">{displayTasks.length}</span>
       </div>
       <div className="column-cards">
-        {recurringTasks && recurringTasks.length > 0 && id !== "done" && recurringTasks.map((ri) => (
-          <div key={ri.id} className="task-card recurring-task-card">
-            <button className="card-delete-btn" onClick={(e) => { e.stopPropagation(); onDeleteRecurring?.(ri.id); }} title="Delete" aria-label="Delete recurring task">
-              <Icon name="close" />
-            </button>
-            <div className="card-header">
-              <label className="card-checkbox" onClick={(e) => e.stopPropagation()}>
-                <input type="checkbox" checked={ri.completedThisWeek} onChange={(e) => { e.stopPropagation(); onToggleRecurring?.(ri.id); }} />
-                <span className="checkmark" />
-              </label>
-              <span className="card-title">{ri.title}</span>
-            </div>
-            <div className="card-row">
-              <div className="card-tags">
-                {ri.dueDate && (
-                  <span
-                    className={`card-tag ${dueUrgencyClass(ri.dueDate)} tappable`}
-                    onClick={(e) => { e.stopPropagation(); setEditingRecurringDate(editingRecurringDate === ri.id ? null : ri.id); }}
-                  >
-                    {formatDueDate(ri.dueDate)}
-                  </span>
-                )}
-                {!ri.dueDate && (
-                  <span
-                    className="card-tag due-none tappable"
-                    onClick={(e) => { e.stopPropagation(); setEditingRecurringDate(editingRecurringDate === ri.id ? null : ri.id); }}
-                  >
-                    + date
-                  </span>
-                )}
-                {editingRecurringDate === ri.id && (
-                  <DatePickerModal
-                    value={ri.dueDate}
-                    onChange={(d) => onUpdateRecurring?.(ri.id, { dueDate: d })}
-                    onClose={() => setEditingRecurringDate(null)}
+        {recurringTasks &&
+          recurringTasks.length > 0 &&
+          id !== "done" &&
+          recurringTasks.map((ri) => (
+            <div key={ri.id} className="task-card recurring-task-card">
+              <button
+                className="card-delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteRecurring?.(ri.id);
+                }}
+                title="Delete"
+                aria-label="Delete recurring task"
+              >
+                <Icon name="close" />
+              </button>
+              <div className="card-header">
+                <label
+                  className="card-checkbox"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    checked={ri.completedThisWeek}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onToggleRecurring?.(ri.id);
+                    }}
                   />
-                )}
+                  <span className="checkmark" />
+                </label>
+                <span className="card-title">{ri.title}</span>
+              </div>
+              <div className="card-row">
+                <div className="card-tags">
+                  {ri.dueDate && (
+                    <span
+                      className={`card-tag ${dueUrgencyClass(ri.dueDate)} tappable`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingRecurringDate(
+                          editingRecurringDate === ri.id ? null : ri.id
+                        );
+                      }}
+                    >
+                      {formatDueDate(ri.dueDate)}
+                    </span>
+                  )}
+                  {!ri.dueDate && (
+                    <span
+                      className="card-tag due-none tappable"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingRecurringDate(
+                          editingRecurringDate === ri.id ? null : ri.id
+                        );
+                      }}
+                    >
+                      + date
+                    </span>
+                  )}
+                  {editingRecurringDate === ri.id && (
+                    <DatePickerModal
+                      value={ri.dueDate}
+                      onChange={(d) =>
+                        onUpdateRecurring?.(ri.id, { dueDate: d })
+                      }
+                      onClose={() => setEditingRecurringDate(null)}
+                    />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-        {displayTasks.length === 0 && (!recurringTasks || recurringTasks.length === 0) ? (
+          ))}
+        {displayTasks.length === 0 &&
+        (!recurringTasks || recurringTasks.length === 0) ? (
           <div className="column-empty">
-            {id === "done" ? "Nothing completed yet" :
-             id === "this-month" ? "Drag tasks here or use the arrow" :
-             "All clear!"}
+            {id === "done"
+              ? "Nothing completed yet"
+              : id === "this-month"
+                ? "Drag tasks here or use the arrow"
+                : "All clear!"}
           </div>
         ) : doneGroups ? (
           (() => {
-            const recurringDoneGroups = recurringTasks && recurringTasks.length > 0
-              ? groupRecurringDoneByDate(recurringTasks) : [];
+            const recurringDoneGroups =
+              recurringTasks && recurringTasks.length > 0
+                ? groupRecurringDoneByDate(recurringTasks)
+                : [];
             const dateKeyMap = new Map<string, string>();
             for (const g of doneGroups) dateKeyMap.set(g.dateKey, g.label);
-            for (const g of recurringDoneGroups) dateKeyMap.set(g.dateKey, g.label);
+            for (const g of recurringDoneGroups)
+              dateKeyMap.set(g.dateKey, g.label);
             const sortedKeys = [...dateKeyMap.keys()].sort((a, b) => {
               if (a === "unknown") return 1;
               if (b === "unknown") return -1;
@@ -1051,42 +1336,70 @@ function BoardColumn({
             });
             return sortedKeys.map((key) => {
               const label = dateKeyMap.get(key)!;
-              const taskGroup = doneGroups.find(g => g.dateKey === key);
-              const recurringGroup = recurringDoneGroups.find(g => g.dateKey === key);
+              const taskGroup = doneGroups.find((g) => g.dateKey === key);
+              const recurringGroup = recurringDoneGroups.find(
+                (g) => g.dateKey === key
+              );
               return (
                 <div key={label} className="done-group">
                   <div className="done-group-label">{label}</div>
-                  {recurringGroup && recurringGroup.items.map((ri) => (
-                    <div key={ri.id} className="task-card recurring-task-card">
-                      <button className="card-delete-btn" onClick={(e) => { e.stopPropagation(); onDeleteRecurring?.(ri.id); }} title="Delete" aria-label="Delete recurring task">
-                        <Icon name="close" />
-                      </button>
-                      <div className="card-header">
-                        <label className="card-checkbox" onClick={(e) => e.stopPropagation()}>
-                          <input type="checkbox" checked={true} onChange={(e) => { e.stopPropagation(); onToggleRecurring?.(ri.id); }} />
-                          <span className="checkmark" />
-                        </label>
-                        <span className="card-title done">{ri.title}</span>
-                      </div>
-                      <div className="card-row">
-                        <div className="card-tags">
-                          {ri.dueDate && <span className="card-due-subtext">{formatDueDateFull(ri.dueDate)}</span>}
+                  {recurringGroup &&
+                    recurringGroup.items.map((ri) => (
+                      <div
+                        key={ri.id}
+                        className="task-card recurring-task-card"
+                      >
+                        <button
+                          className="card-delete-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteRecurring?.(ri.id);
+                          }}
+                          title="Delete"
+                          aria-label="Delete recurring task"
+                        >
+                          <Icon name="close" />
+                        </button>
+                        <div className="card-header">
+                          <label
+                            className="card-checkbox"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={true}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                onToggleRecurring?.(ri.id);
+                              }}
+                            />
+                            <span className="checkmark" />
+                          </label>
+                          <span className="card-title done">{ri.title}</span>
                         </div>
-                        <div className="card-actions">
+                        <div className="card-row">
+                          <div className="card-tags">
+                            {ri.dueDate && (
+                              <span className="card-due-subtext">
+                                {formatDueDateFull(ri.dueDate)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="card-actions"></div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  {taskGroup && taskGroup.tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onStatusChange={onStatusChange}
-                      onDelete={onDelete}
-                      onUpdate={onUpdate}
-                      settings={settings}
-                    />
-                  ))}
+                    ))}
+                  {taskGroup &&
+                    taskGroup.tasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onStatusChange={onStatusChange}
+                        onDelete={onDelete}
+                        onUpdate={onUpdate}
+                        settings={settings}
+                      />
+                    ))}
                 </div>
               );
             });
@@ -1106,37 +1419,55 @@ function BoardColumn({
       </div>
     </div>
   );
-}
+};
 
 // ── Settings View ──
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
-const REPEAT_UNITS: ("day" | "week" | "month" | "year")[] = ["day", "week", "month", "year"];
+const REPEAT_UNITS: ("day" | "week" | "month" | "year")[] = [
+  "day",
+  "week",
+  "month",
+  "year",
+];
 
-function formatRecurrence(item: RecurringItem): string {
+const formatRecurrence = (item: RecurringItem): string => {
   const every = item.repeatEvery || 1;
   const unit = item.repeatUnit || "week";
   const days = item.repeatDays || [];
-  let result = "";
+  let result: string;
   if (every === 1) {
-    result = unit === "day" ? "Daily" : unit === "week" ? "Weekly" : unit === "month" ? "Monthly" : "Yearly";
+    result =
+      unit === "day"
+        ? "Daily"
+        : unit === "week"
+          ? "Weekly"
+          : unit === "month"
+            ? "Monthly"
+            : "Yearly";
   } else {
     const plural = unit + "s";
     result = "Every " + every + " " + plural;
   }
   if (unit === "week" && days.length > 0) {
-    result += " on " + days.map(d => DAY_NAMES[d]).join(", ");
+    result += " on " + days.map((d) => DAY_NAMES[d]).join(", ");
   }
   if (item.endsType === "on" && item.endsOn) {
-    result += " until " + new Date(item.endsOn + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    result +=
+      " until " +
+      new Date(item.endsOn + "T00:00:00").toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
   } else if (item.endsType === "after" && item.endsAfter) {
     result += " (" + item.endsAfter + "x)";
   }
   return result;
-}
+};
 
-function timeSince(isoDate: string): string {
+const timeSince = (isoDate: string): string => {
   const ms = Date.now() - new Date(isoDate).getTime();
   const days = Math.floor(ms / 86400000);
   if (days === 0) return "today";
@@ -1148,17 +1479,17 @@ function timeSince(isoDate: string): string {
   const months = Math.floor(days / 30);
   if (months === 1) return "1 month ago";
   return `${months} months ago`;
-}
+};
 
-function getDomain(url: string): string {
+const getDomain = (url: string): string => {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {
     return url;
   }
-}
+};
 
-function RecurringListItem({
+const RecurringListItem = ({
   item,
   onToggle,
   onDelete,
@@ -1170,38 +1501,69 @@ function RecurringListItem({
   onDelete: (id: string) => void;
   onUpdate: (id: string, fields: Partial<RecurringItem>) => void;
   onEdit: (item: RecurringItem) => void;
-}) {
+}) => {
   const [editingLink, setEditingLink] = useState(false);
   const [linkDraft, setLinkDraft] = useState(item.link);
   const isEvent = item.category === "reference";
-  const isWeekly = !isEvent && item.repeatUnit === "week" && item.repeatEvery === 1 && item.frequency !== "long-term";
+  const isWeekly =
+    !isEvent &&
+    item.repeatUnit === "week" &&
+    item.repeatEvery === 1 &&
+    item.frequency !== "long-term";
   const isChecked = isWeekly ? item.completedThisWeek : false;
   const recurrenceLabel = isEvent ? "" : formatRecurrence(item);
 
-  function saveLink() {
+  const saveLink = () => {
     const trimmed = linkDraft.trim();
-    const normalized = trimmed && !trimmed.match(/^https?:\/\//) ? `https://${trimmed}` : trimmed;
+    const normalized =
+      trimmed && !trimmed.match(/^https?:\/\//)
+        ? `https://${trimmed}`
+        : trimmed;
     onUpdate(item.id, { link: normalized });
     setEditingLink(false);
-  }
+  };
 
   return (
-    <div className={`list-item recurring-item ${isChecked ? "checked" : ""} ${(isWeekly || isEvent) ? "weekly-hub-item" : ""}`}>
+    <div
+      className={`list-item recurring-item ${isChecked ? "checked" : ""} ${isWeekly || isEvent ? "weekly-hub-item" : ""}`}
+    >
       {isWeekly && (
         <label className="list-checkbox">
-          <input type="checkbox" checked={isChecked} onChange={() => onToggle(item.id)} />
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={() => onToggle(item.id)}
+          />
           <span className="checkmark" />
         </label>
       )}
       <div className="recurring-info">
-        <span className={`list-title ${isChecked ? "done" : ""}`}>{item.title}</span>
+        <span className={`list-title ${isChecked ? "done" : ""}`}>
+          {item.title}
+        </span>
         <div className="recurring-meta">
-          {recurrenceLabel && <span className="recurring-schedule-label">{recurrenceLabel}</span>}
-          {item.area && <span className={`recurring-area-tag ${AREA_COLORS[item.area] || ""}`}>{AREA_LABELS[item.area] || item.area}</span>}
-          {item.dueDate && <span className={`recurring-due-tag ${dueUrgencyClass(item.dueDate)}`}>{formatDueDate(item.dueDate)}</span>}
+          {recurrenceLabel && (
+            <span className="recurring-schedule-label">{recurrenceLabel}</span>
+          )}
+          {item.area && (
+            <span
+              className={`recurring-area-tag ${AREA_COLORS[item.area] || ""}`}
+            >
+              {AREA_LABELS[item.area] || item.area}
+            </span>
+          )}
+          {item.dueDate && (
+            <span
+              className={`recurring-due-tag ${dueUrgencyClass(item.dueDate)}`}
+            >
+              {formatDueDate(item.dueDate)}
+            </span>
+          )}
           {item.note && <span className="recurring-note">{item.note}</span>}
           {!isWeekly && !isEvent && item.lastCompletedAt && (
-            <span className="recurring-last-done">Done {timeSince(item.lastCompletedAt)}</span>
+            <span className="recurring-last-done">
+              Done {timeSince(item.lastCompletedAt)}
+            </span>
           )}
           {!isWeekly && !isEvent && !item.lastCompletedAt && (
             <span className="recurring-last-done never">Not yet done</span>
@@ -1210,13 +1572,25 @@ function RecurringListItem({
         {(isWeekly || isEvent) && (
           <div className="recurring-link-row">
             {item.link && !editingLink ? (
-              <a href={item.link} target="_blank" rel="noopener noreferrer" className="recurring-link-btn" onClick={(e) => e.stopPropagation()}>
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="recurring-link-btn"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Icon name="open_in_new" className="link-btn-icon" />
                 <span className="link-domain">{getDomain(item.link)}</span>
               </a>
             ) : null}
             {!item.link && !editingLink ? (
-              <button className="recurring-add-link-btn" onClick={() => { setEditingLink(true); setLinkDraft(""); }}>
+              <button
+                className="recurring-add-link-btn"
+                onClick={() => {
+                  setEditingLink(true);
+                  setLinkDraft("");
+                }}
+              >
                 <Icon name="add_link" className="link-btn-icon" /> Add link
               </button>
             ) : null}
@@ -1228,15 +1602,35 @@ function RecurringListItem({
                   placeholder="https://..."
                   value={linkDraft}
                   onChange={(e) => setLinkDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); saveLink(); } if (e.key === "Escape") setEditingLink(false); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      saveLink();
+                    }
+                    if (e.key === "Escape") setEditingLink(false);
+                  }}
                   autoFocus
                 />
-                <button className="link-edit-save" onClick={saveLink}><Icon name="check" /></button>
-                <button className="link-edit-cancel" onClick={() => setEditingLink(false)}><Icon name="close" /></button>
+                <button className="link-edit-save" onClick={saveLink}>
+                  <Icon name="check" />
+                </button>
+                <button
+                  className="link-edit-cancel"
+                  onClick={() => setEditingLink(false)}
+                >
+                  <Icon name="close" />
+                </button>
               </div>
             )}
             {item.link && !editingLink && (
-              <button className="recurring-edit-link-btn" onClick={() => { setEditingLink(true); setLinkDraft(item.link); }} title="Edit link">
+              <button
+                className="recurring-edit-link-btn"
+                onClick={() => {
+                  setEditingLink(true);
+                  setLinkDraft(item.link);
+                }}
+                title="Edit link"
+              >
                 <Icon name="edit" />
               </button>
             )}
@@ -1245,31 +1639,48 @@ function RecurringListItem({
       </div>
       <div className="list-actions">
         {!isWeekly && !isEvent && (
-          <button className="list-action-btn" onClick={() => onToggle(item.id)} title="Mark done">
+          <button
+            className="list-action-btn"
+            onClick={() => onToggle(item.id)}
+            title="Mark done"
+          >
             <Icon name="check_circle" />
           </button>
         )}
-        <button className="list-action-btn" onClick={() => onEdit(item)} title="Edit">
+        <button
+          className="list-action-btn"
+          onClick={() => onEdit(item)}
+          title="Edit"
+        >
           <Icon name="edit" />
         </button>
-        <button className="list-action-btn delete" onClick={() => onDelete(item.id)} title="Delete">
+        <button
+          className="list-action-btn delete"
+          onClick={() => onDelete(item.id)}
+          title="Delete"
+        >
           <Icon name="close" />
         </button>
       </div>
     </div>
   );
-}
+};
 
-function SettingsView({
+const SettingsView = ({
   settings,
   onToggle,
 }: {
   settings: Settings;
   onToggle: (key: keyof Settings) => void;
-}) {
-  const toggles: { key: keyof Settings; label: string; description: string }[] = [
-    { key: "showArea", label: "Area", description: "Show category label (Life Admin, Social, etc.)" },
-  ];
+}) => {
+  const toggles: { key: keyof Settings; label: string; description: string }[] =
+    [
+      {
+        key: "showArea",
+        label: "Area",
+        description: "Show category label (Life Admin, Social, etc.)",
+      },
+    ];
 
   return (
     <div className="settings-view">
@@ -1282,7 +1693,10 @@ function SettingsView({
               <span className="toggle-label">{label}</span>
               <span className="toggle-desc">{description}</span>
             </div>
-            <div className={`toggle-switch ${settings[key] ? "on" : ""}`} onClick={() => onToggle(key)}>
+            <div
+              className={`toggle-switch ${settings[key] ? "on" : ""}`}
+              onClick={() => onToggle(key)}
+            >
               <div className="toggle-knob" />
             </div>
           </label>
@@ -1290,7 +1704,7 @@ function SettingsView({
       </div>
     </div>
   );
-}
+};
 
 // ── Main Page ──
 
@@ -1309,12 +1723,22 @@ export default function TodoPage() {
   const [recurringAddNote, setRecurringAddNote] = useState("");
   const [recurringAddDay, setRecurringAddDay] = useState<number | null>(null);
   const [showRecurringModal, setShowRecurringModal] = useState(false);
-  const [editingRecurringId, setEditingRecurringId] = useState<string | null>(null);
-  const [recurringAddCategory, setRecurringAddCategory] = useState<"task" | "reference">("task");
+  const [editingRecurringId, setEditingRecurringId] = useState<string | null>(
+    null
+  );
+  const [recurringAddCategory, setRecurringAddCategory] = useState<
+    "task" | "reference"
+  >("task");
   const [recurringAddRepeatEvery, setRecurringAddRepeatEvery] = useState(1);
-  const [recurringAddRepeatUnit, setRecurringAddRepeatUnit] = useState<"day" | "week" | "month" | "year">("week");
-  const [recurringAddRepeatDays, setRecurringAddRepeatDays] = useState<number[]>([]);
-  const [recurringAddEndsType, setRecurringAddEndsType] = useState<"never" | "on" | "after">("never");
+  const [recurringAddRepeatUnit, setRecurringAddRepeatUnit] = useState<
+    "day" | "week" | "month" | "year"
+  >("week");
+  const [recurringAddRepeatDays, setRecurringAddRepeatDays] = useState<
+    number[]
+  >([]);
+  const [recurringAddEndsType, setRecurringAddEndsType] = useState<
+    "never" | "on" | "after"
+  >("never");
   const [recurringAddEndsOn, setRecurringAddEndsOn] = useState("");
   const [recurringAddEndsAfter, setRecurringAddEndsAfter] = useState(13);
   const [recurringAddDueDate, setRecurringAddDueDate] = useState("");
@@ -1326,17 +1750,24 @@ export default function TodoPage() {
 
   const resolvedTheme =
     theme === "system"
-      ? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
       : theme;
 
-  const isTouchDevice = typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
+  const isTouchDevice =
+    typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
   const sensors = useSensors(
-    ...isTouchDevice ? [] : [useSensor(PointerSensor, { activationConstraint: { distance: 8 } })],
+    ...(isTouchDevice
+      ? []
+      : [useSensor(PointerSensor, { activationConstraint: { distance: 8 } })])
   );
 
   const fetchTasks = useCallback(async () => {
     try {
-      const res = await fetch("/api/tasks", { headers: { Accept: "application/json" } });
+      const res = await fetch("/api/tasks", {
+        headers: { Accept: "application/json" },
+      });
       const data = await res.json();
       setTasks(data);
     } catch (e) {
@@ -1348,35 +1779,56 @@ export default function TodoPage() {
 
   const fetchShopping = useCallback(async () => {
     try {
-      const res = await fetch("/api/shopping", { headers: { Accept: "application/json" } });
+      const res = await fetch("/api/shopping", {
+        headers: { Accept: "application/json" },
+      });
       setShoppingItems(await res.json());
-    } catch (e) { console.error("Failed to fetch shopping:", e); }
+    } catch (e) {
+      console.error("Failed to fetch shopping:", e);
+    }
   }, []);
 
   const fetchGroceries = useCallback(async () => {
     try {
-      const res = await fetch("/api/groceries", { headers: { Accept: "application/json" } });
+      const res = await fetch("/api/groceries", {
+        headers: { Accept: "application/json" },
+      });
       setGroceryItems(await res.json());
-    } catch (e) { console.error("Failed to fetch groceries:", e); }
+    } catch (e) {
+      console.error("Failed to fetch groceries:", e);
+    }
   }, []);
 
   const fetchRecurring = useCallback(async () => {
     try {
-      const res = await fetch("/api/recurring", { headers: { Accept: "application/json" } });
+      const res = await fetch("/api/recurring", {
+        headers: { Accept: "application/json" },
+      });
       setRecurringItems(await res.json());
-    } catch (e) { console.error("Failed to fetch recurring:", e); }
+    } catch (e) {
+      console.error("Failed to fetch recurring:", e);
+    }
   }, []);
 
-  useEffect(() => { fetchTasks(); fetchShopping(); fetchGroceries(); fetchRecurring(); }, [fetchTasks, fetchShopping, fetchGroceries, fetchRecurring]);
+  useEffect(() => {
+    fetchTasks();
+    fetchShopping();
+    fetchGroceries();
+    fetchRecurring();
+  }, [fetchTasks, fetchShopping, fetchGroceries, fetchRecurring]);
 
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        fetchTasks(); fetchShopping(); fetchGroceries(); fetchRecurring();
+        fetchTasks();
+        fetchShopping();
+        fetchGroceries();
+        fetchRecurring();
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
   }, [fetchTasks, fetchShopping, fetchGroceries, fetchRecurring]);
 
   useEffect(() => {
@@ -1390,16 +1842,19 @@ export default function TodoPage() {
     });
   }, []);
 
-  function toggleSetting(key: keyof Settings) {
+  const toggleSetting = (key: keyof Settings) => {
     setSettings((prev) => {
       const next = { ...prev, [key]: !prev[key] };
       saveSettingsLocal(next);
-      pushSettingsToServer({ ...next, theme: resolvedTheme as "light" | "dark" });
+      pushSettingsToServer({
+        ...next,
+        theme: resolvedTheme as "light" | "dark",
+      });
       return next;
     });
-  }
+  };
 
-  async function addTask(e: React.FormEvent) {
+  const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
     const title = newTitle.trim();
     if (!title) return;
@@ -1407,7 +1862,10 @@ export default function TodoPage() {
     try {
       const res = await fetch("/api/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ title, status, dueDate: newTaskDueDate }),
       });
       const task = await res.json();
@@ -1418,216 +1876,325 @@ export default function TodoPage() {
     } catch (e) {
       console.error("Failed to add task:", e);
     }
-  }
+  };
 
-  async function addTaskFromList(title: string, source: string, sourceItemId: string) {
+  const addTaskFromList = async (
+    title: string,
+    source: string,
+    sourceItemId: string
+  ) => {
     try {
       const res = await fetch("/api/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ title, status: "this-week", source, sourceItemId }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          status: "this-week",
+          source,
+          sourceItemId,
+        }),
       });
       const task = await res.json();
       setTasks((prev) => [...prev, task]);
     } catch (e) {
       console.error("Failed to add task from list:", e);
     }
-  }
+  };
 
-  async function changeStatus(id: string, status: TaskStatus) {
+  const changeStatus = async (id: string, status: TaskStatus) => {
     const task = tasks.find((t) => t.id === id);
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? applyStatusChange(t, { status }, new Date()) : t))
+      prev.map((t) =>
+        t.id === id ? applyStatusChange(t, { status }, new Date()) : t
+      )
     );
     try {
       await fetch(`/api/tasks/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ status }),
       });
       if (status === "done" && task?.sourceItemId) {
         if (task.source === "shopping") toggleShoppingItem(task.sourceItemId);
-        else if (task.source === "grocery") toggleGroceryItem(task.sourceItemId);
+        else if (task.source === "grocery")
+          toggleGroceryItem(task.sourceItemId);
       }
     } catch (e) {
       console.error("Failed to update task:", e);
       fetchTasks();
     }
-  }
+  };
 
-  async function updateTask(id: string, fields: Partial<Task>) {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...fields } : t)));
+  const updateTask = async (id: string, fields: Partial<Task>) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...fields } : t))
+    );
     try {
       await fetch(`/api/tasks/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify(fields),
       });
     } catch (e) {
       console.error("Failed to update task:", e);
       fetchTasks();
     }
-  }
+  };
 
-  async function deleteTask(id: string) {
+  const deleteTask = async (id: string) => {
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? applyStatusChange(t, { status: "trashed" }, new Date()) : t))
+      prev.map((t) =>
+        t.id === id
+          ? applyStatusChange(t, { status: "trashed" }, new Date())
+          : t
+      )
     );
     try {
-      await fetch(`/api/tasks/${id}`, { method: "DELETE", headers: { Accept: "application/json" } });
+      await fetch(`/api/tasks/${id}`, {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
     } catch (e) {
       console.error("Failed to delete task:", e);
       fetchTasks();
     }
-  }
+  };
 
-  async function restoreTask(id: string) {
+  const restoreTask = async (id: string) => {
     changeStatus(id, "this-week");
-  }
+  };
 
-  async function permanentDelete(id: string) {
+  const permanentDelete = async (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     try {
-      await fetch(`/api/tasks/${id}?permanent=true`, { method: "DELETE", headers: { Accept: "application/json" } });
+      await fetch(`/api/tasks/${id}?permanent=true`, {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
     } catch (e) {
       console.error("Failed to permanently delete:", e);
       fetchTasks();
     }
-  }
+  };
 
   // ── Shopping CRUD ──
 
-  async function addShoppingItem(e: React.FormEvent) {
+  const addShoppingItem = async (e: React.FormEvent) => {
     e.preventDefault();
     const title = newTitle.trim();
     if (!title) return;
     try {
       const res = await fetch("/api/shopping", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ title, category: "need" }),
       });
       const item = await res.json();
       setShoppingItems((prev) => [...prev, item]);
       setNewTitle("");
-    } catch (e) { console.error("Failed to add shopping item:", e); }
-  }
+    } catch (e) {
+      console.error("Failed to add shopping item:", e);
+    }
+  };
 
-  async function toggleShoppingItem(id: string) {
-    setShoppingItems((prev) => prev.map((i) => i.id === id ? { ...i, done: !i.done } : i));
+  const toggleShoppingItem = async (id: string) => {
+    setShoppingItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, done: !i.done } : i))
+    );
     const item = shoppingItems.find((i) => i.id === id);
     if (!item) return;
     try {
       await fetch(`/api/shopping/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ done: !item.done }),
       });
-    } catch (e) { console.error("Failed to toggle shopping item:", e); fetchShopping(); }
-  }
+    } catch (e) {
+      console.error("Failed to toggle shopping item:", e);
+      fetchShopping();
+    }
+  };
 
-  async function archiveShoppingItem(id: string) {
-    setShoppingItems((prev) => prev.map((i) => i.id === id ? { ...i, archived: true } : i));
+  const archiveShoppingItem = async (id: string) => {
+    setShoppingItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, archived: true } : i))
+    );
     try {
       await fetch(`/api/shopping/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ archived: true }),
       });
-    } catch (e) { console.error("Failed to archive shopping item:", e); fetchShopping(); }
-  }
+    } catch (e) {
+      console.error("Failed to archive shopping item:", e);
+      fetchShopping();
+    }
+  };
 
-  async function unarchiveShoppingItem(id: string) {
-    setShoppingItems((prev) => prev.map((i) => i.id === id ? { ...i, archived: false } : i));
+  const unarchiveShoppingItem = async (id: string) => {
+    setShoppingItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, archived: false } : i))
+    );
     try {
       await fetch(`/api/shopping/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ archived: false }),
       });
-    } catch (e) { console.error("Failed to unarchive shopping item:", e); fetchShopping(); }
-  }
+    } catch (e) {
+      console.error("Failed to unarchive shopping item:", e);
+      fetchShopping();
+    }
+  };
 
-  async function deleteShoppingItem(id: string) {
+  const deleteShoppingItem = async (id: string) => {
     setShoppingItems((prev) => prev.filter((i) => i.id !== id));
     try {
-      await fetch(`/api/shopping/${id}`, { method: "DELETE", headers: { Accept: "application/json" } });
-    } catch (e) { console.error("Failed to delete shopping item:", e); fetchShopping(); }
-  }
+      await fetch(`/api/shopping/${id}`, {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
+    } catch (e) {
+      console.error("Failed to delete shopping item:", e);
+      fetchShopping();
+    }
+  };
 
-  async function updateShoppingLinks(id: string, links: string[]) {
-    setShoppingItems((prev) => prev.map((i) => i.id === id ? { ...i, links } : i));
+  const updateShoppingLinks = async (id: string, links: string[]) => {
+    setShoppingItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, links } : i))
+    );
     try {
       await fetch(`/api/shopping/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ links }),
       });
-    } catch (e) { console.error("Failed to update shopping links:", e); fetchShopping(); }
-  }
+    } catch (e) {
+      console.error("Failed to update shopping links:", e);
+      fetchShopping();
+    }
+  };
 
-  async function changeShoppingCategory(id: string) {
+  const changeShoppingCategory = async (id: string) => {
     const item = shoppingItems.find((i) => i.id === id);
     if (!item) return;
     const newCategory = item.category === "need" ? "want" : "need";
-    setShoppingItems((prev) => prev.map((i) => i.id === id ? { ...i, category: newCategory } : i));
+    setShoppingItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, category: newCategory } : i))
+    );
     try {
       await fetch(`/api/shopping/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ category: newCategory }),
       });
-    } catch (e) { console.error("Failed to change shopping category:", e); fetchShopping(); }
-  }
+    } catch (e) {
+      console.error("Failed to change shopping category:", e);
+      fetchShopping();
+    }
+  };
 
   // ── Grocery CRUD ──
 
-  async function addGroceryItem(e: React.FormEvent) {
+  const addGroceryItem = async (e: React.FormEvent) => {
     e.preventDefault();
     const title = newTitle.trim();
     if (!title) return;
     try {
       const res = await fetch("/api/groceries", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ title }),
       });
       const item = await res.json();
       setGroceryItems((prev) => [...prev, item]);
       setNewTitle("");
-    } catch (e) { console.error("Failed to add grocery item:", e); }
-  }
+    } catch (e) {
+      console.error("Failed to add grocery item:", e);
+    }
+  };
 
-  async function toggleGroceryItem(id: string) {
-    setGroceryItems((prev) => prev.map((i) => i.id === id ? { ...i, done: !i.done } : i));
+  const toggleGroceryItem = async (id: string) => {
+    setGroceryItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, done: !i.done } : i))
+    );
     const item = groceryItems.find((i) => i.id === id);
     if (!item) return;
     try {
       await fetch(`/api/groceries/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({ done: !item.done }),
       });
-    } catch (e) { console.error("Failed to toggle grocery item:", e); fetchGroceries(); }
-  }
+    } catch (e) {
+      console.error("Failed to toggle grocery item:", e);
+      fetchGroceries();
+    }
+  };
 
-  async function deleteGroceryItem(id: string) {
+  const deleteGroceryItem = async (id: string) => {
     setGroceryItems((prev) => prev.filter((i) => i.id !== id));
     try {
-      await fetch(`/api/groceries/${id}`, { method: "DELETE", headers: { Accept: "application/json" } });
-    } catch (e) { console.error("Failed to delete grocery item:", e); fetchGroceries(); }
-  }
+      await fetch(`/api/groceries/${id}`, {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
+    } catch (e) {
+      console.error("Failed to delete grocery item:", e);
+      fetchGroceries();
+    }
+  };
 
-  async function clearBoughtGroceries() {
+  const clearBoughtGroceries = async () => {
     setGroceryItems((prev) => prev.filter((i) => !i.done));
     try {
-      await fetch("/api/groceries/clear-bought", { method: "DELETE", headers: { Accept: "application/json" } });
-    } catch (e) { console.error("Failed to clear bought groceries:", e); fetchGroceries(); }
-  }
+      await fetch("/api/groceries/clear-bought", {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
+    } catch (e) {
+      console.error("Failed to clear bought groceries:", e);
+      fetchGroceries();
+    }
+  };
 
   // ── Recurring CRUD ──
 
-  function closeRecurringModal() {
+  const closeRecurringModal = () => {
     setShowRecurringModal(false);
     setEditingRecurringId(null);
     setNewTitle("");
@@ -1644,9 +2211,9 @@ export default function TodoPage() {
     setRecurringAddDueDate("");
     setShowRecurringDatePicker(false);
     setRecurringAddArea("");
-  }
+  };
 
-  function openRecurringEdit(item: RecurringItem) {
+  const openRecurringEdit = (item: RecurringItem) => {
     setEditingRecurringId(item.id);
     setNewTitle(item.title);
     setRecurringAddCategory(item.category);
@@ -1662,14 +2229,18 @@ export default function TodoPage() {
     setRecurringAddDueDate(item.dueDate || "");
     setRecurringAddArea(item.area || "");
     setShowRecurringModal(true);
-  }
+  };
 
-  async function handleRecurringSubmit(e: React.FormEvent) {
+  const handleRecurringSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const title = newTitle.trim();
     if (!title) return;
     const isEvent = recurringAddCategory === "reference";
-    const effectiveDay = isEvent ? recurringAddDay : (recurringAddRepeatDays.length > 0 ? recurringAddRepeatDays[0] : recurringAddDay);
+    const effectiveDay = isEvent
+      ? recurringAddDay
+      : recurringAddRepeatDays.length > 0
+        ? recurringAddRepeatDays[0]
+        : recurringAddDay;
     let dueDate: string | null = recurringAddDueDate || null;
     if (!dueDate && effectiveDay != null && !isEvent) {
       const today = new Date();
@@ -1681,7 +2252,7 @@ export default function TodoPage() {
       if (recurDate <= today) recurDate.setDate(recurDate.getDate() + 7);
       dueDate = toLocalDateKey(recurDate);
     }
-    const fields: Record<string, any> = {
+    const fields: Record<string, unknown> = {
       title,
       frequency: "weekly",
       category: recurringAddCategory,
@@ -1697,7 +2268,8 @@ export default function TodoPage() {
       fields.repeatDays = recurringAddRepeatDays;
       fields.endsType = recurringAddEndsType;
       fields.endsOn = recurringAddEndsType === "on" ? recurringAddEndsOn : null;
-      fields.endsAfter = recurringAddEndsType === "after" ? recurringAddEndsAfter : null;
+      fields.endsAfter =
+        recurringAddEndsType === "after" ? recurringAddEndsAfter : null;
     }
 
     if (editingRecurringId) {
@@ -1707,66 +2279,119 @@ export default function TodoPage() {
       try {
         const res = await fetch("/api/recurring", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify(fields),
         });
         const item = await res.json();
         setRecurringItems((prev) => [...prev, item]);
         closeRecurringModal();
-      } catch (e) { console.error("Failed to add recurring item:", e); }
+      } catch (e) {
+        console.error("Failed to add recurring item:", e);
+      }
     }
-  }
+  };
 
-  async function toggleRecurringItem(id: string) {
+  const toggleRecurringItem = async (id: string) => {
     const item = recurringItems.find((i) => i.id === id);
     if (!item) return;
-    const itemIsWeekly = item.repeatUnit === "week" && item.repeatEvery === 1 && item.frequency !== "long-term";
+    const itemIsWeekly =
+      item.repeatUnit === "week" &&
+      item.repeatEvery === 1 &&
+      item.frequency !== "long-term";
     if (itemIsWeekly) {
       const next = !item.completedThisWeek;
-      setRecurringItems((prev) => prev.map((i) => i.id === id ? { ...i, completedThisWeek: next, lastCompletedAt: next ? new Date().toISOString() : i.lastCompletedAt } : i));
+      setRecurringItems((prev) =>
+        prev.map((i) =>
+          i.id === id
+            ? {
+                ...i,
+                completedThisWeek: next,
+                lastCompletedAt: next
+                  ? new Date().toISOString()
+                  : i.lastCompletedAt,
+              }
+            : i
+        )
+      );
       try {
         await fetch(`/api/recurring/${id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify({ completedThisWeek: next }),
         });
-      } catch (e) { console.error("Failed to toggle recurring:", e); fetchRecurring(); }
+      } catch (e) {
+        console.error("Failed to toggle recurring:", e);
+        fetchRecurring();
+      }
     } else {
-      setRecurringItems((prev) => prev.map((i) => i.id === id ? { ...i, lastCompletedAt: new Date().toISOString() } : i));
+      setRecurringItems((prev) =>
+        prev.map((i) =>
+          i.id === id ? { ...i, lastCompletedAt: new Date().toISOString() } : i
+        )
+      );
       try {
         await fetch(`/api/recurring/${id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify({ done: true }),
         });
-      } catch (e) { console.error("Failed to mark recurring done:", e); fetchRecurring(); }
+      } catch (e) {
+        console.error("Failed to mark recurring done:", e);
+        fetchRecurring();
+      }
     }
-  }
+  };
 
-  async function deleteRecurringItem(id: string) {
+  const deleteRecurringItem = async (id: string) => {
     setRecurringItems((prev) => prev.filter((i) => i.id !== id));
     try {
-      await fetch(`/api/recurring/${id}`, { method: "DELETE", headers: { Accept: "application/json" } });
-    } catch (e) { console.error("Failed to delete recurring:", e); fetchRecurring(); }
-  }
+      await fetch(`/api/recurring/${id}`, {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
+    } catch (e) {
+      console.error("Failed to delete recurring:", e);
+      fetchRecurring();
+    }
+  };
 
-  async function updateRecurringItem(id: string, fields: Partial<RecurringItem>) {
-    setRecurringItems((prev) => prev.map((i) => i.id === id ? { ...i, ...fields } : i));
+  const updateRecurringItem = async (
+    id: string,
+    fields: Partial<RecurringItem>
+  ) => {
+    setRecurringItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, ...fields } : i))
+    );
     try {
       await fetch(`/api/recurring/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify(fields),
       });
-    } catch (e) { console.error("Failed to update recurring:", e); fetchRecurring(); }
-  }
+    } catch (e) {
+      console.error("Failed to update recurring:", e);
+      fetchRecurring();
+    }
+  };
 
-  function handleDragStart(event: DragStartEvent) {
+  const handleDragStart = (event: DragStartEvent) => {
     const task = tasks.find((t) => t.id === event.active.id);
     setActiveTask(task || null);
-  }
+  };
 
-  function handleDragEnd(event: DragEndEvent) {
+  const handleDragEnd = (event: DragEndEvent) => {
     setActiveTask(null);
     const { active, over } = event;
     if (!over) return;
@@ -1775,38 +2400,68 @@ export default function TodoPage() {
     const task = tasks.find((t) => t.id === taskId);
     if (!task || task.status === targetColumn) return;
     changeStatus(taskId, targetColumn);
-  }
+  };
 
-  const tasksByStatus = (status: TaskStatus) => tasks.filter((t) => t.status === status);
+  const tasksByStatus = (status: TaskStatus) =>
+    tasks.filter((t) => t.status === status);
   const futureTasks = tasksByStatus("future");
   const trashedTasks = tasksByStatus("trashed");
-  const activeShoppingItems = shoppingItems.filter((i) => !i.archived && !i.done);
+  const activeShoppingItems = shoppingItems.filter(
+    (i) => !i.archived && !i.done
+  );
   const doneShoppingItems = shoppingItems.filter((i) => !i.archived && i.done);
   const archivedShoppingItems = shoppingItems.filter((i) => i.archived);
-  const shoppingNeeds = activeShoppingItems.filter((i) => i.category === "need");
-  const shoppingWants = activeShoppingItems.filter((i) => i.category === "want");
+  const shoppingNeeds = activeShoppingItems.filter(
+    (i) => i.category === "need"
+  );
+  const shoppingWants = activeShoppingItems.filter(
+    (i) => i.category === "want"
+  );
   const boughtGroceries = groceryItems.filter((i) => i.done);
   const unboughtGroceries = groceryItems.filter((i) => !i.done);
-  const isWeeklyItem = (i: RecurringItem) => i.repeatUnit === "week" && i.repeatEvery === 1 && i.frequency !== "long-term";
+  const isWeeklyItem = (i: RecurringItem) =>
+    i.repeatUnit === "week" &&
+    i.repeatEvery === 1 &&
+    i.frequency !== "long-term";
   const allTasks = recurringItems.filter((i) => i.category === "task");
-  const allReferences = recurringItems.filter((i) => i.category === "reference");
+  const allReferences = recurringItems.filter(
+    (i) => i.category === "reference"
+  );
   const weeklyTasks = allTasks.filter(isWeeklyItem);
   const todayDow = new Date().getDay();
-  const boardWeeklyTasks = weeklyTasks.filter((i) =>
-    i.repeatDays.length === 0 || i.repeatDays.includes(todayDow) || i.completedThisWeek
+  const boardWeeklyTasks = weeklyTasks.filter(
+    (i) =>
+      i.repeatDays.length === 0 ||
+      i.repeatDays.includes(todayDow) ||
+      i.completedThisWeek
   );
-  const unitOrder: Record<string, number> = { day: 0, week: 1, month: 2, year: 3 };
-  const longTermTasks = allTasks.filter((i) => !isWeeklyItem(i)).sort((a, b) => (unitOrder[a.repeatUnit] ?? 9) - (unitOrder[b.repeatUnit] ?? 9));
+  const unitOrder: Record<string, number> = {
+    day: 0,
+    week: 1,
+    month: 2,
+    year: 3,
+  };
+  const longTermTasks = allTasks
+    .filter((i) => !isWeeklyItem(i))
+    .sort(
+      (a, b) => (unitOrder[a.repeatUnit] ?? 9) - (unitOrder[b.repeatUnit] ?? 9)
+    );
   const weeklyDoneCount = weeklyTasks.filter((i) => i.completedThisWeek).length;
   const upcomingLongTerm = longTermTasks.filter((i) => {
     if (!i.dueDate) return false;
     const due = new Date(i.dueDate).getTime();
     const now = Date.now();
-    return due - now <= 7 * 24 * 60 * 60 * 1000 && due - now > -24 * 60 * 60 * 1000;
+    return (
+      due - now <= 7 * 24 * 60 * 60 * 1000 && due - now > -24 * 60 * 60 * 1000
+    );
   });
   const allBoardRecurring = [...boardWeeklyTasks, ...upcomingLongTerm];
-  const boardRecurringTasks = allBoardRecurring.filter((i) => !i.completedThisWeek);
-  const boardRecurringDone = allBoardRecurring.filter((i) => i.completedThisWeek);
+  const boardRecurringTasks = allBoardRecurring.filter(
+    (i) => !i.completedThisWeek
+  );
+  const boardRecurringDone = allBoardRecurring.filter(
+    (i) => i.completedThisWeek
+  );
 
   if (loading) {
     return (
@@ -1816,13 +2471,27 @@ export default function TodoPage() {
     );
   }
 
-  const handleAddForm = viewTab === "shopping" ? addShoppingItem : viewTab === "groceries" ? addGroceryItem : addTask;
-  const addPlaceholder = viewTab === "shopping" ? "Add a shopping item..." : viewTab === "groceries" ? "Add a grocery item..." : viewTab === "recurring" ? "Add a recurring item..." : "Add a task...";
+  const handleAddForm =
+    viewTab === "shopping"
+      ? addShoppingItem
+      : viewTab === "groceries"
+        ? addGroceryItem
+        : addTask;
+  const addPlaceholder =
+    viewTab === "shopping"
+      ? "Add a shopping item..."
+      : viewTab === "groceries"
+        ? "Add a grocery item..."
+        : viewTab === "recurring"
+          ? "Add a recurring item..."
+          : "Add a task...";
 
   return (
     <div className="todo-page">
       <header className="todo-header">
-        <h1><Icon name="eco" /> {formatHeadingDate()}</h1>
+        <h1>
+          <Icon name="eco" /> {formatHeadingDate()}
+        </h1>
         <div className="header-actions">
           <button
             className="theme-toggle"
@@ -1833,26 +2502,63 @@ export default function TodoPage() {
             }}
             aria-label="Toggle theme"
           >
-            <Icon name={resolvedTheme === "dark" ? "light_mode" : "dark_mode"} />
+            <Icon
+              name={resolvedTheme === "dark" ? "light_mode" : "dark_mode"}
+            />
           </button>
-          <button className="sidebar-toggle" onClick={() => setSidebarPanel(sidebarPanel ? null : "settings")} aria-label="Settings">
+          <button
+            className="sidebar-toggle"
+            onClick={() => setSidebarPanel(sidebarPanel ? null : "settings")}
+            aria-label="Settings"
+          >
             <Icon name="settings" />
           </button>
         </div>
       </header>
 
       <div className="view-tabs">
-        <button className={`view-tab ${viewTab === "board" ? "active" : ""}`} onClick={() => setViewTab("board")}>
-          <Icon name="dashboard" className="tab-icon" /><span className="tab-label"> Board</span>
+        <button
+          className={`view-tab ${viewTab === "board" ? "active" : ""}`}
+          onClick={() => setViewTab("board")}
+        >
+          <Icon name="dashboard" className="tab-icon" />
+          <span className="tab-label"> Board</span>
         </button>
-        <button className={`view-tab recurring-tab ${viewTab === "recurring" ? "active" : ""}`} onClick={() => setViewTab("recurring")}>
-          <Icon name="repeat" className="tab-icon" /><span className="tab-label"> Recurring</span> {recurringItems.length > 0 && <span className="tab-count recurring-count">{recurringItems.length}</span>}
+        <button
+          className={`view-tab recurring-tab ${viewTab === "recurring" ? "active" : ""}`}
+          onClick={() => setViewTab("recurring")}
+        >
+          <Icon name="repeat" className="tab-icon" />
+          <span className="tab-label"> Recurring</span>{" "}
+          {recurringItems.length > 0 && (
+            <span className="tab-count recurring-count">
+              {recurringItems.length}
+            </span>
+          )}
         </button>
-        <button className={`view-tab shopping-tab ${viewTab === "shopping" ? "active" : ""}`} onClick={() => setViewTab("shopping")}>
-          <Icon name="shopping_bag" className="tab-icon" /><span className="tab-label"> Shopping</span> {(activeShoppingItems.length + doneShoppingItems.length) > 0 && <span className="tab-count shopping-count">{activeShoppingItems.length + doneShoppingItems.length}</span>}
+        <button
+          className={`view-tab shopping-tab ${viewTab === "shopping" ? "active" : ""}`}
+          onClick={() => setViewTab("shopping")}
+        >
+          <Icon name="shopping_bag" className="tab-icon" />
+          <span className="tab-label"> Shopping</span>{" "}
+          {activeShoppingItems.length + doneShoppingItems.length > 0 && (
+            <span className="tab-count shopping-count">
+              {activeShoppingItems.length + doneShoppingItems.length}
+            </span>
+          )}
         </button>
-        <button className={`view-tab grocery-tab ${viewTab === "groceries" ? "active" : ""}`} onClick={() => setViewTab("groceries")}>
-          <Icon name="grocery" className="tab-icon" /><span className="tab-label"> Groceries</span> {groceryItems.length > 0 && <span className="tab-count grocery-count">{groceryItems.length}</span>}
+        <button
+          className={`view-tab grocery-tab ${viewTab === "groceries" ? "active" : ""}`}
+          onClick={() => setViewTab("groceries")}
+        >
+          <Icon name="grocery" className="tab-icon" />
+          <span className="tab-label"> Groceries</span>{" "}
+          {groceryItems.length > 0 && (
+            <span className="tab-count grocery-count">
+              {groceryItems.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -1872,10 +2578,18 @@ export default function TodoPage() {
                   type="button"
                   className={`add-date-btn ${newTaskDueDate ? "has-date" : ""}`}
                   onClick={() => setShowAddDatePicker(!showAddDatePicker)}
-                  title={newTaskDueDate ? `Due: ${formatDueDate(newTaskDueDate)}` : "Set due date"}
+                  title={
+                    newTaskDueDate
+                      ? `Due: ${formatDueDate(newTaskDueDate)}`
+                      : "Set due date"
+                  }
                 >
                   <Icon name="calendar_month" />
-                  {newTaskDueDate && <span className="add-date-label">{formatDueDate(newTaskDueDate)}</span>}
+                  {newTaskDueDate && (
+                    <span className="add-date-label">
+                      {formatDueDate(newTaskDueDate)}
+                    </span>
+                  )}
                 </button>
                 {showAddDatePicker && (
                   <DatePickerDropdown
@@ -1886,13 +2600,19 @@ export default function TodoPage() {
                 )}
               </div>
             )}
-            <button className="add-task-btn" type="submit">Add</button>
+            <button className="add-task-btn" type="submit">
+              Add
+            </button>
           </div>
         </form>
       )}
 
       {viewTab === "board" && (
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
           <div className="board">
             {BOARD_COLUMNS.map((col) => (
               <BoardColumn
@@ -1906,11 +2626,33 @@ export default function TodoPage() {
                 onDelete={deleteTask}
                 onUpdate={updateTask}
                 settings={settings}
-                recurringTasks={col.id === "this-week" ? boardRecurringTasks : col.id === "done" ? boardRecurringDone : undefined}
-                onToggleRecurring={(col.id === "this-week" || col.id === "done") ? toggleRecurringItem : undefined}
-                onDeleteRecurring={(col.id === "this-week" || col.id === "done") ? deleteRecurringItem : undefined}
-                onUpdateRecurring={(col.id === "this-week" || col.id === "done") ? updateRecurringItem : undefined}
-                onEditRecurring={(col.id === "this-week" || col.id === "done") ? openRecurringEdit : undefined}
+                recurringTasks={
+                  col.id === "this-week"
+                    ? boardRecurringTasks
+                    : col.id === "done"
+                      ? boardRecurringDone
+                      : undefined
+                }
+                onToggleRecurring={
+                  col.id === "this-week" || col.id === "done"
+                    ? toggleRecurringItem
+                    : undefined
+                }
+                onDeleteRecurring={
+                  col.id === "this-week" || col.id === "done"
+                    ? deleteRecurringItem
+                    : undefined
+                }
+                onUpdateRecurring={
+                  col.id === "this-week" || col.id === "done"
+                    ? updateRecurringItem
+                    : undefined
+                }
+                onEditRecurring={
+                  col.id === "this-week" || col.id === "done"
+                    ? openRecurringEdit
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -1942,7 +2684,16 @@ export default function TodoPage() {
                 <div className="column-empty">No items needed right now</div>
               ) : (
                 shoppingNeeds.map((item) => (
-                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} onAddToBoard={addTaskFromList} onUpdateLinks={updateShoppingLinks} />
+                  <ShoppingListItem
+                    key={item.id}
+                    item={item}
+                    onToggle={toggleShoppingItem}
+                    onArchive={archiveShoppingItem}
+                    onDelete={deleteShoppingItem}
+                    onMove={changeShoppingCategory}
+                    onAddToBoard={addTaskFromList}
+                    onUpdateLinks={updateShoppingLinks}
+                  />
                 ))
               )}
             </div>
@@ -1956,7 +2707,16 @@ export default function TodoPage() {
                 <div className="column-empty">No wishlist items</div>
               ) : (
                 shoppingWants.map((item) => (
-                  <ShoppingListItem key={item.id} item={item} onToggle={toggleShoppingItem} onArchive={archiveShoppingItem} onDelete={deleteShoppingItem} onMove={changeShoppingCategory} onAddToBoard={addTaskFromList} onUpdateLinks={updateShoppingLinks} />
+                  <ShoppingListItem
+                    key={item.id}
+                    item={item}
+                    onToggle={toggleShoppingItem}
+                    onArchive={archiveShoppingItem}
+                    onDelete={deleteShoppingItem}
+                    onMove={changeShoppingCategory}
+                    onAddToBoard={addTaskFromList}
+                    onUpdateLinks={updateShoppingLinks}
+                  />
                 ))
               )}
             </div>
@@ -1970,7 +2730,12 @@ export default function TodoPage() {
                 <div className="column-empty">Nothing bought yet</div>
               ) : (
                 doneShoppingItems.map((item) => (
-                  <ShoppingDoneItem key={item.id} item={item} onUndone={toggleShoppingItem} onDelete={deleteShoppingItem} />
+                  <ShoppingDoneItem
+                    key={item.id}
+                    item={item}
+                    onUndone={toggleShoppingItem}
+                    onDelete={deleteShoppingItem}
+                  />
                 ))
               )}
             </div>
@@ -1986,8 +2751,12 @@ export default function TodoPage() {
               <h3>Groceries</h3>
               <span className="column-count">{unboughtGroceries.length}</span>
               {boughtGroceries.length > 0 && (
-                <button className="clear-bought-btn" onClick={clearBoughtGroceries}>
-                  <Icon name="delete_sweep" /> Clear {boughtGroceries.length} bought
+                <button
+                  className="clear-bought-btn"
+                  onClick={clearBoughtGroceries}
+                >
+                  <Icon name="delete_sweep" /> Clear {boughtGroceries.length}{" "}
+                  bought
                 </button>
               )}
             </div>
@@ -1996,10 +2765,22 @@ export default function TodoPage() {
             ) : (
               <>
                 {unboughtGroceries.map((item) => (
-                  <GroceryListItem key={item.id} item={item} onToggle={toggleGroceryItem} onDelete={deleteGroceryItem} onAddToBoard={addTaskFromList} />
+                  <GroceryListItem
+                    key={item.id}
+                    item={item}
+                    onToggle={toggleGroceryItem}
+                    onDelete={deleteGroceryItem}
+                    onAddToBoard={addTaskFromList}
+                  />
                 ))}
                 {boughtGroceries.map((item) => (
-                  <GroceryListItem key={item.id} item={item} onToggle={toggleGroceryItem} onDelete={deleteGroceryItem} onAddToBoard={addTaskFromList} />
+                  <GroceryListItem
+                    key={item.id}
+                    item={item}
+                    onToggle={toggleGroceryItem}
+                    onDelete={deleteGroceryItem}
+                    onAddToBoard={addTaskFromList}
+                  />
                 ))}
               </>
             )}
@@ -2010,7 +2791,13 @@ export default function TodoPage() {
       {viewTab === "recurring" && (
         <div className="recurring-board">
           <div className="recurring-left-col">
-            <button className="recurring-col-add-btn" onClick={() => { setRecurringAddCategory("task"); setShowRecurringModal(true); }}>
+            <button
+              className="recurring-col-add-btn"
+              onClick={() => {
+                setRecurringAddCategory("task");
+                setShowRecurringModal(true);
+              }}
+            >
               <Icon name="add" /> Add Task
             </button>
             <div className="recurring-section">
@@ -2018,14 +2805,23 @@ export default function TodoPage() {
                 <Icon name="check_circle" className="column-icon" />
                 <h3>Weekly Tasks</h3>
                 {weeklyTasks.length > 0 && (
-                  <span className="recurring-progress">{weeklyDoneCount}/{weeklyTasks.length} done</span>
+                  <span className="recurring-progress">
+                    {weeklyDoneCount}/{weeklyTasks.length} done
+                  </span>
                 )}
               </div>
               {weeklyTasks.length === 0 ? (
                 <div className="column-empty">No weekly tasks yet</div>
               ) : (
                 weeklyTasks.map((item) => (
-                  <RecurringListItem key={item.id} item={item} onToggle={toggleRecurringItem} onDelete={deleteRecurringItem} onUpdate={updateRecurringItem} onEdit={openRecurringEdit} />
+                  <RecurringListItem
+                    key={item.id}
+                    item={item}
+                    onToggle={toggleRecurringItem}
+                    onDelete={deleteRecurringItem}
+                    onUpdate={updateRecurringItem}
+                    onEdit={openRecurringEdit}
+                  />
                 ))
               )}
             </div>
@@ -2037,13 +2833,26 @@ export default function TodoPage() {
                   <span className="column-count">{longTermTasks.length}</span>
                 </div>
                 {longTermTasks.map((item) => (
-                  <RecurringListItem key={item.id} item={item} onToggle={toggleRecurringItem} onDelete={deleteRecurringItem} onUpdate={updateRecurringItem} onEdit={openRecurringEdit} />
+                  <RecurringListItem
+                    key={item.id}
+                    item={item}
+                    onToggle={toggleRecurringItem}
+                    onDelete={deleteRecurringItem}
+                    onUpdate={updateRecurringItem}
+                    onEdit={openRecurringEdit}
+                  />
                 ))}
               </div>
             )}
           </div>
           <div className="recurring-right-col">
-            <button className="recurring-col-add-btn events-add-btn" onClick={() => { setRecurringAddCategory("reference"); setShowRecurringModal(true); }}>
+            <button
+              className="recurring-col-add-btn events-add-btn"
+              onClick={() => {
+                setRecurringAddCategory("reference");
+                setShowRecurringModal(true);
+              }}
+            >
               <Icon name="add" /> Add Event / Class
             </button>
             <div className="recurring-section events-section">
@@ -2056,7 +2865,14 @@ export default function TodoPage() {
                 <div className="column-empty">No events or classes yet</div>
               ) : (
                 allReferences.map((item) => (
-                  <RecurringListItem key={item.id} item={item} onToggle={toggleRecurringItem} onDelete={deleteRecurringItem} onUpdate={updateRecurringItem} onEdit={openRecurringEdit} />
+                  <RecurringListItem
+                    key={item.id}
+                    item={item}
+                    onToggle={toggleRecurringItem}
+                    onDelete={deleteRecurringItem}
+                    onUpdate={updateRecurringItem}
+                    onEdit={openRecurringEdit}
+                  />
                 ))
               )}
             </div>
@@ -2066,23 +2882,43 @@ export default function TodoPage() {
 
       {showRecurringModal && (
         <div className="recurring-modal-overlay" onClick={closeRecurringModal}>
-          <div className={`recurring-modal ${recurringAddCategory === "reference" ? "event-modal" : ""}`} onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`recurring-modal ${recurringAddCategory === "reference" ? "event-modal" : ""}`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="recurring-modal-header">
-              <h3>{editingRecurringId ? (recurringAddCategory === "reference" ? "Edit Event / Class" : "Edit Recurring Task") : (recurringAddCategory === "reference" ? "Add Event / Class" : "Add Recurring Task")}</h3>
-              <button className="recurring-modal-close" onClick={closeRecurringModal}>
+              <h3>
+                {editingRecurringId
+                  ? recurringAddCategory === "reference"
+                    ? "Edit Event / Class"
+                    : "Edit Recurring Task"
+                  : recurringAddCategory === "reference"
+                    ? "Add Event / Class"
+                    : "Add Recurring Task"}
+              </h3>
+              <button
+                className="recurring-modal-close"
+                onClick={closeRecurringModal}
+              >
                 <Icon name="close" />
               </button>
             </div>
-            <form className="recurring-modal-form" onSubmit={handleRecurringSubmit}>
+            <form
+              className="recurring-modal-form"
+              onSubmit={handleRecurringSubmit}
+            >
               <input
                 className="recurring-modal-input"
                 type="text"
-                placeholder={recurringAddCategory === "reference" ? "Event or class name..." : "What do you do regularly?"}
+                placeholder={
+                  recurringAddCategory === "reference"
+                    ? "Event or class name..."
+                    : "What do you do regularly?"
+                }
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 autoFocus
               />
-
 
               <div className="recurring-modal-row">
                 <select
@@ -2092,18 +2928,32 @@ export default function TodoPage() {
                 >
                   <option value="">Area (optional)</option>
                   {AREA_OPTIONS.map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
                   ))}
                 </select>
                 <div className="add-date-picker-wrapper">
                   <button
                     type="button"
                     className={`add-date-btn recurring-date-btn ${recurringAddDueDate ? "has-date" : ""}`}
-                    onClick={() => setShowRecurringDatePicker(!showRecurringDatePicker)}
-                    title={recurringAddDueDate ? `Due: ${formatDueDate(recurringAddDueDate)}` : "Set due date"}
+                    onClick={() =>
+                      setShowRecurringDatePicker(!showRecurringDatePicker)
+                    }
+                    title={
+                      recurringAddDueDate
+                        ? `Due: ${formatDueDate(recurringAddDueDate)}`
+                        : "Set due date"
+                    }
                   >
                     <Icon name="calendar_month" />
-                    {recurringAddDueDate ? <span className="add-date-label">{formatDueDate(recurringAddDueDate)}</span> : <span className="add-date-label">Date</span>}
+                    {recurringAddDueDate ? (
+                      <span className="add-date-label">
+                        {formatDueDate(recurringAddDueDate)}
+                      </span>
+                    ) : (
+                      <span className="add-date-label">Date</span>
+                    )}
                   </button>
                   {showRecurringDatePicker && (
                     <DatePickerDropdown
@@ -2115,7 +2965,8 @@ export default function TodoPage() {
                 </div>
               </div>
 
-              {recurringAddCategory === "task" && <div className="recurrence-picker">
+              {recurringAddCategory === "task" && (
+                <div className="recurrence-picker">
                   <div className="recurrence-section">
                     <label className="recurrence-label">Repeat every</label>
                     <div className="recurrence-repeat-row">
@@ -2125,15 +2976,25 @@ export default function TodoPage() {
                         min={1}
                         max={99}
                         value={recurringAddRepeatEvery}
-                        onChange={(e) => setRecurringAddRepeatEvery(Math.max(1, parseInt(e.target.value) || 1))}
+                        onChange={(e) =>
+                          setRecurringAddRepeatEvery(
+                            Math.max(1, parseInt(e.target.value) || 1)
+                          )
+                        }
                       />
                       <select
                         className="recurrence-unit-select"
                         value={recurringAddRepeatUnit}
-                        onChange={(e) => setRecurringAddRepeatUnit(e.target.value as "day" | "week" | "month" | "year")}
+                        onChange={(e) =>
+                          setRecurringAddRepeatUnit(
+                            e.target.value as "day" | "week" | "month" | "year"
+                          )
+                        }
                       >
                         {REPEAT_UNITS.map((u) => (
-                          <option key={u} value={u}>{recurringAddRepeatEvery === 1 ? u : u + "s"}</option>
+                          <option key={u} value={u}>
+                            {recurringAddRepeatEvery === 1 ? u : u + "s"}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -2150,7 +3011,9 @@ export default function TodoPage() {
                             className={`recurrence-day-btn ${recurringAddRepeatDays.includes(idx) ? "active" : ""}`}
                             onClick={() => {
                               setRecurringAddRepeatDays((prev) =>
-                                prev.includes(idx) ? prev.filter((d) => d !== idx) : [...prev, idx].sort()
+                                prev.includes(idx)
+                                  ? prev.filter((d) => d !== idx)
+                                  : [...prev, idx].sort()
                               );
                             }}
                           >
@@ -2165,36 +3028,62 @@ export default function TodoPage() {
                     <label className="recurrence-label">Ends</label>
                     <div className="recurrence-ends-options">
                       <label className="recurrence-radio-row">
-                        <input type="radio" name="ends" checked={recurringAddEndsType === "never"} onChange={() => setRecurringAddEndsType("never")} />
+                        <input
+                          type="radio"
+                          name="ends"
+                          checked={recurringAddEndsType === "never"}
+                          onChange={() => setRecurringAddEndsType("never")}
+                        />
                         <span>Never</span>
                       </label>
                       <label className="recurrence-radio-row">
-                        <input type="radio" name="ends" checked={recurringAddEndsType === "on"} onChange={() => setRecurringAddEndsType("on")} />
+                        <input
+                          type="radio"
+                          name="ends"
+                          checked={recurringAddEndsType === "on"}
+                          onChange={() => setRecurringAddEndsType("on")}
+                        />
                         <span>On</span>
                         <input
                           type="date"
                           className="recurrence-date-input"
                           value={recurringAddEndsOn}
-                          onChange={(e) => { setRecurringAddEndsOn(e.target.value); setRecurringAddEndsType("on"); }}
+                          onChange={(e) => {
+                            setRecurringAddEndsOn(e.target.value);
+                            setRecurringAddEndsType("on");
+                          }}
                           disabled={recurringAddEndsType !== "on"}
                         />
                       </label>
                       <label className="recurrence-radio-row">
-                        <input type="radio" name="ends" checked={recurringAddEndsType === "after"} onChange={() => setRecurringAddEndsType("after")} />
+                        <input
+                          type="radio"
+                          name="ends"
+                          checked={recurringAddEndsType === "after"}
+                          onChange={() => setRecurringAddEndsType("after")}
+                        />
                         <span>After</span>
                         <input
                           type="number"
                           className="recurrence-occurrence-input"
                           min={1}
                           value={recurringAddEndsAfter}
-                          onChange={(e) => { setRecurringAddEndsAfter(Math.max(1, parseInt(e.target.value) || 1)); setRecurringAddEndsType("after"); }}
+                          onChange={(e) => {
+                            setRecurringAddEndsAfter(
+                              Math.max(1, parseInt(e.target.value) || 1)
+                            );
+                            setRecurringAddEndsType("after");
+                          }}
                           disabled={recurringAddEndsType !== "after"}
                         />
-                        <span className="recurrence-occurrence-label">occurrences</span>
+                        <span className="recurrence-occurrence-label">
+                          occurrences
+                        </span>
                       </label>
                     </div>
                   </div>
-                </div>}
+                </div>
+              )}
 
               <input
                 className="recurring-modal-input"
@@ -2223,26 +3112,42 @@ export default function TodoPage() {
           <div className="sidebar" onClick={(e) => e.stopPropagation()}>
             <div className="sidebar-header">
               <h2>Settings</h2>
-              <button className="sidebar-close" onClick={() => setSidebarPanel(null)}><Icon name="close" /></button>
+              <button
+                className="sidebar-close"
+                onClick={() => setSidebarPanel(null)}
+              >
+                <Icon name="close" />
+              </button>
             </div>
             <nav className="sidebar-nav">
               <button
                 className={`sidebar-nav-item ${sidebarPanel === "todo-archive" ? "active" : ""}`}
                 onClick={() => setSidebarPanel("todo-archive")}
               >
-                <Icon name="inventory_2" /> Todo Archive {futureTasks.length > 0 && <span className="sidebar-count">{futureTasks.length}</span>}
+                <Icon name="inventory_2" /> Todo Archive{" "}
+                {futureTasks.length > 0 && (
+                  <span className="sidebar-count">{futureTasks.length}</span>
+                )}
               </button>
               <button
                 className={`sidebar-nav-item ${sidebarPanel === "todo-trash" ? "active" : ""}`}
                 onClick={() => setSidebarPanel("todo-trash")}
               >
-                <Icon name="delete" /> Todo Trash {trashedTasks.length > 0 && <span className="sidebar-count">{trashedTasks.length}</span>}
+                <Icon name="delete" /> Todo Trash{" "}
+                {trashedTasks.length > 0 && (
+                  <span className="sidebar-count">{trashedTasks.length}</span>
+                )}
               </button>
               <button
                 className={`sidebar-nav-item ${sidebarPanel === "shopping-archive" ? "active" : ""}`}
                 onClick={() => setSidebarPanel("shopping-archive")}
               >
-                <Icon name="archive" /> Shopping Archive {archivedShoppingItems.length > 0 && <span className="sidebar-count">{archivedShoppingItems.length}</span>}
+                <Icon name="archive" /> Shopping Archive{" "}
+                {archivedShoppingItems.length > 0 && (
+                  <span className="sidebar-count">
+                    {archivedShoppingItems.length}
+                  </span>
+                )}
               </button>
               <button
                 className={`sidebar-nav-item ${sidebarPanel === "settings" ? "active" : ""}`}
@@ -2255,7 +3160,10 @@ export default function TodoPage() {
               {sidebarPanel === "todo-archive" && (
                 <div className="future-list">
                   {futureTasks.length === 0 ? (
-                    <div className="sidebar-empty">No archived tasks. Use the archive button on cards to save ideas for later.</div>
+                    <div className="sidebar-empty">
+                      No archived tasks. Use the archive button on cards to save
+                      ideas for later.
+                    </div>
                   ) : (
                     sortTasks(futureTasks).map((task) => (
                       <FutureTaskCard
@@ -2273,10 +3181,17 @@ export default function TodoPage() {
               {sidebarPanel === "todo-trash" && (
                 <div className="trash-list">
                   {trashedTasks.length === 0 ? (
-                    <div className="sidebar-empty">Trash is empty. Deleted tasks appear here for 30 days.</div>
+                    <div className="sidebar-empty">
+                      Trash is empty. Deleted tasks appear here for 30 days.
+                    </div>
                   ) : (
                     trashedTasks.map((task) => (
-                      <TrashCard key={task.id} task={task} onRestore={restoreTask} onPermanentDelete={permanentDelete} />
+                      <TrashCard
+                        key={task.id}
+                        task={task}
+                        onRestore={restoreTask}
+                        onPermanentDelete={permanentDelete}
+                      />
                     ))
                   )}
                 </div>
@@ -2284,16 +3199,35 @@ export default function TodoPage() {
               {sidebarPanel === "shopping-archive" && (
                 <div className="simple-list shopping-list">
                   {archivedShoppingItems.length === 0 ? (
-                    <div className="sidebar-empty">No archived shopping items.</div>
+                    <div className="sidebar-empty">
+                      No archived shopping items.
+                    </div>
                   ) : (
                     archivedShoppingItems.map((item) => (
-                      <div key={item.id} className={`list-item shopping-item archived ${item.done ? "checked" : ""}`}>
-                        <span className={`list-title ${item.done ? "done" : ""}`}>{item.title}</span>
+                      <div
+                        key={item.id}
+                        className={`list-item shopping-item archived ${item.done ? "checked" : ""}`}
+                      >
+                        <span
+                          className={`list-title ${item.done ? "done" : ""}`}
+                        >
+                          {item.title}
+                        </span>
                         <div className="list-actions">
-                          <button className="list-action-btn" onClick={() => unarchiveShoppingItem(item.id)} title="Restore">
+                          <button
+                            className="list-action-btn"
+                            onClick={() => unarchiveShoppingItem(item.id)}
+                            title="Restore"
+                          >
                             <Icon name="undo" />
                           </button>
-                          <button className="list-action-btn delete" onClick={() => deleteShoppingItem(item.id)} title="Delete"><Icon name="close" /></button>
+                          <button
+                            className="list-action-btn delete"
+                            onClick={() => deleteShoppingItem(item.id)}
+                            title="Delete"
+                          >
+                            <Icon name="close" />
+                          </button>
                         </div>
                       </div>
                     ))

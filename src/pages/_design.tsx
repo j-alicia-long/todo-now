@@ -37,7 +37,7 @@ import { Spinner } from "@/components/kit/spinner";
 import { ThemedSurface } from "@/components/kit/themed-surface";
 import { Tooltip } from "@/components/kit/tooltip";
 
-function Section({
+const Section = ({
   id,
   title,
   description,
@@ -47,17 +47,15 @@ function Section({
   title: string;
   description: string;
   children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="scroll-mt-8">
-      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-      <p className="mt-1 text-sm text-pretty text-muted-foreground">
-        {description}
-      </p>
-      <div className="mt-4 rounded-xl border bg-card/50 p-6">{children}</div>
-    </section>
-  );
-}
+}) => (
+  <section id={id} className="scroll-mt-8">
+    <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+    <p className="mt-1 text-sm text-pretty text-muted-foreground">
+      {description}
+    </p>
+    <div className="mt-4 rounded-xl border bg-card/50 p-6">{children}</div>
+  </section>
+);
 
 /**
  * The design-kit showcase. Every reusable piece of this site's UI — the
@@ -77,9 +75,9 @@ export default function DesignKitDemo() {
             Components
           </h1>
           <p className="mt-2 text-pretty text-muted-foreground">
-            The building blocks for this site: shadcn/ui primitives (Base UI)
-            in <code className="font-mono text-sm">components/ui</code>, and
-            the site kit — opinionated, keyboard-friendly patterns — in{" "}
+            The building blocks for this site: shadcn/ui primitives (Base UI) in{" "}
+            <code className="font-mono text-sm">components/ui</code>, and the
+            site kit — opinionated, keyboard-friendly patterns — in{" "}
             <code className="font-mono text-sm">components/kit</code>.
           </p>
         </header>
@@ -147,7 +145,11 @@ export default function DesignKitDemo() {
           title="List"
           description="kit/list — a keyboard-navigable collection (arrows, type-ahead, Home/End). For interactive lists, not static nav."
         >
-          <List aria-label="Documents" selectionMode="single" defaultSelectedKeys={["roadmap"]}>
+          <List
+            aria-label="Documents"
+            selectionMode="single"
+            defaultSelectedKeys={["roadmap"]}
+          >
             <ListSection title="Recent">
               <ListItem id="roadmap" textValue="Roadmap">
                 <FileText className="size-4 shrink-0" /> Roadmap

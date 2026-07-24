@@ -33,61 +33,59 @@ export type SegmentedControlProps<Id extends string = string> = {
  * between segments, Home/End jump to the ends) and accessible out of the box.
  * Demo: `/_design`.
  */
-export function SegmentedControl<Id extends string = string>({
+export const SegmentedControl = <Id extends string = string>({
   "aria-label": ariaLabel,
   items,
   value,
   onChange,
   size = "md",
   className,
-}: SegmentedControlProps<Id>) {
-  return (
-    <ToggleButtonGroup
-      aria-label={ariaLabel}
-      selectionMode="single"
-      disallowEmptySelection
-      selectedKeys={new Set([value])}
-      onSelectionChange={(keys) => {
-        // RAC reports keys as `Key` (string | number); our item ids are `Id`,
-        // so the selected key is one of them by construction.
-        const next = [...keys][0];
-        if (next != null) onChange(String(next) as Id);
-      }}
-      className={cn(
-        // `flex-wrap` + `max-w-full` lets a control with many segments wrap
-        // onto additional rows within its container instead of overflowing.
-        "inline-flex max-w-full flex-wrap items-center gap-1 rounded-full border border-border bg-muted/40 p-1",
-        className,
-      )}
-    >
-      {items.map((item) => {
-        const ItemIcon = item.icon;
-        const button = (
-          <ToggleButton
-            key={item.id}
-            id={item.id}
-            className={cn(
-              "flex select-none items-center gap-2 rounded-full font-medium outline-none transition-colors",
-              size === "sm" ? "px-3 py-1 text-xs" : "px-4 py-1.5 text-sm",
-              "text-muted-foreground data-[hovered=true]:text-foreground",
-              "data-[selected=true]:bg-background data-[selected=true]:text-foreground data-[selected=true]:shadow-sm",
-              "data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-ring",
-            )}
-          >
-            {ItemIcon != null && (
-              <ItemIcon className={size === "sm" ? "size-3.5" : "size-4"} />
-            )}
-            {item.label}
-          </ToggleButton>
-        );
-        return item.tooltip != null ? (
-          <Tooltip key={item.id} label={item.tooltip} side="bottom">
-            {button}
-          </Tooltip>
-        ) : (
-          button
-        );
-      })}
-    </ToggleButtonGroup>
-  );
-}
+}: SegmentedControlProps<Id>) => (
+  <ToggleButtonGroup
+    aria-label={ariaLabel}
+    selectionMode="single"
+    disallowEmptySelection
+    selectedKeys={new Set([value])}
+    onSelectionChange={(keys) => {
+      // RAC reports keys as `Key` (string | number); our item ids are `Id`,
+      // so the selected key is one of them by construction.
+      const next = [...keys][0];
+      if (next != null) onChange(String(next) as Id);
+    }}
+    className={cn(
+      // `flex-wrap` + `max-w-full` lets a control with many segments wrap
+      // onto additional rows within its container instead of overflowing.
+      "inline-flex max-w-full flex-wrap items-center gap-1 rounded-full border border-border bg-muted/40 p-1",
+      className
+    )}
+  >
+    {items.map((item) => {
+      const ItemIcon = item.icon;
+      const button = (
+        <ToggleButton
+          key={item.id}
+          id={item.id}
+          className={cn(
+            "flex select-none items-center gap-2 rounded-full font-medium outline-none transition-colors",
+            size === "sm" ? "px-3 py-1 text-xs" : "px-4 py-1.5 text-sm",
+            "text-muted-foreground data-[hovered=true]:text-foreground",
+            "data-[selected=true]:bg-background data-[selected=true]:text-foreground data-[selected=true]:shadow-sm",
+            "data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-ring"
+          )}
+        >
+          {ItemIcon != null && (
+            <ItemIcon className={size === "sm" ? "size-3.5" : "size-4"} />
+          )}
+          {item.label}
+        </ToggleButton>
+      );
+      return item.tooltip != null ? (
+        <Tooltip key={item.id} label={item.tooltip} side="bottom">
+          {button}
+        </Tooltip>
+      ) : (
+        button
+      );
+    })}
+  </ToggleButtonGroup>
+);

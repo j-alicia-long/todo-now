@@ -17,17 +17,14 @@ const KEY_TOKEN_LABELS: Record<string, string> = {
   Alt: "Option",
 };
 
-function tokenize(display: string): string[] {
-  return (
-    display
-      // Isolate modifier glyphs that may be glued to the key (e.g. "⌥T", "⌘⇧K")
-      // so each renders as its own chip.
-      .replace(/([⌘⌥⌃⇧])/g, " $1 ")
-      .split(/\s*\+\s*|\s+/)
-      .map((token) => token.trim())
-      .filter(Boolean)
-  );
-}
+const tokenize = (display: string): string[] =>
+  display
+    // Isolate modifier glyphs that may be glued to the key (e.g. "⌥T", "⌘⇧K")
+    // so each renders as its own chip.
+    .replace(/([⌘⌥⌃⇧])/g, " $1 ")
+    .split(/\s*\+\s*|\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
 
 export interface KeyHintProps {
   /** Platform-aware display string, e.g. "⌘ ⇧ ." or "Ctrl + Shift + ." */
@@ -42,7 +39,7 @@ export interface KeyHintProps {
  * spells out the modifier names that aren't broadly recognized.
  * Demo: `/_design`.
  */
-export function KeyHint({ display, className, size = "sm" }: KeyHintProps) {
+export const KeyHint = ({ display, className, size = "sm" }: KeyHintProps) => {
   const tokens = tokenize(display);
   if (tokens.length === 0) return null;
 
@@ -55,7 +52,7 @@ export function KeyHint({ display, className, size = "sm" }: KeyHintProps) {
             "inline-flex select-none items-center justify-center rounded-md border border-border/60 bg-muted/70 font-sans font-medium leading-none text-muted-foreground",
             size === "xs"
               ? "h-5 min-w-[1.25rem] px-1.5 text-[11px]"
-              : "h-6 min-w-[1.5rem] px-2 text-xs",
+              : "h-6 min-w-[1.5rem] px-2 text-xs"
           )}
         >
           {KEY_TOKEN_LABELS[token] ?? token}
@@ -63,4 +60,4 @@ export function KeyHint({ display, className, size = "sm" }: KeyHintProps) {
       ))}
     </span>
   );
-}
+};

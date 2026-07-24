@@ -13,22 +13,20 @@ export type ProseLinkProps = ComponentProps<"a"> & {
  * directional links (Continue, Back, Read more) reach for `ArrowLink` instead.
  * Demo: `/_design`.
  */
-export function ProseLink({
+export const ProseLink = ({
   external,
   className,
   children,
   ...props
-}: ProseLinkProps) {
-  return (
-    <a
-      className={cn(
-        "font-medium text-foreground underline decoration-foreground/30 underline-offset-4 transition-colors hover:decoration-foreground",
-        className,
-      )}
-      {...props}
-      {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
-    >
-      {children}
-    </a>
-  );
-}
+}: ProseLinkProps) => (
+  <a
+    className={cn(
+      "font-medium text-foreground underline decoration-foreground/30 underline-offset-4 transition-colors hover:decoration-foreground",
+      className
+    )}
+    {...props}
+    {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+  >
+    {children}
+  </a>
+);

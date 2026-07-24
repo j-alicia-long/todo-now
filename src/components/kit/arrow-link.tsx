@@ -34,27 +34,25 @@ const NUDGE: Record<ArrowDirection, string> = {
   "up-right": "group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
 };
 
-function Arrow({
+const Arrow = ({
   direction,
   leading,
 }: {
   direction: ArrowDirection;
   leading: boolean;
-}) {
-  return (
-    <span
-      aria-hidden
-      style={TEXT_GLYPH}
-      className={cn(
-        "inline-block font-mono transition-transform duration-200 ease-out",
-        leading ? "order-first" : "order-last",
-        NUDGE[direction],
-      )}
-    >
-      {`${ARROW_GLYPHS[direction]}\uFE0E`}
-    </span>
-  );
-}
+}) => (
+  <span
+    aria-hidden
+    style={TEXT_GLYPH}
+    className={cn(
+      "inline-block font-mono transition-transform duration-200 ease-out",
+      leading ? "order-first" : "order-last",
+      NUDGE[direction]
+    )}
+  >
+    {`${ARROW_GLYPHS[direction]}\uFE0E`}
+  </span>
+);
 
 export type ArrowLinkProps = ComponentProps<"a"> & {
   /** Which arrow glyph to show — see `ARROW_GLYPHS` for semantics. */
@@ -69,23 +67,21 @@ export type ArrowLinkProps = ComponentProps<"a"> & {
  * under both the label and the arrow (no gap). Needs no icon dependency.
  * Demo: `/_design`.
  */
-export function ArrowLink({
+export const ArrowLink = ({
   direction = "right",
   leading = false,
   className,
   children,
   ...props
-}: ArrowLinkProps) {
-  return (
-    <a
-      className={cn(
-        "group inline-flex items-center gap-1 border-b border-transparent font-medium text-foreground transition-colors hover:border-current",
-        className,
-      )}
-      {...props}
-    >
-      <span>{children}</span>
-      <Arrow direction={direction} leading={leading} />
-    </a>
-  );
-}
+}: ArrowLinkProps) => (
+  <a
+    className={cn(
+      "group inline-flex items-center gap-1 border-b border-transparent font-medium text-foreground transition-colors hover:border-current",
+      className
+    )}
+    {...props}
+  >
+    <span>{children}</span>
+    <Arrow direction={direction} leading={leading} />
+  </a>
+);

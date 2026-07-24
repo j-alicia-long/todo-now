@@ -3,7 +3,8 @@
 // Imported by both server.ts (persistence) and the UI (optimistic updates).
 // All functions are pure; the clock is always passed in as `now`.
 
-export type TaskStatus = "this-week" | "this-month" | "future" | "done" | "trashed";
+export type TaskStatus =
+  "this-week" | "this-month" | "future" | "done" | "trashed";
 
 export type Task = {
   id: string;
@@ -39,7 +40,11 @@ export const DUE_SOON_MS = 7 * 24 * 60 * 60 * 1000;
  * - `done: false` on a done Task sends it back to This Week
  * A change that doesn't alter anything returns the task unchanged.
  */
-export function applyStatusChange(task: Task, change: StatusChange, now: Date): Task {
+export const applyStatusChange = (
+  task: Task,
+  change: StatusChange,
+  now: Date
+): Task => {
   const { status, done } = change;
 
   if (status !== undefined && status !== task.status) {
@@ -60,20 +65,25 @@ export function applyStatusChange(task: Task, change: StatusChange, now: Date): 
   }
 
   if (done === true && !task.done) {
-    return { ...task, done: true, status: "done", completedAt: now.toISOString() };
+    return {
+      ...task,
+      done: true,
+      status: "done",
+      completedAt: now.toISOString(),
+    };
   }
   if (done === false && task.done) {
     return { ...task, done: false, status: "this-week", completedAt: null };
   }
 
   return task;
-}
+};
 
 /**
  * Tasks in This Month whose due date is within 7 days move to This Week.
  * Returns the same array instance when nothing changed.
  */
-export function promoteDueSoon(tasks: Task[], now: Date): Task[] {
+export const promoteDueSoon = (tasks: Task[], now: Date): Task[] => {
   let changed = false;
   const result = tasks.map((t) => {
     if (t.status === "this-month" && t.dueDate) {
@@ -86,13 +96,13 @@ export function promoteDueSoon(tasks: Task[], now: Date): Task[] {
     return t;
   });
   return changed ? result : tasks;
-}
+};
 
 /**
  * Trashed Tasks older than 30 days are dropped.
  * Returns the same array instance when nothing changed.
  */
-export function purgeTrash(tasks: Task[], now: Date): Task[] {
+export const purgeTrash = (tasks: Task[], now: Date): Task[] => {
   const result = tasks.filter((t) => {
     if (t.status === "trashed" && t.deletedAt) {
       return now.getTime() - new Date(t.deletedAt).getTime() <= TRASH_TTL_MS;
@@ -100,4 +110,4 @@ export function purgeTrash(tasks: Task[], now: Date): Task[] {
     return true;
   });
   return result.length === tasks.length ? tasks : result;
-}
+};

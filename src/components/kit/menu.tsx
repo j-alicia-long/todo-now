@@ -27,7 +27,7 @@ export { MenuTrigger };
  * NOT open the menu — always use `MenuButton` (styled identically via
  * `buttonVariants`) as the first child of `MenuTrigger`.
  */
-export function MenuButton({
+export const MenuButton = ({
   variant = "outline",
   size = "default",
   className,
@@ -36,23 +36,21 @@ export function MenuButton({
 }: AriaButtonProps &
   Pick<VariantProps<typeof buttonVariants>, "variant" | "size"> & {
     children: ReactNode;
-  }) {
-  return (
-    <AriaButton
-      {...props}
-      className={cn(buttonVariants({ variant, size }), className)}
-    >
-      {children}
-    </AriaButton>
-  );
-}
+  }) => (
+  <AriaButton
+    {...props}
+    className={cn(buttonVariants({ variant, size }), className)}
+  >
+    {children}
+  </AriaButton>
+);
 
 // Shared popover chassis: a floating card with theme tokens and tw-animate-css
 // enter/exit transitions keyed off RAC's data-[entering]/data-[exiting].
 const POPOVER_CLASS = cn(
   "min-w-[12rem] overflow-hidden rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg outline-none",
   "data-[entering]:animate-in data-[entering]:fade-in-0 data-[entering]:zoom-in-95",
-  "data-[exiting]:animate-out data-[exiting]:fade-out-0 data-[exiting]:zoom-out-95",
+  "data-[exiting]:animate-out data-[exiting]:fade-out-0 data-[exiting]:zoom-out-95"
 );
 
 const MENU_CLASS = "flex flex-col gap-0.5 outline-none";
@@ -66,7 +64,7 @@ const MENU_CLASS = "flex flex-col gap-0.5 outline-none";
  * `MenuSeparator`.
  * Demo: `/_design`.
  */
-export function Menu({
+export const Menu = ({
   children,
   onAction,
   className,
@@ -91,25 +89,23 @@ export function Menu({
   selectedKeys?: Iterable<string>;
   onSelectionChange?: (keys: Set<string>) => void;
   "aria-label": string;
-}) {
-  return (
-    <Popover className={POPOVER_CLASS} placement={placement} offset={6}>
-      <AriaMenu
-        aria-label={ariaLabel}
-        onAction={(key) => onAction?.(String(key))}
-        selectionMode={selectionMode}
-        selectedKeys={selectedKeys}
-        onSelectionChange={(keys) => {
-          if (keys === "all") return;
-          onSelectionChange?.(new Set([...keys].map(String)));
-        }}
-        className={cn(MENU_CLASS, className)}
-      >
-        {children}
-      </AriaMenu>
-    </Popover>
-  );
-}
+}) => (
+  <Popover className={POPOVER_CLASS} placement={placement} offset={6}>
+    <AriaMenu
+      aria-label={ariaLabel}
+      onAction={(key) => onAction?.(String(key))}
+      selectionMode={selectionMode}
+      selectedKeys={selectedKeys}
+      onSelectionChange={(keys) => {
+        if (keys === "all") return;
+        onSelectionChange?.(new Set([...keys].map(String)));
+      }}
+      className={cn(MENU_CLASS, className)}
+    >
+      {children}
+    </AriaMenu>
+  </Popover>
+);
 
 export type MenuItemProps = Omit<AriaMenuItemProps, "children"> & {
   /** Optional leading Lucide icon. */
@@ -124,7 +120,7 @@ export type MenuItemProps = Omit<AriaMenuItemProps, "children"> & {
 };
 
 /** A single menu row. Give it an `id` and wire behavior with `onAction`. */
-export function MenuItem({
+export const MenuItem = ({
   icon: Icon,
   shortcut,
   selected,
@@ -132,44 +128,42 @@ export function MenuItem({
   className,
   children,
   ...props
-}: MenuItemProps) {
-  return (
-    <AriaMenuItem
-      {...props}
-      className={cn(
-        "group flex select-none items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none transition-colors",
-        "data-[focused=true]:bg-muted/60 data-[focused=true]:text-foreground",
-        "data-[disabled=true]:opacity-50",
-        "data-[selected=true]:text-foreground",
-        selected && "text-foreground",
-        variant === "destructive" &&
-          "text-destructive data-[focused=true]:bg-destructive/10 data-[focused=true]:text-destructive",
-        className,
-      )}
-    >
-      {(renderProps) => (
-        <>
-          {Icon != null && <Icon className="size-[18px]" />}
-          <span className="flex-1">{children}</span>
-          {shortcut != null && (
-            <KeyHint display={shortcut} size="xs" className="ml-2" />
-          )}
-          {(selected || renderProps.isSelected) && (
-            <Check className="size-4 text-foreground" />
-          )}
-        </>
-      )}
-    </AriaMenuItem>
-  );
-}
+}: MenuItemProps) => (
+  <AriaMenuItem
+    {...props}
+    className={cn(
+      "group flex select-none items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none transition-colors",
+      "data-[focused=true]:bg-muted/60 data-[focused=true]:text-foreground",
+      "data-[disabled=true]:opacity-50",
+      "data-[selected=true]:text-foreground",
+      selected && "text-foreground",
+      variant === "destructive" &&
+        "text-destructive data-[focused=true]:bg-destructive/10 data-[focused=true]:text-destructive",
+      className
+    )}
+  >
+    {(renderProps) => (
+      <>
+        {Icon != null && <Icon className="size-[18px]" />}
+        <span className="flex-1">{children}</span>
+        {shortcut != null && (
+          <KeyHint display={shortcut} size="xs" className="ml-2" />
+        )}
+        {(selected || renderProps.isSelected) && (
+          <Check className="size-4 text-foreground" />
+        )}
+      </>
+    )}
+  </AriaMenuItem>
+);
 
 /** A divider between groups of items. */
-export function MenuSeparator({ className }: { className?: string }) {
-  return <Separator className={cn("-mx-1 my-1 h-px bg-border", className)} />;
-}
+export const MenuSeparator = ({ className }: { className?: string }) => (
+  <Separator className={cn("-mx-1 my-1 h-px bg-border", className)} />
+);
 
 /** A titled group of menu rows. */
-export function MenuSection({
+export const MenuSection = ({
   title,
   children,
   className,
@@ -177,24 +171,22 @@ export function MenuSection({
   title?: ReactNode;
   children: ReactNode;
   className?: string;
-}) {
-  return (
-    <AriaMenuSection className={cn("flex flex-col gap-0.5", className)}>
-      {title != null && (
-        <Header className="px-3 pb-1 pt-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          {title}
-        </Header>
-      )}
-      {children}
-    </AriaMenuSection>
-  );
-}
+}) => (
+  <AriaMenuSection className={cn("flex flex-col gap-0.5", className)}>
+    {title != null && (
+      <Header className="px-3 pb-1 pt-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        {title}
+      </Header>
+    )}
+    {children}
+  </AriaMenuSection>
+);
 
 /**
  * Wraps arbitrary content and opens a menu on right-click (or long-press on
  * touch), anchored at the pointer. Pass the same `MenuItem`s you'd give `Menu`.
  */
-export function ContextMenuTrigger({
+export const ContextMenuTrigger = ({
   children,
   menu,
   onAction,
@@ -206,7 +198,7 @@ export function ContextMenuTrigger({
   onAction?: (key: string) => void;
   className?: string;
   "aria-label": string;
-}) {
+}) => {
   const [point, setPoint] = useState<{ x: number; y: number } | null>(null);
   const anchorRef = useRef<HTMLSpanElement>(null);
 
@@ -250,4 +242,4 @@ export function ContextMenuTrigger({
       </Popover>
     </div>
   );
-}
+};

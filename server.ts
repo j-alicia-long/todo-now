@@ -8,7 +8,6 @@ import {
   promoteDueSoon,
   purgeTrash,
   type Task,
-  type TaskStatus,
 } from "./src/domain/task-rules";
 
 // AI agents: read README.md for navigation and contribution guidance.
@@ -25,11 +24,17 @@ const SHOPPING_PATH = import.meta.dir + "/data/shopping.json";
 const GROCERY_PATH = import.meta.dir + "/data/groceries.json";
 const RECURRING_PATH = import.meta.dir + "/data/recurring.json";
 
-async function readTasks(): Promise<Task[]> {
+// Raw task rows from disk may predate the current schema
+type LegacyTaskRecord = Omit<Task, "status"> & {
+  status?: string;
+  done?: boolean;
+};
+
+const readTasks = async (): Promise<Task[]> => {
   try {
     const file = Bun.file(DATA_PATH);
     if (await file.exists()) {
-      const raw = JSON.parse(await file.text()) as any[];
+      const raw = JSON.parse(await file.text()) as LegacyTaskRecord[];
       let needsMigration = false;
       const now = new Date();
       let tasks = raw.map((t) => {
@@ -78,13 +83,15 @@ async function readTasks(): Promise<Task[]> {
       }
       return tasks;
     }
-  } catch {}
+  } catch {
+    // corrupt or missing data file — fall back to empty list
+  }
   return [];
-}
+};
 
-async function writeTasks(tasks: Task[]): Promise<void> {
+const writeTasks = async (tasks: Task[]): Promise<void> => {
   await Bun.write(DATA_PATH, JSON.stringify(tasks, null, 2));
-}
+};
 
 // ── Shopping data layer ──
 
@@ -99,11 +106,11 @@ type ShoppingItem = {
   doneAt: string | null;
 };
 
-async function readShopping(): Promise<ShoppingItem[]> {
+const readShopping = async (): Promise<ShoppingItem[]> => {
   try {
     const file = Bun.file(SHOPPING_PATH);
     if (await file.exists()) {
-      const raw = JSON.parse(await file.text()) as any[];
+      const raw = JSON.parse(await file.text()) as ShoppingItem[];
       return raw.map((i) => ({
         ...i,
         category: i.category || "need",
@@ -111,13 +118,15 @@ async function readShopping(): Promise<ShoppingItem[]> {
         doneAt: i.doneAt ?? null,
       }));
     }
-  } catch {}
+  } catch {
+    // corrupt or missing data file — fall back to empty list
+  }
   return [];
-}
+};
 
-async function writeShopping(items: ShoppingItem[]): Promise<void> {
+const writeShopping = async (items: ShoppingItem[]): Promise<void> => {
   await Bun.write(SHOPPING_PATH, JSON.stringify(items, null, 2));
-}
+};
 
 // ── Grocery data layer ──
 
@@ -129,17 +138,20 @@ type GroceryItem = {
   category: "task" | "reference";
 };
 
-async function readGroceries(): Promise<GroceryItem[]> {
+const readGroceries = async (): Promise<GroceryItem[]> => {
   try {
     const file = Bun.file(GROCERY_PATH);
-    if (await file.exists()) return JSON.parse(await file.text()) as GroceryItem[];
-  } catch {}
+    if (await file.exists())
+      return JSON.parse(await file.text()) as GroceryItem[];
+  } catch {
+    // corrupt or missing data file — fall back to empty list
+  }
   return [];
-}
+};
 
-async function writeGroceries(items: GroceryItem[]): Promise<void> {
+const writeGroceries = async (items: GroceryItem[]): Promise<void> => {
   await Bun.write(GROCERY_PATH, JSON.stringify(items, null, 2));
-}
+};
 
 // ── Recurring data layer ──
 
@@ -164,19 +176,23 @@ type RecurringItem = {
   category: "task" | "reference";
 };
 
-function getWeekStart(): number {
+const getWeekStart = (): number => {
   const now = new Date();
   const day = now.getDay();
   const diff = day === 0 ? 6 : day - 1;
-  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
+  const monday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() - diff
+  );
   return monday.getTime();
-}
+};
 
-async function readRecurring(): Promise<RecurringItem[]> {
+const readRecurring = async (): Promise<RecurringItem[]> => {
   try {
     const file = Bun.file(RECURRING_PATH);
     if (await file.exists()) {
-      const raw = JSON.parse(await file.text()) as any[];
+      const raw = JSON.parse(await file.text()) as RecurringItem[];
       const weekStart = getWeekStart();
       let needsReset = false;
       const items = raw.map((i) => {
@@ -187,7 +203,8 @@ async function readRecurring(): Promise<RecurringItem[]> {
           dayOfWeek: i.dayOfWeek ?? null,
           repeatEvery: i.repeatEvery ?? 1,
           repeatUnit: i.repeatUnit ?? "week",
-          repeatDays: i.repeatDays ?? (i.dayOfWeek != null ? [i.dayOfWeek] : []),
+          repeatDays:
+            i.repeatDays ?? (i.dayOfWeek != null ? [i.dayOfWeek] : []),
           endsType: i.endsType ?? "never",
           endsOn: i.endsOn ?? null,
           endsAfter: i.endsAfter ?? null,
@@ -200,12 +217,18 @@ async function readRecurring(): Promise<RecurringItem[]> {
           area: i.area || "",
           category: i.category === "reference" ? "reference" : "task",
         };
-        if (item.frequency === "long-term" && item.repeatUnit === "week" && item.repeatEvery === 1) {
+        if (
+          item.frequency === "long-term" &&
+          item.repeatUnit === "week" &&
+          item.repeatEvery === 1
+        ) {
           item.repeatUnit = "year";
           needsReset = true;
         }
         if (item.frequency === "weekly" && item.completedThisWeek) {
-          const lastDone = item.lastCompletedAt ? new Date(item.lastCompletedAt).getTime() : 0;
+          const lastDone = item.lastCompletedAt
+            ? new Date(item.lastCompletedAt).getTime()
+            : 0;
           if (lastDone < weekStart) {
             item.completedThisWeek = false;
             needsReset = true;
@@ -216,28 +239,34 @@ async function readRecurring(): Promise<RecurringItem[]> {
       if (needsReset) await writeRecurring(items);
       return items;
     }
-  } catch {}
+  } catch {
+    // corrupt or missing data file — fall back to empty list
+  }
   return [];
-}
+};
 
-async function writeRecurring(items: RecurringItem[]): Promise<void> {
+const writeRecurring = async (items: RecurringItem[]): Promise<void> => {
   await Bun.write(RECURRING_PATH, JSON.stringify(items, null, 2));
-}
+};
 
 // ── Settings ──
-async function readSettings(): Promise<Record<string, any>> {
+const readSettings = async (): Promise<Record<string, unknown>> => {
   try {
     const file = Bun.file(SETTINGS_PATH);
     if (await file.exists()) {
       return JSON.parse(await file.text());
     }
-  } catch {}
+  } catch {
+    // corrupt or missing data file — fall back to empty settings
+  }
   return {};
-}
+};
 
-async function writeSettings(settings: Record<string, any>): Promise<void> {
+const writeSettings = async (
+  settings: Record<string, unknown>
+): Promise<void> => {
   await Bun.write(SETTINGS_PATH, JSON.stringify(settings, null, 2));
-}
+};
 
 // ── API Routes ──
 app.get("/api/settings", async (c) => {
@@ -293,10 +322,19 @@ app.put("/api/tasks/:id", async (c) => {
   if (idx === -1) return c.json({ error: "Not found" }, 404);
 
   const task = tasks[idx];
-  const updated: Task = { ...task, ...body, id: task.id, createdAt: task.createdAt };
+  const updated: Task = {
+    ...task,
+    ...body,
+    id: task.id,
+    createdAt: task.createdAt,
+  };
 
   if (body.status !== undefined || body.done !== undefined) {
-    const lifecycle = applyStatusChange(task, { status: body.status, done: body.done }, new Date());
+    const lifecycle = applyStatusChange(
+      task,
+      { status: body.status, done: body.done },
+      new Date()
+    );
     updated.status = lifecycle.status;
     updated.done = lifecycle.done;
     updated.completedAt = lifecycle.completedAt;
@@ -319,7 +357,11 @@ app.delete("/api/tasks/:id", async (c) => {
   if (permanent) {
     tasks.splice(idx, 1);
   } else {
-    tasks[idx] = applyStatusChange(tasks[idx], { status: "trashed" }, new Date());
+    tasks[idx] = applyStatusChange(
+      tasks[idx],
+      { status: "trashed" },
+      new Date()
+    );
   }
 
   await writeTasks(tasks);
@@ -406,7 +448,12 @@ app.put("/api/groceries/:id", async (c) => {
   const items = await readGroceries();
   const idx = items.findIndex((i) => i.id === id);
   if (idx === -1) return c.json({ error: "Not found" }, 404);
-  items[idx] = { ...items[idx], ...body, id: items[idx].id, createdAt: items[idx].createdAt };
+  items[idx] = {
+    ...items[idx],
+    ...body,
+    id: items[idx].id,
+    createdAt: items[idx].createdAt,
+  };
   await writeGroceries(items);
   return c.json(items[idx]);
 });
@@ -442,11 +489,17 @@ app.post("/api/recurring", async (c) => {
   const item: RecurringItem = {
     id: crypto.randomUUID().slice(0, 8),
     title: body.title || "Untitled",
-    frequency: isEvent ? "weekly" : (body.frequency === "long-term" ? "long-term" : "weekly"),
+    frequency: isEvent
+      ? "weekly"
+      : body.frequency === "long-term"
+        ? "long-term"
+        : "weekly",
     dayOfWeek: body.dayOfWeek ?? null,
     repeatEvery: isEvent ? 1 : (body.repeatEvery ?? 1),
     repeatUnit: isEvent ? "week" : (body.repeatUnit ?? "week"),
-    repeatDays: isEvent ? [] : (body.repeatDays ?? (body.dayOfWeek != null ? [body.dayOfWeek] : [])),
+    repeatDays: isEvent
+      ? []
+      : (body.repeatDays ?? (body.dayOfWeek != null ? [body.dayOfWeek] : [])),
     endsType: isEvent ? "never" : (body.endsType ?? "never"),
     endsOn: isEvent ? null : (body.endsOn ?? null),
     endsAfter: isEvent ? null : (body.endsAfter ?? null),
@@ -505,26 +558,37 @@ app.post("/api/archive", async (c) => {
 
   const tasks = await readTasks();
   const oldDone = tasks.filter(
-    (t) => t.status === "done" && t.completedAt && now - new Date(t.completedAt).getTime() > FOUR_WEEKS_MS
+    (t) =>
+      t.status === "done" &&
+      t.completedAt &&
+      now - new Date(t.completedAt).getTime() > FOUR_WEEKS_MS
   );
 
   const shopping = await readShopping();
   const oldBought = shopping.filter(
-    (i) => i.done && i.doneAt && now - new Date(i.doneAt).getTime() > FOUR_WEEKS_MS
+    (i) =>
+      i.done && i.doneAt && now - new Date(i.doneAt).getTime() > FOUR_WEEKS_MS
   );
 
   if (oldDone.length === 0 && oldBought.length === 0) {
     return c.json({ archived: 0, message: "Nothing old enough to archive" });
   }
 
-  const weekOf = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const weekOf = new Date().toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
   const lines: string[] = [`## Week of ${weekOf}\n`];
 
   if (oldDone.length > 0) {
     lines.push("### Completed Tasks");
     for (const t of oldDone) {
       const date = t.completedAt
-        ? new Date(t.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        ? new Date(t.completedAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })
         : "";
       lines.push(`- ${t.title}${date ? ` (completed ${date})` : ""}`);
     }
@@ -535,7 +599,10 @@ app.post("/api/archive", async (c) => {
     lines.push("### Items Bought");
     for (const i of oldBought) {
       const date = i.doneAt
-        ? new Date(i.doneAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        ? new Date(i.doneAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })
         : "";
       lines.push(`- ${i.title}${date ? ` (bought ${date})` : ""}`);
     }
@@ -546,30 +613,30 @@ app.post("/api/archive", async (c) => {
   const section = lines.join("\n");
 
   const archiveFile = Bun.file(ARCHIVE_PATH);
-  let existing = "";
-  if (await archiveFile.exists()) {
-    existing = await archiveFile.text();
-  } else {
-    existing = "# Todo Archive\n\n";
-  }
+  const existing = (await archiveFile.exists())
+    ? await archiveFile.text()
+    : "# Todo Archive\n\n";
   await Bun.write(ARCHIVE_PATH, existing + section);
 
-  const remainingTasks = tasks.filter((t) => !oldDone.some((d) => d.id === t.id));
+  const remainingTasks = tasks.filter(
+    (t) => !oldDone.some((d) => d.id === t.id)
+  );
   await writeTasks(remainingTasks);
 
-  const remainingShopping = shopping.filter((i) => !oldBought.some((b) => b.id === i.id));
+  const remainingShopping = shopping.filter(
+    (i) => !oldBought.some((b) => b.id === i.id)
+  );
   await writeShopping(remainingShopping);
 
-  return c.json({ archived: oldDone.length + oldBought.length, tasks: oldDone.length, shopping: oldBought.length });
+  return c.json({
+    archived: oldDone.length + oldBought.length,
+    tasks: oldDone.length,
+    shopping: oldBought.length,
+  });
 });
 
 // ── Static / SPA serving ──
-
-if (mode === "production") {
-  configureProduction(app);
-} else {
-  await configureDevelopment(app);
-}
+// (configured at the bottom of this file, after the helpers are defined)
 
 /**
  * Determine port based on mode. In production, use the published_port if available.
@@ -591,7 +658,7 @@ export default { fetch: app.fetch, port, idleTimeout: 255 };
  * - Static files from `public/` are copied to `dist/` by Vite and served at root paths.
  * - Falls back to `index.html` for any other GET so the SPA router can resolve the request.
  */
-function configureProduction(app: Hono) {
+const configureProduction = (app: Hono) => {
   app.use("/assets/*", serveStatic({ root: "./dist" }));
   app.get("/favicon.ico", (c) => c.redirect("/favicon.svg", 302));
   app.use(async (c, next) => {
@@ -610,7 +677,7 @@ function configureProduction(app: Hono) {
 
     return serveStatic({ path: "./dist/index.html" })(c, next);
   });
-}
+};
 
 /**
  * Configure routing for development builds.
@@ -619,7 +686,7 @@ function configureProduction(app: Hono) {
  * - Static files from `public/` are served at root paths (matching Vite convention).
  * - Mirrors production routing semantics so SPA routes behave consistently.
  */
-async function configureDevelopment(app: Hono): Promise<ViteDevServer> {
+const configureDevelopment = async (app: Hono): Promise<ViteDevServer> => {
   const vite = await createViteServer({
     server: { middlewareMode: true, hmr: false, ws: false },
     appType: "custom",
@@ -678,4 +745,10 @@ async function configureDevelopment(app: Hono): Promise<ViteDevServer> {
   });
 
   return vite;
+};
+
+if (mode === "production") {
+  configureProduction(app);
+} else {
+  await configureDevelopment(app);
 }

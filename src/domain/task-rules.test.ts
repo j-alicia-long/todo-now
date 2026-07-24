@@ -11,28 +11,32 @@ import {
 
 const NOW = new Date("2026-07-20T12:00:00.000Z");
 
-function makeTask(overrides: Partial<Task> = {}): Task {
-  return {
-    id: "t1",
-    title: "Test task",
-    done: false,
-    status: "this-week",
-    priority: "medium",
-    effort: "medium",
-    decisionLoad: "medium",
-    area: "life-admin",
-    dueDate: null,
-    createdAt: "2026-07-01T00:00:00.000Z",
-    completedAt: null,
-    deletedAt: null,
-    source: "board",
-    sourceItemId: null,
-    ...overrides,
-  };
-}
+const makeTask = (overrides: Partial<Task> = {}): Task => ({
+  id: "t1",
+  title: "Test task",
+  done: false,
+  status: "this-week",
+  priority: "medium",
+  effort: "medium",
+  decisionLoad: "medium",
+  area: "life-admin",
+  dueDate: null,
+  createdAt: "2026-07-01T00:00:00.000Z",
+  completedAt: null,
+  deletedAt: null,
+  source: "board",
+  sourceItemId: null,
+  ...overrides,
+});
 
 describe("applyStatusChange — status transition matrix", () => {
-  const statuses: TaskStatus[] = ["this-week", "this-month", "future", "done", "trashed"];
+  const statuses: TaskStatus[] = [
+    "this-week",
+    "this-month",
+    "future",
+    "done",
+    "trashed",
+  ];
 
   const fromState = (status: TaskStatus): Partial<Task> =>
     status === "done"
@@ -85,7 +89,11 @@ describe("applyStatusChange — done shorthand", () => {
   });
 
   test("done: false on a done Task returns it to This Week", () => {
-    const task = makeTask({ status: "done", done: true, completedAt: "2026-07-10T00:00:00.000Z" });
+    const task = makeTask({
+      status: "done",
+      done: true,
+      completedAt: "2026-07-10T00:00:00.000Z",
+    });
     const result = applyStatusChange(task, { done: false }, NOW);
     expect(result.status).toBe("this-week");
     expect(result.done).toBe(false);
@@ -93,7 +101,11 @@ describe("applyStatusChange — done shorthand", () => {
   });
 
   test("done: true on an already-done Task is a no-op", () => {
-    const task = makeTask({ status: "done", done: true, completedAt: "2026-07-10T00:00:00.000Z" });
+    const task = makeTask({
+      status: "done",
+      done: true,
+      completedAt: "2026-07-10T00:00:00.000Z",
+    });
     expect(applyStatusChange(task, { done: true }, NOW)).toBe(task);
   });
 
@@ -103,7 +115,11 @@ describe("applyStatusChange — done shorthand", () => {
   });
 
   test("status takes precedence over done in the same change", () => {
-    const result = applyStatusChange(makeTask(), { status: "done", done: false }, NOW);
+    const result = applyStatusChange(
+      makeTask(),
+      { status: "done", done: false },
+      NOW
+    );
     expect(result.status).toBe("done");
     expect(result.done).toBe(true);
   });
@@ -113,19 +129,25 @@ describe("promoteDueSoon", () => {
   const dueIn = (ms: number) => new Date(NOW.getTime() + ms).toISOString();
 
   test("This Month task due in exactly 7 days is promoted", () => {
-    const tasks = [makeTask({ status: "this-month", dueDate: dueIn(DUE_SOON_MS) })];
+    const tasks = [
+      makeTask({ status: "this-month", dueDate: dueIn(DUE_SOON_MS) }),
+    ];
     expect(promoteDueSoon(tasks, NOW)[0].status).toBe("this-week");
   });
 
   test("This Month task due just past 7 days stays", () => {
-    const tasks = [makeTask({ status: "this-month", dueDate: dueIn(DUE_SOON_MS + 1000) })];
+    const tasks = [
+      makeTask({ status: "this-month", dueDate: dueIn(DUE_SOON_MS + 1000) }),
+    ];
     const result = promoteDueSoon(tasks, NOW);
     expect(result[0].status).toBe("this-month");
     expect(result).toBe(tasks); // unchanged input returns same instance
   });
 
   test("overdue This Month task is promoted", () => {
-    const tasks = [makeTask({ status: "this-month", dueDate: dueIn(-DUE_SOON_MS) })];
+    const tasks = [
+      makeTask({ status: "this-month", dueDate: dueIn(-DUE_SOON_MS) }),
+    ];
     expect(promoteDueSoon(tasks, NOW)[0].status).toBe("this-week");
   });
 
@@ -144,12 +166,19 @@ describe("purgeTrash", () => {
   const deletedAgo = (ms: number) => new Date(NOW.getTime() - ms).toISOString();
 
   test("trashed task at exactly 30 days survives", () => {
-    const tasks = [makeTask({ status: "trashed", deletedAt: deletedAgo(TRASH_TTL_MS) })];
+    const tasks = [
+      makeTask({ status: "trashed", deletedAt: deletedAgo(TRASH_TTL_MS) }),
+    ];
     expect(purgeTrash(tasks, NOW)).toHaveLength(1);
   });
 
   test("trashed task just past 30 days is purged", () => {
-    const tasks = [makeTask({ status: "trashed", deletedAt: deletedAgo(TRASH_TTL_MS + 1000) })];
+    const tasks = [
+      makeTask({
+        status: "trashed",
+        deletedAt: deletedAgo(TRASH_TTL_MS + 1000),
+      }),
+    ];
     expect(purgeTrash(tasks, NOW)).toHaveLength(0);
   });
 
@@ -159,7 +188,9 @@ describe("purgeTrash", () => {
   });
 
   test("non-trashed tasks are never purged", () => {
-    const tasks = [makeTask({ status: "done", completedAt: deletedAgo(TRASH_TTL_MS * 2) })];
+    const tasks = [
+      makeTask({ status: "done", completedAt: deletedAgo(TRASH_TTL_MS * 2) }),
+    ];
     expect(purgeTrash(tasks, NOW)).toBe(tasks);
   });
 });
