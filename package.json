@@ -4,6 +4,7 @@
   "scripts": {
     "clear-cache": "rm -rf node_modules/.vite",
     "dev": "bun run clear-cache && NODE_ENV=development bun run --hot server.ts",
+    "test": "bun test src",
     "build": "bun run clear-cache && bunx vite build",
     "prod": "bun run build && NODE_ENV=production bun run server.ts",
     "preview": "bun run vite preview"

@@ -14,6 +14,7 @@ React PWA hosted as a Zo Site. Jennifer's personal task/shopping/grocery manager
 
 - Frontend: single-page app in `src/pages/TodoPage.tsx` (~1500 lines) + `TodoPage.scss` (~1600 lines)
 - Backend: `server.ts` with CRUD routes for `/api/tasks`, `/api/shopping`, `/api/groceries`, `/api/recurring`, `/api/settings`, `/api/archive`
+- Domain: `src/domain/task-rules.ts` — pure Task lifecycle rules (status transitions, due-date auto-promote, trash purge) shared by server and client; the `Task` type lives here. Tested via `bun test` (`src/domain/task-rules.test.ts`).
 - Data: JSON files in `data/` (gitignored — contains personal data)
 
 ## Tabs

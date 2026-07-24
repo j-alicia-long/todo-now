@@ -23,28 +23,15 @@ import {
   Button as AriaButton,
 } from "react-aria-components";
 import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
+import {
+  applyStatusChange,
+  type Task,
+  type TaskStatus,
+} from "../domain/task-rules";
 import "./TodoPage.scss";
 
-type TaskStatus = "this-week" | "this-month" | "future" | "done" | "trashed";
 type ViewTab = "board" | "shopping" | "groceries" | "recurring";
 type SidebarPanel = "todo-archive" | "todo-trash" | "shopping-archive" | "settings" | null;
-
-type Task = {
-  id: string;
-  title: string;
-  done: boolean;
-  status: TaskStatus;
-  priority: "high" | "medium" | "low";
-  effort: "low" | "medium" | "high";
-  decisionLoad: "low" | "medium" | "high";
-  area: string;
-  dueDate: string | null;
-  createdAt: string;
-  completedAt: string | null;
-  deletedAt: string | null;
-  source: "board" | "shopping" | "grocery";
-  sourceItemId: string | null;
-};
 
 type ShoppingItem = {
   id: string;
@@ -1450,17 +1437,7 @@ export default function TodoPage() {
   async function changeStatus(id: string, status: TaskStatus) {
     const task = tasks.find((t) => t.id === id);
     setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status,
-              done: status === "done",
-              completedAt: status === "done" ? new Date().toISOString() : null,
-              deletedAt: status === "trashed" ? new Date().toISOString() : (t.status === "trashed" ? null : t.deletedAt),
-            }
-          : t
-      )
+      prev.map((t) => (t.id === id ? applyStatusChange(t, { status }, new Date()) : t))
     );
     try {
       await fetch(`/api/tasks/${id}`, {
@@ -1494,9 +1471,7 @@ export default function TodoPage() {
 
   async function deleteTask(id: string) {
     setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, status: "trashed" as TaskStatus, deletedAt: new Date().toISOString(), done: false, completedAt: null } : t
-      )
+      prev.map((t) => (t.id === id ? applyStatusChange(t, { status: "trashed" }, new Date()) : t))
     );
     try {
       await fetch(`/api/tasks/${id}`, { method: "DELETE", headers: { Accept: "application/json" } });

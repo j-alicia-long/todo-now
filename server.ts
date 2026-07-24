@@ -3,6 +3,13 @@ import type { ViteDevServer } from "vite";
 import { createServer as createViteServer } from "vite";
 import config from "./zosite.json";
 import { Hono } from "hono";
+import {
+  applyStatusChange,
+  promoteDueSoon,
+  purgeTrash,
+  type Task,
+  type TaskStatus,
+} from "./src/domain/task-rules";
 
 // AI agents: read README.md for navigation and contribution guidance.
 type Mode = "development" | "production";
@@ -18,75 +25,43 @@ const SHOPPING_PATH = import.meta.dir + "/data/shopping.json";
 const GROCERY_PATH = import.meta.dir + "/data/groceries.json";
 const RECURRING_PATH = import.meta.dir + "/data/recurring.json";
 
-type TaskStatus = "this-week" | "this-month" | "future" | "done" | "trashed";
-
-type Task = {
-  id: string;
-  title: string;
-  done: boolean;
-  status: TaskStatus;
-  priority: "high" | "medium" | "low";
-  effort: "low" | "medium" | "high";
-  decisionLoad: "low" | "medium" | "high";
-  area: string;
-  dueDate: string | null;
-  createdAt: string;
-  completedAt: string | null;
-  deletedAt: string | null;
-  source: "board" | "shopping" | "grocery";
-  sourceItemId: string | null;
-};
-
-const TRASH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-
 async function readTasks(): Promise<Task[]> {
   try {
     const file = Bun.file(DATA_PATH);
     if (await file.exists()) {
       const raw = JSON.parse(await file.text()) as any[];
       let needsMigration = false;
-      const now = Date.now();
-      const tasks = raw
-        .map((t) => {
-          if (!t.status) {
+      const now = new Date();
+      let tasks = raw.map((t) => {
+        // Legacy file-format migrations only; lifecycle rules live in task-rules.ts
+        if (!t.status) {
+          needsMigration = true;
+          t.status = t.done ? "done" : "this-week";
+        } else if (t.status === "active") {
+          needsMigration = true;
+          t.status = "this-week";
+        }
+        if (t.deletedAt === undefined) {
+          t.deletedAt = null;
+        }
+        if (!t.source) {
+          t.source = "board";
+        }
+        if (t.sourceItemId === undefined || t.sourceItemId === null) {
+          t.sourceItemId = null;
+          if (t.source === "shopping" || t.source === "grocery") {
             needsMigration = true;
-            t.status = t.done ? "done" : "this-week";
-          } else if (t.status === "active") {
-            needsMigration = true;
-            t.status = "this-week";
           }
-          if (t.deletedAt === undefined) {
-            t.deletedAt = null;
-          }
-          if (!t.source) {
-            t.source = "board";
-          }
-          if (t.sourceItemId === undefined || t.sourceItemId === null) {
-            t.sourceItemId = null;
-            if (t.source === "shopping" || t.source === "grocery") {
-              needsMigration = true;
-            }
-          }
-          if (t.status === "this-month" && t.dueDate) {
-            const dueMs = new Date(t.dueDate).getTime();
-            if (dueMs - now <= SEVEN_DAYS_MS) {
-              needsMigration = true;
-              t.status = "this-week";
-            }
-          }
-          return t as Task;
-        })
-        .filter((t) => {
-          if (t.status === "trashed" && t.deletedAt) {
-            const elapsed = now - new Date(t.deletedAt).getTime();
-            if (elapsed > TRASH_TTL_MS) {
-              needsMigration = true;
-              return false;
-            }
-          }
-          return true;
-        });
+        }
+        return t as Task;
+      });
+
+      const normalized = purgeTrash(promoteDueSoon(tasks, now), now);
+      if (normalized !== tasks) {
+        needsMigration = true;
+        tasks = normalized;
+      }
+
       if (needsMigration) {
         const shopping = await readShopping();
         const groceries = await readGroceries();
@@ -320,22 +295,12 @@ app.put("/api/tasks/:id", async (c) => {
   const task = tasks[idx];
   const updated: Task = { ...task, ...body, id: task.id, createdAt: task.createdAt };
 
-  if (body.status && body.status !== "trashed" && task.status === "trashed") {
-    updated.deletedAt = null;
-  }
-
-  if (body.status === "done" && task.status !== "done") {
-    updated.done = true;
-    updated.completedAt = new Date().toISOString();
-  } else if (body.status && body.status !== "done" && task.status === "done") {
-    updated.done = false;
-    updated.completedAt = null;
-  } else if (body.done === true && !task.done) {
-    updated.status = "done";
-    updated.completedAt = new Date().toISOString();
-  } else if (body.done === false) {
-    updated.status = "this-week";
-    updated.completedAt = null;
+  if (body.status !== undefined || body.done !== undefined) {
+    const lifecycle = applyStatusChange(task, { status: body.status, done: body.done }, new Date());
+    updated.status = lifecycle.status;
+    updated.done = lifecycle.done;
+    updated.completedAt = lifecycle.completedAt;
+    updated.deletedAt = lifecycle.deletedAt;
   }
 
   tasks[idx] = updated;
@@ -354,10 +319,7 @@ app.delete("/api/tasks/:id", async (c) => {
   if (permanent) {
     tasks.splice(idx, 1);
   } else {
-    tasks[idx].status = "trashed";
-    tasks[idx].deletedAt = new Date().toISOString();
-    tasks[idx].done = false;
-    tasks[idx].completedAt = null;
+    tasks[idx] = applyStatusChange(tasks[idx], { status: "trashed" }, new Date());
   }
 
   await writeTasks(tasks);
