@@ -10,9 +10,7 @@ Planned and deferred work. Shipped work is logged in `../devlog.md`.
 
 ## Deferred architecture candidates
 
-From the Jul 2026 architecture reviews (candidate #1, Task lifecycle rules, the client data seam, and the Week & recurrence module already shipped — see devlog):
-
-1. Narrow Board card interfaces via store handles — unblocked now that per-family store hooks exist _(speculative)_
+From the Jul 2026 architecture reviews — all four candidates (Task lifecycle rules, the client data seam, the Week & recurrence module, and component extraction with narrow card interfaces) have shipped; see devlog. Nothing currently deferred.
 
 ## Cut / deprioritized (Jul 16, 2026)
 

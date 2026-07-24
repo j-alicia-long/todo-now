@@ -12,7 +12,8 @@ React PWA hosted as a Zo Site. Jennifer's personal task/shopping/grocery manager
 
 ## Architecture
 
-- Frontend: single-page app in `src/pages/TodoPage.tsx` (~2900 lines) + `TodoPage.scss` (~1600 lines)
+- Frontend: `src/pages/TodoPage.tsx` (~1,200 lines) — page state, tab routing, CRUD wrappers, and modals — plus `TodoPage.scss` (~1600 lines)
+- Components: `src/components/` — presentational components extracted from TodoPage: `ui.tsx` (Icon, LinkPills, TagSelect), `DatePicker.tsx`, `TaskCard.tsx`, `FutureTaskCard.tsx`, `TrashCard.tsx`, `BoardColumn.tsx`, `ShoppingItems.tsx`, `RecurringListItem.tsx`, `SettingsView.tsx`. Components with 3+ callbacks take a narrow action-handle object (e.g. `TaskActions`, `RecurringItemActions`) declared in the consumer's file and built once in TodoPage; smaller components take plain props.
 - Backend: `server.ts` with CRUD routes for `/api/tasks`, `/api/shopping`, `/api/groceries`, `/api/recurring`, `/api/settings`, `/api/archive`
 - Domain: `src/domain/task-rules.ts` — pure Task lifecycle rules (status transitions, due-date auto-promote, trash purge) shared by server and client; the `Task` type lives here. Tested via `bun test` (`src/domain/task-rules.test.ts`).
 - Domain: `src/domain/recurrence.ts` — pure Week & recurrence rules shared by server and client: weekly reset (`resetWeeklyItems`), completion stamping (`applyRecurringCompletion`), due-date advancement on long-term completion (`advanceDueDate`, enforces endsOn/endsAfter), first-due derivation, and Board visibility selectors (`boardWeeklyItems`, `upcomingLongTermItems`, gated by `showEarlyDays`). The `RecurringItem` type lives here. All functions take an injected `now: Date`. Tested via `bun test` (`src/domain/recurrence.test.ts`).
