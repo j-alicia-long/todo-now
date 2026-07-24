@@ -3,8 +3,6 @@ import { useTheme } from "@/components/theme-provider";
 import {
   DndContext,
   DragOverlay,
-  useDroppable,
-  useDraggable,
   PointerSensor,
   useSensor,
   useSensors,
@@ -29,23 +27,26 @@ import {
   type RecurringItem,
   type Settings,
 } from "../stores/hooks";
-import { Icon, LinkPills, TagSelect } from "../components/ui";
-import { DatePickerModal, DatePickerDropdown } from "../components/DatePicker";
+import { Icon, LinkPills } from "../components/ui";
+import { DatePickerDropdown } from "../components/DatePicker";
+import { TaskCard, type TaskActions } from "../components/TaskCard";
+import { FutureTaskCard } from "../components/FutureTaskCard";
+import { TrashCard } from "../components/TrashCard";
+import {
+  BoardColumn,
+  type RecurringCardActions,
+} from "../components/BoardColumn";
 import {
   AREA_LABELS,
   AREA_COLORS,
   AREA_OPTIONS,
   DAY_LETTERS,
   REPEAT_UNITS,
-  daysAgo,
   dueUrgencyClass,
   formatDueDate,
-  formatDueDateFull,
   formatHeadingDate,
   formatRecurrence,
   getDomain,
-  groupDoneByDate,
-  groupRecurringDoneByDate,
   sortTasks,
   timeSince,
 } from "../lib/presentation";
@@ -241,687 +242,6 @@ const GroceryListItem = ({
     </div>
   </div>
 );
-
-// ── Task Card ──
-
-const TaskCard = ({
-  task,
-  onStatusChange,
-  onDelete,
-  onUpdate,
-  settings,
-  isDragOverlay,
-}: {
-  task: Task;
-  onStatusChange: (id: string, status: TaskStatus) => void;
-  onDelete: (id: string) => void;
-  onUpdate: (id: string, fields: Partial<Task>) => void;
-  settings: Settings;
-  isDragOverlay?: boolean;
-}) => {
-  const [editingTag, setEditingTag] = useState<string | null>(null);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editTitle, setEditTitle] = useState(task.title);
-  const editInputRef = useRef<HTMLInputElement>(null);
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: task.id, data: { task } });
-
-  useEffect(() => {
-    if (isEditingTitle && editInputRef.current) {
-      editInputRef.current.focus();
-      editInputRef.current.select();
-    }
-  }, [isEditingTitle]);
-
-  const commitTitleEdit = () => {
-    const trimmed = editTitle.trim();
-    if (trimmed && trimmed !== task.title) {
-      onUpdate(task.id, { title: trimmed });
-    } else {
-      setEditTitle(task.title);
-    }
-    setIsEditingTitle(false);
-  };
-
-  const style: React.CSSProperties = {};
-  if (isDragOverlay) {
-    style.cursor = "grabbing";
-    style.boxShadow = "var(--shadow-lg)";
-    style.transform = "rotate(2deg) scale(1.02)";
-  } else if (transform) {
-    style.transform = `translate3d(${transform.x}px, ${transform.y}px, 0)`;
-  }
-  if (isDragging && !isDragOverlay) {
-    style.opacity = 0.3;
-  }
-
-  const ref = isDragOverlay ? undefined : setNodeRef;
-  const dragProps = isDragOverlay ? {} : { ...attributes, ...listeners };
-
-  return (
-    <div
-      ref={ref}
-      className={`task-card ${isDragging && !isDragOverlay ? "dragging" : ""} ${task.source && task.source !== "board" ? `source-${task.source}` : ""}`}
-      style={style}
-      {...dragProps}
-    >
-      <button
-        className="card-delete-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(task.id);
-        }}
-        title="Delete"
-        aria-label="Delete task"
-      >
-        <Icon name="close" />
-      </button>
-      <div className="card-header">
-        <label className="card-checkbox" onClick={(e) => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={task.done}
-            onChange={(e) => {
-              e.stopPropagation();
-              if (!task.done) {
-                onStatusChange(task.id, "done");
-              } else {
-                onStatusChange(task.id, "this-week");
-              }
-            }}
-          />
-          <span className="checkmark" />
-        </label>
-        {isEditingTitle ? (
-          <input
-            ref={editInputRef}
-            className="card-title-edit"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={commitTitleEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                commitTitleEdit();
-              }
-              if (e.key === "Escape") {
-                setEditTitle(task.title);
-                setIsEditingTitle(false);
-              }
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : (
-          <span
-            className={`card-title ${task.done ? "done" : ""}`}
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-              setEditTitle(task.title);
-              setIsEditingTitle(true);
-            }}
-          >
-            {task.title}
-          </span>
-        )}
-      </div>
-
-      <div className="card-row">
-        <div className="card-tags">
-          {task.done && task.dueDate && (
-            <span className="card-due-subtext">
-              {formatDueDateFull(task.dueDate)}
-            </span>
-          )}
-          {!task.done && task.dueDate && (
-            <span
-              className={`card-tag ${dueUrgencyClass(task.dueDate)} tappable`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditingTag(editingTag === "dueDate" ? null : "dueDate");
-              }}
-            >
-              {formatDueDate(task.dueDate)}
-            </span>
-          )}
-          {!task.done && !task.dueDate && (
-            <span
-              className="card-tag due-none tappable"
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditingTag(editingTag === "dueDate" ? null : "dueDate");
-              }}
-            >
-              + date
-            </span>
-          )}
-          {editingTag === "dueDate" && (
-            <DatePickerModal
-              value={task.dueDate}
-              onChange={(d) => onUpdate(task.id, { dueDate: d })}
-              onClose={() => setEditingTag(null)}
-            />
-          )}
-          {settings.showArea && task.area && (
-            <span className="tag-anchor">
-              <span
-                className={`card-tag area ${AREA_COLORS[task.area] || ""} tappable`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditingTag(editingTag === "area" ? null : "area");
-                }}
-              >
-                {AREA_LABELS[task.area] || task.area}
-              </span>
-              {editingTag === "area" && (
-                <TagSelect
-                  value={task.area}
-                  options={AREA_OPTIONS.map(([k]) => k)}
-                  labels={AREA_LABELS}
-                  onChange={(v) => onUpdate(task.id, { area: v })}
-                  onClose={() => setEditingTag(null)}
-                  className="area-select"
-                />
-              )}
-            </span>
-          )}
-        </div>
-        <div className="card-actions">
-          {task.status === "this-week" && (
-            <>
-              <button
-                className="card-action-btn move-right"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStatusChange(task.id, "this-month");
-                }}
-                title="Move to This Month"
-              >
-                <Icon name="chevron_right" />
-              </button>
-              <button
-                className="card-action-btn archive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStatusChange(task.id, "future");
-                }}
-                title="File away to Future"
-              >
-                <Icon name="archive" />
-              </button>
-            </>
-          )}
-          {task.status === "this-month" && (
-            <>
-              <button
-                className="card-action-btn move-left"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStatusChange(task.id, "this-week");
-                }}
-                title="Move to This Week"
-              >
-                <Icon name="chevron_left" />
-              </button>
-              <button
-                className="card-action-btn archive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStatusChange(task.id, "future");
-                }}
-                title="File away to Future"
-              >
-                <Icon name="archive" />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ── Future Task Card ──
-
-const FutureTaskCard = ({
-  task,
-  onStatusChange,
-  onDelete,
-  onUpdate,
-  settings,
-}: {
-  task: Task;
-  onStatusChange: (id: string, status: TaskStatus) => void;
-  onDelete: (id: string) => void;
-  onUpdate: (id: string, fields: Partial<Task>) => void;
-  settings: Settings;
-}) => {
-  const [editingTag, setEditingTag] = useState<string | null>(null);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editTitle, setEditTitle] = useState(task.title);
-  const editInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditingTitle && editInputRef.current) {
-      editInputRef.current.focus();
-      editInputRef.current.select();
-    }
-  }, [isEditingTitle]);
-
-  const commitTitleEdit = () => {
-    const trimmed = editTitle.trim();
-    if (trimmed && trimmed !== task.title) {
-      onUpdate(task.id, { title: trimmed });
-    } else {
-      setEditTitle(task.title);
-    }
-    setIsEditingTitle(false);
-  };
-
-  return (
-    <div className="task-card future-card">
-      <button
-        className="card-delete-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(task.id);
-        }}
-        title="Delete"
-        aria-label="Delete task"
-      >
-        <Icon name="close" />
-      </button>
-      <div className="card-header">
-        <label className="card-checkbox" onClick={(e) => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={false}
-            onChange={(e) => {
-              e.stopPropagation();
-              onStatusChange(task.id, "done");
-            }}
-          />
-          <span className="checkmark" />
-        </label>
-        {isEditingTitle ? (
-          <input
-            ref={editInputRef}
-            className="card-title-edit"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={commitTitleEdit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                commitTitleEdit();
-              }
-              if (e.key === "Escape") {
-                setEditTitle(task.title);
-                setIsEditingTitle(false);
-              }
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
-        ) : (
-          <span
-            className="card-title"
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-              setEditTitle(task.title);
-              setIsEditingTitle(true);
-            }}
-          >
-            {task.title}
-          </span>
-        )}
-      </div>
-
-      <div className="card-tags">
-        {task.dueDate && (
-          <span
-            className={`card-tag ${dueUrgencyClass(task.dueDate)} tappable`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditingTag(editingTag === "dueDate" ? null : "dueDate");
-            }}
-          >
-            {formatDueDate(task.dueDate)}
-          </span>
-        )}
-        {!task.dueDate && (
-          <span
-            className="card-tag due-none tappable"
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditingTag(editingTag === "dueDate" ? null : "dueDate");
-            }}
-          >
-            + date
-          </span>
-        )}
-        {editingTag === "dueDate" && (
-          <DatePickerModal
-            value={task.dueDate}
-            onChange={(d) => onUpdate(task.id, { dueDate: d })}
-            onClose={() => setEditingTag(null)}
-          />
-        )}
-        {settings.showArea && task.area && (
-          <span className="tag-anchor">
-            <span
-              className={`card-tag area ${AREA_COLORS[task.area] || ""} tappable`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditingTag(editingTag === "area" ? null : "area");
-              }}
-            >
-              {AREA_LABELS[task.area] || task.area}
-            </span>
-            {editingTag === "area" && (
-              <TagSelect
-                value={task.area}
-                options={AREA_OPTIONS.map(([k]) => k)}
-                labels={AREA_LABELS}
-                onChange={(v) => onUpdate(task.id, { area: v })}
-                onClose={() => setEditingTag(null)}
-              />
-            )}
-          </span>
-        )}
-      </div>
-
-      <div className="card-actions">
-        <button
-          className="card-action-btn activate"
-          onClick={(e) => {
-            e.stopPropagation();
-            onStatusChange(task.id, "this-week");
-          }}
-          title="Move to This Week"
-        >
-          <Icon name="play_arrow" /> This Week
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// ── Trash Card ──
-
-const TrashCard = ({
-  task,
-  onRestore,
-  onPermanentDelete,
-}: {
-  task: Task;
-  onRestore: (id: string) => void;
-  onPermanentDelete: (id: string) => void;
-}) => (
-  <div className="task-card trash-card">
-    <div className="card-header">
-      <span className="card-title trashed">{task.title}</span>
-    </div>
-    {task.deletedAt && (
-      <div className="trash-meta">Deleted {daysAgo(task.deletedAt)}</div>
-    )}
-    <div className="card-actions">
-      <button
-        className="card-action-btn undo"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRestore(task.id);
-        }}
-      >
-        <Icon name="undo" /> Restore
-      </button>
-      <button
-        className="card-action-btn delete-permanent"
-        onClick={(e) => {
-          e.stopPropagation();
-          onPermanentDelete(task.id);
-        }}
-      >
-        <Icon name="delete_forever" /> Delete forever
-      </button>
-    </div>
-  </div>
-);
-
-// ── Board Column ──
-
-const BoardColumn = ({
-  id,
-  title,
-  icon,
-  colorClass,
-  tasks,
-  onStatusChange,
-  onDelete,
-  onUpdate,
-  settings,
-  recurringTasks,
-  onToggleRecurring,
-  onDeleteRecurring,
-  onUpdateRecurring,
-}: {
-  id: TaskStatus;
-  title: string;
-  icon: string;
-  colorClass: string;
-  tasks: Task[];
-  onStatusChange: (id: string, status: TaskStatus) => void;
-  onDelete: (id: string) => void;
-  onUpdate: (id: string, fields: Partial<Task>) => void;
-  settings: Settings;
-  recurringTasks?: RecurringItem[];
-  onToggleRecurring?: (id: string) => void;
-  onDeleteRecurring?: (id: string) => void;
-  onUpdateRecurring?: (id: string, fields: Partial<RecurringItem>) => void;
-  onEditRecurring?: (item: RecurringItem) => void;
-}) => {
-  const { setNodeRef, isOver } = useDroppable({ id });
-  const [editingRecurringDate, setEditingRecurringDate] = useState<
-    string | null
-  >(null);
-
-  const displayTasks = tasks;
-
-  const doneGroups = id === "done" ? groupDoneByDate(displayTasks) : null;
-
-  return (
-    <div
-      className={`board-column ${isOver ? "drag-over" : ""}`}
-      ref={setNodeRef}
-    >
-      <div className={`column-header ${colorClass}`}>
-        <Icon name={icon} className="column-icon" />
-        <h2 className="column-title">{title}</h2>
-        <span className="column-count">{displayTasks.length}</span>
-      </div>
-      <div className="column-cards">
-        {recurringTasks &&
-          recurringTasks.length > 0 &&
-          id !== "done" &&
-          recurringTasks.map((ri) => (
-            <div key={ri.id} className="task-card recurring-task-card">
-              <button
-                className="card-delete-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteRecurring?.(ri.id);
-                }}
-                title="Delete"
-                aria-label="Delete recurring task"
-              >
-                <Icon name="close" />
-              </button>
-              <div className="card-header">
-                <label
-                  className="card-checkbox"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <input
-                    type="checkbox"
-                    checked={ri.completedThisWeek}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      onToggleRecurring?.(ri.id);
-                    }}
-                  />
-                  <span className="checkmark" />
-                </label>
-                <span className="card-title">{ri.title}</span>
-              </div>
-              <div className="card-row">
-                <div className="card-tags">
-                  {ri.dueDate && (
-                    <span
-                      className={`card-tag ${dueUrgencyClass(ri.dueDate)} tappable`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingRecurringDate(
-                          editingRecurringDate === ri.id ? null : ri.id
-                        );
-                      }}
-                    >
-                      {formatDueDate(ri.dueDate)}
-                    </span>
-                  )}
-                  {!ri.dueDate && (
-                    <span
-                      className="card-tag due-none tappable"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingRecurringDate(
-                          editingRecurringDate === ri.id ? null : ri.id
-                        );
-                      }}
-                    >
-                      + date
-                    </span>
-                  )}
-                  {editingRecurringDate === ri.id && (
-                    <DatePickerModal
-                      value={ri.dueDate}
-                      onChange={(d) =>
-                        onUpdateRecurring?.(ri.id, { dueDate: d })
-                      }
-                      onClose={() => setEditingRecurringDate(null)}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        {displayTasks.length === 0 &&
-        (!recurringTasks || recurringTasks.length === 0) ? (
-          <div className="column-empty">
-            {id === "done"
-              ? "Nothing completed yet"
-              : id === "this-month"
-                ? "Drag tasks here or use the arrow"
-                : "All clear!"}
-          </div>
-        ) : doneGroups ? (
-          (() => {
-            const recurringDoneGroups =
-              recurringTasks && recurringTasks.length > 0
-                ? groupRecurringDoneByDate(recurringTasks)
-                : [];
-            const dateKeyMap = new Map<string, string>();
-            for (const g of doneGroups) dateKeyMap.set(g.dateKey, g.label);
-            for (const g of recurringDoneGroups)
-              dateKeyMap.set(g.dateKey, g.label);
-            const sortedKeys = [...dateKeyMap.keys()].sort((a, b) => {
-              if (a === "unknown") return 1;
-              if (b === "unknown") return -1;
-              return b.localeCompare(a);
-            });
-            return sortedKeys.map((key) => {
-              const label = dateKeyMap.get(key)!;
-              const taskGroup = doneGroups.find((g) => g.dateKey === key);
-              const recurringGroup = recurringDoneGroups.find(
-                (g) => g.dateKey === key
-              );
-              return (
-                <div key={label} className="done-group">
-                  <div className="done-group-label">{label}</div>
-                  {recurringGroup &&
-                    recurringGroup.items.map((ri) => (
-                      <div
-                        key={ri.id}
-                        className="task-card recurring-task-card"
-                      >
-                        <button
-                          className="card-delete-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteRecurring?.(ri.id);
-                          }}
-                          title="Delete"
-                          aria-label="Delete recurring task"
-                        >
-                          <Icon name="close" />
-                        </button>
-                        <div className="card-header">
-                          <label
-                            className="card-checkbox"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={true}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                onToggleRecurring?.(ri.id);
-                              }}
-                            />
-                            <span className="checkmark" />
-                          </label>
-                          <span className="card-title done">{ri.title}</span>
-                        </div>
-                        <div className="card-row">
-                          <div className="card-tags">
-                            {ri.dueDate && (
-                              <span className="card-due-subtext">
-                                {formatDueDateFull(ri.dueDate)}
-                              </span>
-                            )}
-                          </div>
-                          <div className="card-actions"></div>
-                        </div>
-                      </div>
-                    ))}
-                  {taskGroup &&
-                    taskGroup.tasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onStatusChange={onStatusChange}
-                        onDelete={onDelete}
-                        onUpdate={onUpdate}
-                        settings={settings}
-                      />
-                    ))}
-                </div>
-              );
-            });
-          })()
-        ) : (
-          sortTasks(displayTasks).map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onStatusChange={onStatusChange}
-              onDelete={onDelete}
-              onUpdate={onUpdate}
-              settings={settings}
-            />
-          ))
-        )}
-      </div>
-    </div>
-  );
-};
 
 // ── Settings View ──
 
@@ -1262,6 +582,15 @@ export default function TodoPage() {
     await tasksStore.removePermanently(id);
   };
 
+  // Narrow handles passed to card components. changeStatus carries the
+  // cross-family coordination, so cards get these wrappers — not the raw
+  // store actions.
+  const taskActions: TaskActions = {
+    changeStatus,
+    update: updateTask,
+    trash: deleteTask,
+  };
+
   // ── Shopping CRUD ──
 
   const addShoppingItem = async (e: React.FormEvent) => {
@@ -1421,6 +750,12 @@ export default function TodoPage() {
     fields: Partial<RecurringItem>
   ) => {
     await recurring.update(id, fields);
+  };
+
+  const recurringActions: RecurringCardActions = {
+    toggle: toggleRecurringItem,
+    remove: deleteRecurringItem,
+    update: updateRecurringItem,
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -1643,36 +978,14 @@ export default function TodoPage() {
                 icon={col.icon}
                 colorClass={col.colorClass}
                 tasks={tasksByStatus(col.id)}
-                onStatusChange={changeStatus}
-                onDelete={deleteTask}
-                onUpdate={updateTask}
+                taskActions={taskActions}
                 settings={settings}
-                recurringTasks={
+                recurring={
                   col.id === "this-week"
-                    ? boardRecurringTasks
+                    ? { items: boardRecurringTasks, actions: recurringActions }
                     : col.id === "done"
-                      ? boardRecurringDone
+                      ? { items: boardRecurringDone, actions: recurringActions }
                       : undefined
-                }
-                onToggleRecurring={
-                  col.id === "this-week" || col.id === "done"
-                    ? toggleRecurringItem
-                    : undefined
-                }
-                onDeleteRecurring={
-                  col.id === "this-week" || col.id === "done"
-                    ? deleteRecurringItem
-                    : undefined
-                }
-                onUpdateRecurring={
-                  col.id === "this-week" || col.id === "done"
-                    ? updateRecurringItem
-                    : undefined
-                }
-                onEditRecurring={
-                  col.id === "this-week" || col.id === "done"
-                    ? openRecurringEdit
-                    : undefined
                 }
               />
             ))}
@@ -1681,9 +994,11 @@ export default function TodoPage() {
             {activeTask ? (
               <TaskCard
                 task={activeTask}
-                onStatusChange={() => {}}
-                onDelete={() => {}}
-                onUpdate={() => {}}
+                actions={{
+                  changeStatus: () => {},
+                  update: () => {},
+                  trash: () => {},
+                }}
                 settings={settings}
                 isDragOverlay
               />
@@ -2214,9 +1529,7 @@ export default function TodoPage() {
                       <FutureTaskCard
                         key={task.id}
                         task={task}
-                        onStatusChange={changeStatus}
-                        onDelete={deleteTask}
-                        onUpdate={updateTask}
+                        actions={taskActions}
                         settings={settings}
                       />
                     ))
