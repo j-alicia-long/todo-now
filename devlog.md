@@ -10,6 +10,8 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 Codebase quality pass: extracted domain logic, added tooling, deepened the data layer.
 
+- Reworked recurrence scheduling: due dates land on the occurrence day, new `showEarlyDays` field controls Board lead time (defaults 14d long-term / 0d weekly), and completing a long-term item auto-advances its dueDate with endsOn/endsAfter enforcement ([`7b7d971`](https://github.com/j-alicia-long/todo-now/commit/7b7d971))
+- Extracted Week & recurrence rules into a pure shared domain module `src/domain/recurrence.ts` with injected clock, 36 tests ([`5c5fd2a`](https://github.com/j-alicia-long/todo-now/commit/5c5fd2a))
 - Documented the stores layer in AGENTS.md ([`7e4ccf8`](https://github.com/j-alicia-long/todo-now/commit/7e4ccf8))
 - Per-family store hooks to deepen the client data seam ([`ed8d718`](https://github.com/j-alicia-long/todo-now/commit/ed8d718))
 - ESLint + pre-commit hooks (husky, lint-staged, prettier); fixed all lint errors ([`f540c86`](https://github.com/j-alicia-long/todo-now/commit/f540c86), [`0a58054`](https://github.com/j-alicia-long/todo-now/commit/0a58054))
