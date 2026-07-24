@@ -2,7 +2,7 @@
 
 Running log of development on the todo app (Unstuck dashboard). Newest entries first.
 
-**Convention:** one `## YYYY-MM-DD` section per working day. Keep entries short — what shipped, key decisions, and links to commits. The longer narrative history (sessions, open questions, decisions) lives in the parent workspace's `devlog.md`.
+**Convention:** one `## YYYY-MM-DD` section per working day. Keep entries short — what shipped, key decisions, and links to commits. The longer narrative history (sessions, open questions, decisions) lives in the parent workspace's `history.md`.
 
 ---
 
