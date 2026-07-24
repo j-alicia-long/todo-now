@@ -17,29 +17,11 @@ import {
 } from "../domain/recurrence";
 import { useEntityList } from "./entity-store";
 import { httpTransport, type Transport } from "./transport";
+import type { ShoppingItem, GroceryItem } from "../domain/entities";
 
 // Re-exported so store consumers keep a single import site.
 export { isWeeklyRecurring, type RecurringItem };
-
-// ── Entity types ──
-
-export type ShoppingItem = {
-  id: string;
-  title: string;
-  done: boolean;
-  archived: boolean;
-  category: "want" | "need";
-  links: string[];
-  createdAt: string;
-  doneAt: string | null;
-};
-
-export type GroceryItem = {
-  id: string;
-  title: string;
-  done: boolean;
-  createdAt: string;
-};
+export type { ShoppingItem, GroceryItem };
 
 // ── Tasks ──
 

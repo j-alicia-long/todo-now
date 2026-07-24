@@ -317,6 +317,7 @@ describe("useGroceries", () => {
     title: "Milk",
     done: false,
     createdAt: "2026-01-01T00:00:00.000Z",
+    category: "task",
     ...overrides,
   });
 

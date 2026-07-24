@@ -3,18 +3,27 @@ import type { ViteDevServer } from "vite";
 import { createServer as createViteServer } from "vite";
 import config from "./zosite.json";
 import { Hono } from "hono";
+import { createResourceRoutes } from "./src/server/resource";
 import {
-  applyStatusChange,
-  promoteDueSoon,
-  purgeTrash,
-  type Task,
-} from "./src/domain/task-rules";
+  tasksFamily,
+  shoppingFamily,
+  groceriesFamily,
+  recurringFamily,
+} from "./src/server/families";
 import {
-  advanceDueDate,
-  applyRecurringCompletion,
-  resetWeeklyItems,
-  type RecurringItem,
-} from "./src/domain/recurrence";
+  tasksStore,
+  shoppingStore,
+  groceriesStore,
+  recurringStore,
+  readTasks,
+  writeTasks,
+  readShopping,
+  writeShopping,
+  readGroceries,
+  writeGroceries,
+  readSettings,
+  writeSettings,
+} from "./src/server/files";
 
 // AI agents: read README.md for navigation and contribution guidance.
 type Mode = "development" | "production";
@@ -23,219 +32,10 @@ const app = new Hono();
 const mode: Mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 
-// ── Data layer ──
-const DATA_PATH = import.meta.dir + "/data/tasks.json";
-const SETTINGS_PATH = import.meta.dir + "/data/settings.json";
-const SHOPPING_PATH = import.meta.dir + "/data/shopping.json";
-const GROCERY_PATH = import.meta.dir + "/data/groceries.json";
-const RECURRING_PATH = import.meta.dir + "/data/recurring.json";
-
-// Raw task rows from disk may predate the current schema
-type LegacyTaskRecord = Omit<Task, "status"> & {
-  status?: string;
-  done?: boolean;
-};
-
-const readTasks = async (): Promise<Task[]> => {
-  try {
-    const file = Bun.file(DATA_PATH);
-    if (await file.exists()) {
-      const raw = JSON.parse(await file.text()) as LegacyTaskRecord[];
-      let needsMigration = false;
-      const now = new Date();
-      let tasks = raw.map((t) => {
-        // Legacy file-format migrations only; lifecycle rules live in task-rules.ts
-        if (!t.status) {
-          needsMigration = true;
-          t.status = t.done ? "done" : "this-week";
-        } else if (t.status === "active") {
-          needsMigration = true;
-          t.status = "this-week";
-        }
-        if (t.deletedAt === undefined) {
-          t.deletedAt = null;
-        }
-        if (!t.source) {
-          t.source = "board";
-        }
-        if (t.sourceItemId === undefined || t.sourceItemId === null) {
-          t.sourceItemId = null;
-          if (t.source === "shopping" || t.source === "grocery") {
-            needsMigration = true;
-          }
-        }
-        return t as Task;
-      });
-
-      const normalized = purgeTrash(promoteDueSoon(tasks, now), now);
-      if (normalized !== tasks) {
-        needsMigration = true;
-        tasks = normalized;
-      }
-
-      if (needsMigration) {
-        const shopping = await readShopping();
-        const groceries = await readGroceries();
-        for (const t of tasks) {
-          if (!t.sourceItemId && t.source === "shopping") {
-            const match = shopping.find((s) => s.title === t.title);
-            if (match) t.sourceItemId = match.id;
-          } else if (!t.sourceItemId && t.source === "grocery") {
-            const match = groceries.find((g) => g.title === t.title);
-            if (match) t.sourceItemId = match.id;
-          }
-        }
-        await writeTasks(tasks);
-      }
-      return tasks;
-    }
-  } catch {
-    // corrupt or missing data file — fall back to empty list
-  }
-  return [];
-};
-
-const writeTasks = async (tasks: Task[]): Promise<void> => {
-  await Bun.write(DATA_PATH, JSON.stringify(tasks, null, 2));
-};
-
-// ── Shopping data layer ──
-
-type ShoppingItem = {
-  id: string;
-  title: string;
-  done: boolean;
-  archived: boolean;
-  category: "want" | "need";
-  links: string[];
-  createdAt: string;
-  doneAt: string | null;
-};
-
-const readShopping = async (): Promise<ShoppingItem[]> => {
-  try {
-    const file = Bun.file(SHOPPING_PATH);
-    if (await file.exists()) {
-      const raw = JSON.parse(await file.text()) as ShoppingItem[];
-      return raw.map((i) => ({
-        ...i,
-        category: i.category || "need",
-        links: Array.isArray(i.links) ? i.links : [],
-        doneAt: i.doneAt ?? null,
-      }));
-    }
-  } catch {
-    // corrupt or missing data file — fall back to empty list
-  }
-  return [];
-};
-
-const writeShopping = async (items: ShoppingItem[]): Promise<void> => {
-  await Bun.write(SHOPPING_PATH, JSON.stringify(items, null, 2));
-};
-
-// ── Grocery data layer ──
-
-type GroceryItem = {
-  id: string;
-  title: string;
-  done: boolean;
-  createdAt: string;
-  category: "task" | "reference";
-};
-
-const readGroceries = async (): Promise<GroceryItem[]> => {
-  try {
-    const file = Bun.file(GROCERY_PATH);
-    if (await file.exists())
-      return JSON.parse(await file.text()) as GroceryItem[];
-  } catch {
-    // corrupt or missing data file — fall back to empty list
-  }
-  return [];
-};
-
-const writeGroceries = async (items: GroceryItem[]): Promise<void> => {
-  await Bun.write(GROCERY_PATH, JSON.stringify(items, null, 2));
-};
-
-// ── Recurring data layer ──
-// Legacy file-format migrations only; week & recurrence rules live in
-// src/domain/recurrence.ts
-
-const readRecurring = async (): Promise<RecurringItem[]> => {
-  try {
-    const file = Bun.file(RECURRING_PATH);
-    if (await file.exists()) {
-      const raw = JSON.parse(await file.text()) as RecurringItem[];
-      let needsMigration = false;
-      const migrated = raw.map((i) => {
-        const item: RecurringItem = {
-          id: i.id,
-          title: i.title || "Untitled",
-          frequency: i.frequency === "long-term" ? "long-term" : "weekly",
-          dayOfWeek: i.dayOfWeek ?? null,
-          repeatEvery: i.repeatEvery ?? 1,
-          repeatUnit: i.repeatUnit ?? "week",
-          repeatDays:
-            i.repeatDays ?? (i.dayOfWeek != null ? [i.dayOfWeek] : []),
-          endsType: i.endsType ?? "never",
-          endsOn: i.endsOn ?? null,
-          endsAfter: i.endsAfter ?? null,
-          note: i.note || "",
-          link: i.link || "",
-          completedThisWeek: i.completedThisWeek || false,
-          lastCompletedAt: i.lastCompletedAt || null,
-          createdAt: i.createdAt,
-          dueDate: i.dueDate ?? null,
-          showEarlyDays: i.showEarlyDays ?? null,
-          area: i.area || "",
-          category: i.category === "reference" ? "reference" : "task",
-        };
-        if (
-          item.frequency === "long-term" &&
-          item.repeatUnit === "week" &&
-          item.repeatEvery === 1
-        ) {
-          item.repeatUnit = "year";
-          needsMigration = true;
-        }
-        return item;
-      });
-      const items = resetWeeklyItems(migrated, new Date());
-      if (needsMigration || items !== migrated) await writeRecurring(items);
-      return items;
-    }
-  } catch {
-    // corrupt or missing data file — fall back to empty list
-  }
-  return [];
-};
-
-const writeRecurring = async (items: RecurringItem[]): Promise<void> => {
-  await Bun.write(RECURRING_PATH, JSON.stringify(items, null, 2));
-};
-
-// ── Settings ──
-const readSettings = async (): Promise<Record<string, unknown>> => {
-  try {
-    const file = Bun.file(SETTINGS_PATH);
-    if (await file.exists()) {
-      return JSON.parse(await file.text());
-    }
-  } catch {
-    // corrupt or missing data file — fall back to empty settings
-  }
-  return {};
-};
-
-const writeSettings = async (
-  settings: Record<string, unknown>
-): Promise<void> => {
-  await Bun.write(SETTINGS_PATH, JSON.stringify(settings, null, 2));
-};
-
 // ── API Routes ──
+// List families are served by the generic resource module; per-family
+// rules live in src/server/families.ts, persistence in src/server/files.ts.
+
 app.get("/api/settings", async (c) => {
   const settings = await readSettings();
   return c.json(settings);
@@ -249,182 +49,11 @@ app.put("/api/settings", async (c) => {
   return c.json(merged);
 });
 
-app.get("/api/tasks", async (c) => {
-  const tasks = await readTasks();
-  return c.json(tasks);
-});
+createResourceRoutes(app, "/api/tasks", tasksFamily, tasksStore);
+createResourceRoutes(app, "/api/shopping", shoppingFamily, shoppingStore);
 
-app.post("/api/tasks", async (c) => {
-  const body = await c.req.json();
-  const tasks = await readTasks();
-
-  const task: Task = {
-    id: crypto.randomUUID().slice(0, 8),
-    title: body.title || "Untitled",
-    done: false,
-    status: body.status || "this-week",
-    priority: body.priority || "medium",
-    effort: body.effort || "medium",
-    decisionLoad: body.decisionLoad || "medium",
-    area: body.area || "life-admin",
-    dueDate: body.dueDate || null,
-    createdAt: new Date().toISOString(),
-    completedAt: null,
-    deletedAt: null,
-    source: body.source || "board",
-    sourceItemId: body.sourceItemId || null,
-  };
-
-  tasks.push(task);
-  await writeTasks(tasks);
-  return c.json(task, 201);
-});
-
-app.put("/api/tasks/:id", async (c) => {
-  const id = c.req.param("id");
-  const body = await c.req.json();
-  const tasks = await readTasks();
-  const idx = tasks.findIndex((t) => t.id === id);
-
-  if (idx === -1) return c.json({ error: "Not found" }, 404);
-
-  const task = tasks[idx];
-  const updated: Task = {
-    ...task,
-    ...body,
-    id: task.id,
-    createdAt: task.createdAt,
-  };
-
-  if (body.status !== undefined || body.done !== undefined) {
-    const lifecycle = applyStatusChange(
-      task,
-      { status: body.status, done: body.done },
-      new Date()
-    );
-    updated.status = lifecycle.status;
-    updated.done = lifecycle.done;
-    updated.completedAt = lifecycle.completedAt;
-    updated.deletedAt = lifecycle.deletedAt;
-  }
-
-  tasks[idx] = updated;
-  await writeTasks(tasks);
-  return c.json(updated);
-});
-
-app.delete("/api/tasks/:id", async (c) => {
-  const id = c.req.param("id");
-  const permanent = c.req.query("permanent") === "true";
-  const tasks = await readTasks();
-  const idx = tasks.findIndex((t) => t.id === id);
-
-  if (idx === -1) return c.json({ error: "Not found" }, 404);
-
-  if (permanent) {
-    tasks.splice(idx, 1);
-  } else {
-    tasks[idx] = applyStatusChange(
-      tasks[idx],
-      { status: "trashed" },
-      new Date()
-    );
-  }
-
-  await writeTasks(tasks);
-  return c.json({ deleted: true });
-});
-
-// ── Shopping API ──
-
-app.get("/api/shopping", async (c) => {
-  const items = await readShopping();
-  return c.json(items);
-});
-
-app.post("/api/shopping", async (c) => {
-  const body = await c.req.json();
-  const items = await readShopping();
-  const item: ShoppingItem = {
-    id: crypto.randomUUID().slice(0, 8),
-    title: body.title || "Untitled",
-    done: false,
-    archived: false,
-    category: body.category === "want" ? "want" : "need",
-    links: Array.isArray(body.links) ? body.links : [],
-    createdAt: new Date().toISOString(),
-    doneAt: null,
-  };
-  items.push(item);
-  await writeShopping(items);
-  return c.json(item, 201);
-});
-
-app.put("/api/shopping/:id", async (c) => {
-  const id = c.req.param("id");
-  const body = await c.req.json();
-  const items = await readShopping();
-  const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) return c.json({ error: "Not found" }, 404);
-  const prev = items[idx];
-  items[idx] = { ...prev, ...body, id: prev.id, createdAt: prev.createdAt };
-  if (body.done === true && !prev.done) {
-    items[idx].doneAt = new Date().toISOString();
-  } else if (body.done === false && prev.done) {
-    items[idx].doneAt = null;
-  }
-  await writeShopping(items);
-  return c.json(items[idx]);
-});
-
-app.delete("/api/shopping/:id", async (c) => {
-  const id = c.req.param("id");
-  const items = await readShopping();
-  const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) return c.json({ error: "Not found" }, 404);
-  items.splice(idx, 1);
-  await writeShopping(items);
-  return c.json({ deleted: true });
-});
-
-// ── Groceries API ──
-
-app.get("/api/groceries", async (c) => {
-  const items = await readGroceries();
-  return c.json(items);
-});
-
-app.post("/api/groceries", async (c) => {
-  const body = await c.req.json();
-  const items = await readGroceries();
-  const item: GroceryItem = {
-    id: crypto.randomUUID().slice(0, 8),
-    title: body.title || "Untitled",
-    done: false,
-    createdAt: new Date().toISOString(),
-    category: body.category === "reference" ? "reference" : "task",
-  };
-  items.push(item);
-  await writeGroceries(items);
-  return c.json(item, 201);
-});
-
-app.put("/api/groceries/:id", async (c) => {
-  const id = c.req.param("id");
-  const body = await c.req.json();
-  const items = await readGroceries();
-  const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) return c.json({ error: "Not found" }, 404);
-  items[idx] = {
-    ...items[idx],
-    ...body,
-    id: items[idx].id,
-    createdAt: items[idx].createdAt,
-  };
-  await writeGroceries(items);
-  return c.json(items[idx]);
-});
-
+// Collection-level op; registered before the groceries /:id routes so
+// "clear-bought" isn't captured as an id.
 app.delete("/api/groceries/clear-bought", async (c) => {
   const items = await readGroceries();
   const remaining = items.filter((i) => !i.done);
@@ -432,97 +61,8 @@ app.delete("/api/groceries/clear-bought", async (c) => {
   return c.json({ cleared: items.length - remaining.length });
 });
 
-app.delete("/api/groceries/:id", async (c) => {
-  const id = c.req.param("id");
-  const items = await readGroceries();
-  const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) return c.json({ error: "Not found" }, 404);
-  items.splice(idx, 1);
-  await writeGroceries(items);
-  return c.json({ deleted: true });
-});
-
-// ── Recurring API ──
-
-app.get("/api/recurring", async (c) => {
-  const items = await readRecurring();
-  return c.json(items);
-});
-
-app.post("/api/recurring", async (c) => {
-  const body = await c.req.json();
-  const items = await readRecurring();
-  const isEvent = body.category === "reference";
-  const item: RecurringItem = {
-    id: crypto.randomUUID().slice(0, 8),
-    title: body.title || "Untitled",
-    frequency: isEvent
-      ? "weekly"
-      : body.frequency === "long-term"
-        ? "long-term"
-        : "weekly",
-    dayOfWeek: body.dayOfWeek ?? null,
-    repeatEvery: isEvent ? 1 : (body.repeatEvery ?? 1),
-    repeatUnit: isEvent ? "week" : (body.repeatUnit ?? "week"),
-    repeatDays: isEvent
-      ? []
-      : (body.repeatDays ?? (body.dayOfWeek != null ? [body.dayOfWeek] : [])),
-    endsType: isEvent ? "never" : (body.endsType ?? "never"),
-    endsOn: isEvent ? null : (body.endsOn ?? null),
-    endsAfter: isEvent ? null : (body.endsAfter ?? null),
-    note: body.note || "",
-    link: body.link || "",
-    completedThisWeek: false,
-    lastCompletedAt: null,
-    createdAt: new Date().toISOString(),
-    dueDate: body.dueDate ?? null,
-    showEarlyDays: body.showEarlyDays ?? null,
-    area: body.area || "",
-    category: isEvent ? "reference" : "task",
-  };
-  items.push(item);
-  await writeRecurring(items);
-  return c.json(item, 201);
-});
-
-app.put("/api/recurring/:id", async (c) => {
-  const id = c.req.param("id");
-  const body = await c.req.json();
-  const items = await readRecurring();
-  const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) return c.json({ error: "Not found" }, 404);
-  const prev = items[idx];
-  const merged: RecurringItem = {
-    ...prev,
-    ...body,
-    id: prev.id,
-    createdAt: prev.createdAt,
-  };
-  // Completion stamping is a domain rule; evaluate it against the
-  // pre-merge item so "already completed" checks see the previous state.
-  const stamped = applyRecurringCompletion(
-    prev,
-    { completedThisWeek: body.completedThisWeek, done: body.done },
-    new Date()
-  );
-  merged.lastCompletedAt = stamped.lastCompletedAt;
-  merged.completedThisWeek = stamped.completedThisWeek;
-  // Completing a long-term item advances its dueDate to the next
-  // occurrence (or ends the recurrence per its ends settings).
-  items[idx] = body.done === true ? advanceDueDate(merged, new Date()) : merged;
-  await writeRecurring(items);
-  return c.json(items[idx]);
-});
-
-app.delete("/api/recurring/:id", async (c) => {
-  const id = c.req.param("id");
-  const items = await readRecurring();
-  const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) return c.json({ error: "Not found" }, 404);
-  items.splice(idx, 1);
-  await writeRecurring(items);
-  return c.json({ deleted: true });
-});
+createResourceRoutes(app, "/api/groceries", groceriesFamily, groceriesStore);
+createResourceRoutes(app, "/api/recurring", recurringFamily, recurringStore);
 
 // ── Weekly Archive ──
 

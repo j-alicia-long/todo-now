@@ -4,6 +4,12 @@ Jennifer's personal task, shopping, and grocery manager. One person, one dataset
 
 ## Language
 
+### The system
+
+**Family**:
+One kind of item the app manages, as a unit: Tasks, Shopping Items, Grocery Items, Recurring Items, or Settings. The first four are list families (many items); Settings is a single object. "Cross-family" behavior is anything linking two families, e.g. completing a shopping-sourced Task marks its Shopping Item bought.
+_Avoid_: Entity, collection, resource (resource is the server module, not the concept)
+
 ### Tasks & the Board
 
 **Task**:
