@@ -5,7 +5,14 @@ description: Code conventions for this app — TypeScript, React, SCSS, and code
 
 # Web Conventions
 
-Judgment-call conventions for TypeScript/React/SCSS codebases. Mechanically-checkable rules live in the project's ESLint config — the linter is their single source of truth, so they are not repeated here. Project architecture (modules, seams, where things live) is in the project's `AGENTS.md`.
+Judgment-call conventions for TypeScript/React/SCSS codebases. Project architecture (modules, seams, where things live) is in the project's `AGENTS.md`.
+
+**Before writing code, read the ESLint rules** — they are the other half of these conventions (the machine-checkable half, deliberately not repeated here) and they bind generated code at authoring time, not just at pre-commit:
+
+1. The shared preset: `node_modules/@j-alicia-long/web-config/eslint.config.js` — every rule entry has a comment or message explaining the convention it enforces.
+2. The project's own `eslint.config.js` for local overrides.
+
+After changing code, run the project's lint script and fix findings before considering the work done — a pre-commit failure means this step was skipped.
 
 ## General principles
 
