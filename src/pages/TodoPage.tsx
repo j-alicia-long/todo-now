@@ -11,22 +11,10 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import {
-  Calendar,
-  CalendarGrid,
-  CalendarGridBody,
-  CalendarGridHeader,
-  CalendarHeaderCell,
-  CalendarCell,
-  Heading,
-  Button as AriaButton,
-} from "react-aria-components";
-import { parseDate, today, getLocalTimeZone } from "@internationalized/date";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import {
   boardWeeklyItems,
   deriveFirstDueDate,
-  toLocalDateKey,
   upcomingLongTermItems,
 } from "../domain/recurrence";
 import {
@@ -41,31 +29,32 @@ import {
   type RecurringItem,
   type Settings,
 } from "../stores/hooks";
+import { Icon, LinkPills, TagSelect } from "../components/ui";
+import { DatePickerModal, DatePickerDropdown } from "../components/DatePicker";
+import {
+  AREA_LABELS,
+  AREA_COLORS,
+  AREA_OPTIONS,
+  DAY_LETTERS,
+  REPEAT_UNITS,
+  daysAgo,
+  dueUrgencyClass,
+  formatDueDate,
+  formatDueDateFull,
+  formatHeadingDate,
+  formatRecurrence,
+  getDomain,
+  groupDoneByDate,
+  groupRecurringDoneByDate,
+  sortTasks,
+  timeSince,
+} from "../lib/presentation";
 import "./TodoPage.scss";
 
 type ViewTab = "board" | "shopping" | "groceries" | "recurring";
 type SidebarPanel =
   "todo-archive" | "todo-trash" | "shopping-archive" | "settings" | null;
 
-const AREA_LABELS: Record<string, string> = {
-  "life-admin": "Life Admin",
-  social: "Social",
-  health: "Health",
-  learning: "Learning",
-  career: "Career",
-  "personal-project": "Project",
-};
-
-const AREA_COLORS: Record<string, string> = {
-  "life-admin": "area-blue",
-  social: "area-purple",
-  health: "area-orange",
-  learning: "area-teal",
-  career: "area-green",
-  "personal-project": "area-pink",
-};
-
-const AREA_OPTIONS = Object.entries(AREA_LABELS);
 const BOARD_COLUMNS: {
   id: TaskStatus;
   title: string;
@@ -87,151 +76,8 @@ const BOARD_COLUMNS: {
   { id: "done", title: "Done", icon: "check_circle", colorClass: "col-green" },
 ];
 
-// Local-timezone date key helper lives in src/domain/recurrence.ts (toLocalDateKey)
-
-const getDaysLeft = (date: string): number => {
-  const d = new Date(date + "T00:00:00");
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const due = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  return Math.round((due.getTime() - today.getTime()) / 86400000);
-};
-
-const formatDueDate = (date: string): string => {
-  const diff = getDaysLeft(date);
-  if (diff < 0) return `${Math.abs(diff)}d overdue`;
-  if (diff === 0) return "Today";
-  if (diff === 1) return "1 day";
-  return `${diff} days`;
-};
-
-const formatDueDateFull = (date: string): string => {
-  const d = new Date(date + "T00:00:00");
-  return (
-    "Due: " +
-    d.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    })
-  );
-};
-
-const dueUrgencyClass = (date: string): string => {
-  const diff = getDaysLeft(date);
-  if (diff <= 2) return "due-red";
-  if (diff <= 4) return "due-orange";
-  if (diff <= 7) return "due-yellow";
-  return "due-green";
-};
-
-const sortTasks = (tasks: Task[]): Task[] =>
-  [...tasks].sort((a, b) => {
-    if (a.dueDate && !b.dueDate) return -1;
-    if (!a.dueDate && b.dueDate) return 1;
-    if (a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
-    return 0;
-  });
-
-const daysAgo = (isoDate: string): string => {
-  const d = Math.round((Date.now() - new Date(isoDate).getTime()) / 86400000);
-  if (d === 0) return "today";
-  if (d === 1) return "1 day ago";
-  return `${d} days ago`;
-};
-
-// ── Material Design Icon ──
-
-const Icon = ({ name, className }: { name: string; className?: string }) => (
-  <span className={`material-symbols-outlined ${className || ""}`}>{name}</span>
-);
-
-const formatHeadingDate = (): string =>
-  new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
-// ── Lightweight List Items ──
-
-const linkLabel = (url: string): string => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-};
-
-const LinkPills = ({
-  links,
-  onChange,
-}: {
-  links: string[];
-  onChange: (links: string[]) => void;
-}) => {
-  const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (adding) inputRef.current?.focus();
-  }, [adding]);
-
-  const commit = () => {
-    const raw = draft.trim();
-    if (raw) {
-      const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-      onChange([...links, url]);
-    }
-    setDraft("");
-    setAdding(false);
-  };
-
-  return (
-    <div className="link-pills">
-      {links.map((url, i) => (
-        <span key={`${url}-${i}`} className="link-pill">
-          <a href={url} target="_blank" rel="noopener noreferrer" title={url}>
-            {linkLabel(url)}
-          </a>
-          <button
-            className="link-pill-remove"
-            onClick={() => onChange(links.filter((_, j) => j !== i))}
-            title="Remove link"
-          >
-            <Icon name="close" />
-          </button>
-        </span>
-      ))}
-      {adding ? (
-        <input
-          ref={inputRef}
-          className="link-pill-input"
-          value={draft}
-          placeholder="Paste a link…"
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              commit();
-            }
-            if (e.key === "Escape") {
-              setDraft("");
-              setAdding(false);
-            }
-          }}
-        />
-      ) : (
-        <button className="link-pill add" onClick={() => setAdding(true)}>
-          + link
-        </button>
-      )}
-    </div>
-  );
-};
+// Date/label helpers live in src/lib/presentation.ts;
+// toLocalDateKey lives in src/domain/recurrence.ts.
 
 const ShoppingListItem = ({
   item,
@@ -395,225 +241,6 @@ const GroceryListItem = ({
     </div>
   </div>
 );
-
-// ── Inline Tag Editor ──
-
-const TagSelect = <T extends string>({
-  value,
-  options,
-  labels,
-  onChange,
-  onClose,
-  className,
-}: {
-  value: T;
-  options: readonly T[];
-  labels?: Record<string, string>;
-  onChange: (v: T) => void;
-  onClose: () => void;
-  className?: string;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [above, setAbove] = useState(false);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [onClose]);
-
-  useEffect(() => {
-    if (ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      if (rect.bottom > window.innerHeight) {
-        setAbove(true);
-      }
-    }
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className={`tag-select ${above ? "tag-select-above" : ""} ${className || ""}`}
-    >
-      {options.map((opt) => (
-        <button
-          key={opt}
-          className={`tag-option ${opt === value ? "selected" : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onChange(opt);
-            onClose();
-          }}
-        >
-          {labels ? labels[opt] || opt : opt}
-        </button>
-      ))}
-    </div>
-  );
-};
-
-// ── Date Picker Modal ──
-
-const DatePickerModal = ({
-  value,
-  onChange,
-  onClose,
-}: {
-  value: string | null;
-  onChange: (date: string | null) => void;
-  onClose: () => void;
-}) => {
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const tz = getLocalTimeZone();
-  const todayDate = today(tz);
-  const calendarValue = value ? parseDate(value) : undefined;
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (
-        overlayRef.current &&
-        !overlayRef.current.contains(e.target as Node)
-      ) {
-        onClose();
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [onClose]);
-
-  return (
-    <div
-      className="date-picker-overlay"
-      onClick={(e) => {
-        e.stopPropagation();
-        onClose();
-      }}
-    >
-      <div
-        className="date-picker-modal"
-        ref={overlayRef}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Calendar
-          aria-label="Due date"
-          value={calendarValue}
-          onChange={(d) => {
-            onChange(d.toString());
-            onClose();
-          }}
-          minValue={todayDate}
-        >
-          <header className="date-picker-header">
-            <AriaButton slot="previous" className="date-picker-nav">
-              ‹
-            </AriaButton>
-            <Heading className="date-picker-heading" />
-            <AriaButton slot="next" className="date-picker-nav">
-              ›
-            </AriaButton>
-          </header>
-          <CalendarGrid>
-            <CalendarGridHeader>
-              {(day) => <CalendarHeaderCell>{day}</CalendarHeaderCell>}
-            </CalendarGridHeader>
-            <CalendarGridBody>
-              {(date) => <CalendarCell date={date} />}
-            </CalendarGridBody>
-          </CalendarGrid>
-        </Calendar>
-        {value && (
-          <button
-            className="date-picker-clear"
-            onClick={() => {
-              onChange(null);
-              onClose();
-            }}
-          >
-            Clear date
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const DatePickerDropdown = ({
-  value,
-  onChange,
-  onClose,
-}: {
-  value: string | null;
-  onChange: (date: string | null) => void;
-  onClose: () => void;
-}) => {
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const tz = getLocalTimeZone();
-  const todayDate = today(tz);
-  const calendarValue = value ? parseDate(value) : undefined;
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        onClose();
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [onClose]);
-
-  return (
-    <div
-      className="date-picker-dropdown"
-      ref={dropdownRef}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <Calendar
-        aria-label="Due date"
-        value={calendarValue}
-        onChange={(d) => {
-          onChange(d.toString());
-          onClose();
-        }}
-        minValue={todayDate}
-      >
-        <header className="date-picker-header">
-          <AriaButton slot="previous" className="date-picker-nav">
-            ‹
-          </AriaButton>
-          <Heading className="date-picker-heading" />
-          <AriaButton slot="next" className="date-picker-nav">
-            ›
-          </AriaButton>
-        </header>
-        <CalendarGrid>
-          <CalendarGridHeader>
-            {(day) => <CalendarHeaderCell>{day}</CalendarHeaderCell>}
-          </CalendarGridHeader>
-          <CalendarGridBody>
-            {(date) => <CalendarCell date={date} />}
-          </CalendarGridBody>
-        </CalendarGrid>
-      </Calendar>
-      {value && (
-        <button
-          className="date-picker-clear"
-          onClick={() => {
-            onChange(null);
-            onClose();
-          }}
-        >
-          Clear date
-        </button>
-      )}
-    </div>
-  );
-};
 
 // ── Task Card ──
 
@@ -1061,56 +688,6 @@ const TrashCard = ({
 
 // ── Board Column ──
 
-const formatDateLabel = (dateKey: string, todayStr: string): string => {
-  if (dateKey === todayStr) return "Today";
-  if (dateKey === "unknown") return "Earlier";
-  return new Date(dateKey + "T12:00:00").toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const groupDoneByDate = (
-  tasks: Task[]
-): { dateKey: string; label: string; tasks: Task[] }[] => {
-  const todayStr = toLocalDateKey(new Date());
-  const groups = new Map<string, Task[]>();
-  for (const t of tasks) {
-    const dateKey = t.completedAt
-      ? toLocalDateKey(new Date(t.completedAt))
-      : "unknown";
-    if (!groups.has(dateKey)) groups.set(dateKey, []);
-    groups.get(dateKey)!.push(t);
-  }
-  const sorted = [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-  return sorted.map(([dateKey, tasks]) => ({
-    dateKey,
-    label: formatDateLabel(dateKey, todayStr),
-    tasks,
-  }));
-};
-
-const groupRecurringDoneByDate = (
-  items: RecurringItem[]
-): { dateKey: string; label: string; items: RecurringItem[] }[] => {
-  const todayStr = toLocalDateKey(new Date());
-  const groups = new Map<string, RecurringItem[]>();
-  for (const item of items) {
-    const dateKey = item.lastCompletedAt
-      ? toLocalDateKey(new Date(item.lastCompletedAt))
-      : "unknown";
-    if (!groups.has(dateKey)) groups.set(dateKey, []);
-    groups.get(dateKey)!.push(item);
-  }
-  const sorted = [...groups.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-  return sorted.map(([dateKey, grpItems]) => ({
-    dateKey,
-    label: formatDateLabel(dateKey, todayStr),
-    items: grpItems,
-  }));
-};
-
 const BoardColumn = ({
   id,
   title,
@@ -1347,72 +924,6 @@ const BoardColumn = ({
 };
 
 // ── Settings View ──
-
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
-const REPEAT_UNITS: ("day" | "week" | "month" | "year")[] = [
-  "day",
-  "week",
-  "month",
-  "year",
-];
-
-const formatRecurrence = (item: RecurringItem): string => {
-  const every = item.repeatEvery || 1;
-  const unit = item.repeatUnit || "week";
-  const days = item.repeatDays || [];
-  let result: string;
-  if (every === 1) {
-    result =
-      unit === "day"
-        ? "Daily"
-        : unit === "week"
-          ? "Weekly"
-          : unit === "month"
-            ? "Monthly"
-            : "Yearly";
-  } else {
-    const plural = unit + "s";
-    result = "Every " + every + " " + plural;
-  }
-  if (unit === "week" && days.length > 0) {
-    result += " on " + days.map((d) => DAY_NAMES[d]).join(", ");
-  }
-  if (item.endsType === "on" && item.endsOn) {
-    result +=
-      " until " +
-      new Date(item.endsOn + "T00:00:00").toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-  } else if (item.endsType === "after" && item.endsAfter) {
-    result += " (" + item.endsAfter + "x)";
-  }
-  return result;
-};
-
-const timeSince = (isoDate: string): string => {
-  const ms = Date.now() - new Date(isoDate).getTime();
-  const days = Math.floor(ms / 86400000);
-  if (days === 0) return "today";
-  if (days === 1) return "1 day ago";
-  if (days < 7) return `${days} days ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks === 1) return "1 week ago";
-  if (weeks < 5) return `${weeks} weeks ago`;
-  const months = Math.floor(days / 30);
-  if (months === 1) return "1 month ago";
-  return `${months} months ago`;
-};
-
-const getDomain = (url: string): string => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-};
 
 const RecurringListItem = ({
   item,
