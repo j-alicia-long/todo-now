@@ -5,7 +5,8 @@ For projects using plain SCSS (no CSS Modules, no Tailwind).
 ## Approach
 
 - Mobile-first: write base rules for small screens; media queries scale _up_.
-- Use the project's design tokens (CSS custom properties, e.g. `--bg`, `--accent`) for colors — no hardcoded hex/rgba in component styles. New colors get a token first (with a dark-mode value if the project has one).
+- Machine-checkable style rules (tokens-only colors, alphabetical properties, shallow nesting, kebab-case selectors) live in the stylelint preset — read `node_modules/@j-alicia-long/web-config/stylelint.config.js` and the project's overrides before writing styles.
+- New colors get a design token first (with a dark-mode value if the project has one), then get used via `var(--token)`.
 
 ## Markup
 
@@ -17,7 +18,6 @@ For projects using plain SCSS (no CSS Modules, no Tailwind).
 
 - Style via class selectors (`.logo-img`), not type (`img`) or ID (`#logo`) selectors.
 - Name modifiers with a postfix: `button-floating`, not `floating-button` — related names sort together alphabetically.
-- Avoid deep nesting of class rules; keep selectors shallow so styles stay searchable and specificity stays flat.
 
 ## Properties
 
