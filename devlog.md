@@ -6,6 +6,17 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-07-25 — Public demo site
+
+Shipped a shareable demo at **https://j-alicia-long.github.io/todo-now/** — the full app running serverless with sample data (no personal data).
+
+- Demo mode via the transport seam: `VITE_DEMO=true` builds swap `httpTransport` for an in-memory `demo-transport.ts` that reuses the server's `FamilyConfig` hooks (`families.ts`) and `mergeWritable`, so demo CRUD behavior matches production exactly; state resets on reload
+- `demo-data.ts` seeds relative-dated sample tasks/shopping/groceries/recurring so the board always looks current
+- GitHub Actions workflow (`deploy-demo.yml`) builds with `--base=/todo-now/` and deploys to GitHub Pages on every push to `main`; router basename follows `BASE_URL` in demo builds; small "Demo — sample data" badge
+- Verified locally with Playwright (board/shopping/groceries render, task completion and adding work, zero console errors); all 111 tests pass
+
+---
+
 ## 2026-07-24 — Architecture hardening
 
 Codebase quality pass: extracted domain logic, added tooling, deepened the data layer.

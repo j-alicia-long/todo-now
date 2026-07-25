@@ -49,7 +49,8 @@ export type FamilyConfig<T extends { id: string }> = {
   applyRemove?: (prev: T, opts: RemoveOptions, now: Date) => T | null;
 };
 
-const mergeWritable = <T extends { id: string }>(
+/** Whitelisted merge shared with the demo transport (src/stores/demo-transport.ts). */
+export const mergeWritable = <T extends { id: string }>(
   prev: T,
   body: Record<string, unknown>,
   writable: readonly string[]

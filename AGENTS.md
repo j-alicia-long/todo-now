@@ -62,6 +62,7 @@ Sidebar drawer: Todo Archive, Todo Trash, Shopping Archive, Settings
 ## Live URLs
 
 - Production: https://todo-jlong.zocomputer.io/todo
+- Demo (sample data, GitHub Pages): https://j-alicia-long.github.io/todo-now/
 - GitHub: https://github.com/j-alicia-long/todo-now
 
 ## Standing instructions

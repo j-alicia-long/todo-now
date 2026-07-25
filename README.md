@@ -4,6 +4,8 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 
 ![Screenshot](docs/screenshot.png)
 
+**Live demo:** [j-alicia-long.github.io/todo-now](https://j-alicia-long.github.io/todo-now/) — static build seeded with sample data (in-memory, changes reset on reload).
+
 ## Features
 
 - **Three-column board**: This Week → This Month → Done, with drag-and-drop
@@ -100,6 +102,14 @@ bun run dev
 ## Hosting
 
 Currently hosted on [Zo Computer](https://zo.computer) as a Zo Site.
+
+### Demo build
+
+A serverless demo lives at [j-alicia-long.github.io/todo-now](https://j-alicia-long.github.io/todo-now/), deployed by `.github/workflows/deploy-demo.yml` on every push to `main`. Building with `VITE_DEMO=true` swaps the HTTP transport for an in-memory one (`src/stores/demo-transport.ts`) that reuses the server's family logic and seeds sample data (`src/stores/demo-data.ts`) — no API server needed.
+
+```bash
+VITE_DEMO=true bunx vite build --base=/todo-now/ --outDir dist-demo
+```
 
 ## License
 

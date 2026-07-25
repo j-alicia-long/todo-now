@@ -16,7 +16,8 @@ import {
   type RecurringItem,
 } from "../domain/recurrence";
 import { useEntityList } from "./entity-store";
-import { httpTransport, type Transport } from "./transport";
+import { defaultTransport } from "./default-transport";
+import type { Transport } from "./transport";
 import type { ShoppingItem, GroceryItem } from "../domain/entities";
 
 // Re-exported so store consumers keep a single import site.
@@ -25,7 +26,7 @@ export type { ShoppingItem, GroceryItem };
 
 // ── Tasks ──
 
-export const useTasks = (transport: Transport = httpTransport) => {
+export const useTasks = (transport: Transport = defaultTransport) => {
   const store = useEntityList<Task>("/api/tasks", "tasks", transport);
 
   const changeStatus = useCallback(
@@ -69,7 +70,7 @@ export const useTasks = (transport: Transport = httpTransport) => {
 
 // ── Shopping ──
 
-export const useShopping = (transport: Transport = httpTransport) => {
+export const useShopping = (transport: Transport = defaultTransport) => {
   const store = useEntityList<ShoppingItem>(
     "/api/shopping",
     "shopping",
@@ -105,7 +106,7 @@ export const useShopping = (transport: Transport = httpTransport) => {
 
 // ── Groceries ──
 
-export const useGroceries = (transport: Transport = httpTransport) => {
+export const useGroceries = (transport: Transport = defaultTransport) => {
   const store = useEntityList<GroceryItem>(
     "/api/groceries",
     "groceries",
@@ -134,7 +135,7 @@ export const useGroceries = (transport: Transport = httpTransport) => {
 
 // ── Recurring ──
 
-export const useRecurring = (transport: Transport = httpTransport) => {
+export const useRecurring = (transport: Transport = defaultTransport) => {
   const store = useEntityList<RecurringItem>(
     "/api/recurring",
     "recurring",
@@ -207,7 +208,7 @@ type UseSettingsOptions = {
 };
 
 export const useSettings = ({
-  transport = httpTransport,
+  transport = defaultTransport,
   onServerTheme,
 }: UseSettingsOptions = {}) => {
   const [settings, setSettings] = useState<Settings>(loadSettingsLocal);

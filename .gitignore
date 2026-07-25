@@ -6,3 +6,4 @@ bun.lock
 --full-page
 *.log
 .DS_Store
+dist-demo/
