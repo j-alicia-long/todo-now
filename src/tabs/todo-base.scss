@@ -299,6 +299,149 @@
   text-align: center;
 }
 
+// ── Matrix view ──
+.board-view-toggle {
+  align-self: flex-start;
+  background: var(--bg-sunken);
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 2px;
+  margin-bottom: 12px;
+  padding: 3px;
+}
+
+.board-view-btn {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 600;
+  gap: 6px;
+  padding: 6px 14px;
+  transition:
+    background var(--transition),
+    color var(--transition);
+
+  .material-symbols-outlined {
+    font-size: 17px;
+  }
+
+  &.active {
+    background: var(--bg-raised);
+    box-shadow: var(--shadow-sm);
+    color: var(--text);
+  }
+}
+
+.matrix-layout {
+  display: grid;
+  flex: 1;
+  gap: 12px;
+  grid-template-columns: minmax(0, 3fr) minmax(200px, 1fr);
+  min-height: 0;
+}
+
+.matrix-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  min-height: 0;
+}
+
+.matrix-quadrant,
+.matrix-unsorted {
+  background: rgb(61, 46, 31, 0.03);
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+  padding: 12px;
+  transition:
+    background var(--transition),
+    box-shadow var(--transition);
+
+  .dark & {
+    background: rgb(240, 232, 221, 0.03);
+  }
+
+  &.drag-over {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+}
+
+.quadrant-header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  padding: 4px 4px 12px;
+}
+
+.quadrant-icon {
+  font-size: 20px !important;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 20;
+}
+
+.quadrant-do .quadrant-icon {
+  color: var(--danger);
+}
+
+.quadrant-schedule .quadrant-icon {
+  color: var(--success);
+}
+
+.quadrant-quick-hit .quadrant-icon {
+  color: var(--recurring);
+}
+
+.quadrant-reconsider .quadrant-icon,
+.matrix-unsorted .quadrant-icon {
+  color: var(--text-tertiary);
+}
+
+.quadrant-titles {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.quadrant-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.quadrant-subtitle {
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+}
+
+.quadrant-cards {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+// The tray scrolls internally so a long backlog doesn't stretch the grid.
+.matrix-unsorted .quadrant-cards {
+  max-height: 70dvh;
+}
+
 // ── Card ──
 .task-card {
   background: var(--bg-raised);
@@ -2701,6 +2844,24 @@
 
   .recurring-board {
     grid-template-columns: 1fr;
+  }
+
+  .matrix-layout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .matrix-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .matrix-unsorted {
+    order: -1;
+  }
+
+  .matrix-unsorted .quadrant-cards {
+    max-height: 40dvh;
   }
 
   .shopping-columns {

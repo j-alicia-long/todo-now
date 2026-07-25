@@ -19,6 +19,8 @@ import {
 } from "../domain/recurrence";
 import { type Settings } from "../stores/hooks";
 import { TaskCard, type TaskActions } from "../components/task-card";
+import { MatrixView } from "../components/matrix-view";
+import { Icon } from "../components/ui";
 import {
   BoardColumn,
   type RecurringCardActions,
@@ -59,6 +61,7 @@ export const BoardTab = ({
   settings: Settings;
 }) => {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [boardView, setBoardView] = useState<"columns" | "matrix">("columns");
 
   const isTouchDevice =
     typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
@@ -107,27 +110,53 @@ export const BoardTab = ({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="board">
-        {BOARD_COLUMNS.map((col) => (
-          <BoardColumn
-            key={col.id}
-            id={col.id}
-            title={col.title}
-            icon={col.icon}
-            colorClass={col.colorClass}
-            tasks={tasksByStatus(col.id)}
-            taskActions={taskActions}
-            settings={settings}
-            recurring={
-              col.id === "this-week"
-                ? { items: boardRecurringTasks, actions: recurringActions }
-                : col.id === "done"
-                  ? { items: boardRecurringDone, actions: recurringActions }
-                  : undefined
-            }
-          />
-        ))}
+      <div className="board-view-toggle" role="tablist">
+        <button
+          role="tab"
+          aria-selected={boardView === "columns"}
+          className={`board-view-btn ${boardView === "columns" ? "active" : ""}`}
+          onClick={() => setBoardView("columns")}
+        >
+          <Icon name="view_week" /> Columns
+        </button>
+        <button
+          role="tab"
+          aria-selected={boardView === "matrix"}
+          className={`board-view-btn ${boardView === "matrix" ? "active" : ""}`}
+          onClick={() => setBoardView("matrix")}
+        >
+          <Icon name="grid_view" /> Matrix
+        </button>
       </div>
+      {boardView === "matrix" ? (
+        <MatrixView
+          tasks={tasks}
+          taskActions={taskActions}
+          settings={settings}
+        />
+      ) : (
+        <div className="board">
+          {BOARD_COLUMNS.map((col) => (
+            <BoardColumn
+              key={col.id}
+              id={col.id}
+              title={col.title}
+              icon={col.icon}
+              colorClass={col.colorClass}
+              tasks={tasksByStatus(col.id)}
+              taskActions={taskActions}
+              settings={settings}
+              recurring={
+                col.id === "this-week"
+                  ? { items: boardRecurringTasks, actions: recurringActions }
+                  : col.id === "done"
+                    ? { items: boardRecurringDone, actions: recurringActions }
+                    : undefined
+              }
+            />
+          ))}
+        </div>
+      )}
       <DragOverlay>
         {activeTask ? (
           <TaskCard
