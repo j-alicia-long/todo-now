@@ -60,6 +60,9 @@ export const readTasks = async (): Promise<Task[]> => {
     if (t.deletedAt === undefined) {
       t.deletedAt = null;
     }
+    if (t.importance === undefined) {
+      t.importance = null;
+    }
     if (!t.source) {
       t.source = "board";
     }

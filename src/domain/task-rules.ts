@@ -6,6 +6,10 @@
 export type TaskStatus =
   "this-week" | "this-month" | "future" | "done" | "trashed";
 
+// Binary judgment set explicitly by the user; null = not yet judged
+// (Unsorted on the Matrix). Urgency is never stored — see ADR-0001.
+export type Importance = "important" | "not-important";
+
 export type Task = {
   id: string;
   title: string;
@@ -15,6 +19,7 @@ export type Task = {
   decisionLoad: "low" | "medium" | "high";
   area: string;
   dueDate: string | null;
+  importance: Importance | null;
   createdAt: string;
   completedAt: string | null;
   deletedAt: string | null;

@@ -90,6 +90,7 @@ const makeTask = (overrides: Partial<Task> = {}): Task => ({
   completedAt: null,
   deletedAt: null,
   dueDate: null,
+  importance: null,
   source: "board",
   sourceItemId: null,
   ...overrides,

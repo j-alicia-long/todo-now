@@ -20,6 +20,7 @@ const makeTask = (overrides: Partial<Task> = {}): Task => ({
   decisionLoad: "medium",
   area: "life-admin",
   dueDate: null,
+  importance: null,
   createdAt: "2026-07-01T00:00:00.000Z",
   completedAt: null,
   deletedAt: null,

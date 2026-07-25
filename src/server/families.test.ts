@@ -22,6 +22,7 @@ const makeTask = (overrides: Partial<Task> = {}): Task => ({
   decisionLoad: "medium",
   area: "life-admin",
   dueDate: null,
+  importance: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   completedAt: null,
   deletedAt: null,
@@ -38,6 +39,24 @@ describe("tasksFamily", () => {
     expect(task.done).toBe(false);
     expect(task.createdAt).toBe(NOW.toISOString());
     expect(task.completedAt).toBeNull();
+  });
+
+  test("construct defaults importance to null (Unsorted)", () => {
+    const task = tasksFamily.construct({ title: "Buy stamps" }, NOW);
+    expect(task.importance).toBeNull();
+  });
+
+  test("importance is writable via PUT and round-trips", () => {
+    expect(tasksFamily.writable).toContain("importance");
+    const prev = makeTask();
+    const merged = { ...prev, importance: "important" as const };
+    const updated = tasksFamily.applyUpdate!(
+      prev,
+      merged,
+      { importance: "important" },
+      NOW
+    );
+    expect(updated.importance).toBe("important");
   });
 
   test("applyUpdate delegates status changes to task-rules", () => {

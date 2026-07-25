@@ -33,6 +33,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -48,6 +49,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -63,6 +65,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -78,6 +81,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -93,6 +97,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -108,6 +113,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -123,6 +129,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -138,6 +145,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -153,6 +161,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -168,6 +177,7 @@ export const demoTasks: Task[] = [
     completedAt: ago(1),
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -183,6 +193,7 @@ export const demoTasks: Task[] = [
     completedAt: ago(2),
     deletedAt: null,
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
   {
@@ -198,6 +209,7 @@ export const demoTasks: Task[] = [
     completedAt: null,
     deletedAt: ago(3),
     source: "board",
+    importance: null,
     sourceItemId: null,
   },
 ];
