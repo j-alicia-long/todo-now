@@ -11,7 +11,8 @@
     "prod": "bun run build && NODE_ENV=production bun run server.ts",
     "preview": "bun run vite preview",
     "prepare": "husky",
-    "sync-skills": "cp -R node_modules/@j-alicia-long/web-config/skills/web-conventions .github/skills/"
+    "sync-skills": "cp -R node_modules/@j-alicia-long/web-config/skills/web-conventions .github/skills/",
+    "postinstall": "bun run sync-skills"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -49,7 +50,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@happy-dom/global-registrator": "^20.10.6",
-    "@j-alicia-long/web-config": "github:j-alicia-long/web-config",
+    "@j-alicia-long/web-config": "github:j-alicia-long/web-config#v0.1.1",
     "@testing-library/react": "^16.3.2",
     "@types/bun": "1.2.21",
     "@types/react": "^19.2.7",
