@@ -6,9 +6,9 @@
 
 **Blocked by:** 04 — Drag-to-triage on the Matrix.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] todo-architecture.md documents the Matrix view, scoping, derived urgency, `importance`, and drop semantics
-- [ ] README updated to mention the Matrix view
-- [ ] Terminology matches CONTEXT.md ("The Matrix") and ADR-0001
-- [ ] Shipped as its own commit
+- [x] todo-architecture.md documents the Matrix view, scoping, derived urgency, `importance`, and drop semantics
+- [x] README updated to mention the Matrix view
+- [x] Terminology matches CONTEXT.md ("The Matrix") and ADR-0001
+- [x] Shipped as its own commit

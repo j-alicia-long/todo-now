@@ -6,14 +6,14 @@
 
 **Blocked by:** 03 — Matrix view mode on the Board tab.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Dragging a Task from Unsorted into any Quadrant sorts it in a single gesture
-- [ ] Dragging horizontally between Quadrants flips importance instantly
-- [ ] Dropping into Do or Quick-hit when the Task isn't urgent sets its due date to today+2
-- [ ] Dropping into Schedule or Reconsider when the Task is urgent pushes its due date to today+7
-- [ ] Same-Quadrant drops are no-ops (no writes)
-- [ ] All drop outcomes come from the domain module's drop function — no duplicated rules in the UI
-- [ ] Triage persists across sessions/devices (importance and due-date writes round-trip)
+- [x] Dragging a Task from Unsorted into any Quadrant sorts it in a single gesture
+- [x] Dragging horizontally between Quadrants flips importance instantly
+- [x] Dropping into Do or Quick-hit when the Task isn't urgent sets its due date to today+2
+- [x] Dropping into Schedule or Reconsider when the Task is urgent pushes its due date to today+7
+- [x] Same-Quadrant drops are no-ops (no writes)
+- [x] All drop outcomes come from the domain module's drop function — no duplicated rules in the UI
+- [x] Triage persists across sessions/devices (importance and due-date writes round-trip)
 - [ ] ~~Dragging works on mobile~~ Deferred: the app disables drag on touch devices (Board convention); mobile triage gesture to be decided separately
-- [ ] No drag-simulation tests (per testing decisions); behavior is covered by the domain module's tests
+- [x] No drag-simulation tests (per testing decisions); behavior is covered by the domain module's tests

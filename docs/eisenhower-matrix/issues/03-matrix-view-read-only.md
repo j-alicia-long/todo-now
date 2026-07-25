@@ -8,15 +8,15 @@ No dragging yet — this slice is the readable Matrix.
 
 **Blocked by:** 02 — Matrix domain module.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Segmented toggle on the Board tab switches Columns ↔ Matrix
-- [ ] 2×2 grid renders Do / Schedule / Quick-hit / Reconsider plus the Unsorted tray, placement per the domain module
-- [ ] Only This Week / This Month Tasks appear; Future, Done, trashed, and Recurring Items never do
-- [ ] A Task's Quadrant reflects its current due date (urgency derived live, no stored urgency)
-- [ ] Cards reuse the existing Task card: area colors and due-date tags render as elsewhere
-- [ ] Clicking a card opens the Task's details, same as on the Board
-- [ ] Completing or trashing a Task removes it from the Matrix immediately
-- [ ] Calm empty state per Quadrant and for the Unsorted tray
-- [ ] Usable on mobile
-- [ ] The view is a thin, untested consumer of the domain module (no component tests, per testing decisions)
+- [x] Segmented toggle on the Board tab switches Columns ↔ Matrix
+- [x] 2×2 grid renders Do / Schedule / Quick-hit / Reconsider plus the Unsorted tray, placement per the domain module
+- [x] Only This Week / This Month Tasks appear; Future, Done, trashed, and Recurring Items never do
+- [x] A Task's Quadrant reflects its current due date (urgency derived live, no stored urgency)
+- [x] Cards reuse the existing Task card: area colors and due-date tags render as elsewhere
+- [x] Clicking a card opens the Task's details, same as on the Board
+- [x] Completing or trashing a Task removes it from the Matrix immediately
+- [x] Calm empty state per Quadrant and for the Unsorted tray
+- [x] Usable on mobile
+- [x] The view is a thin, untested consumer of the domain module (no component tests, per testing decisions)

@@ -6,6 +6,20 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-07-25 — Eisenhower Matrix shipped
+
+Broke spec issue [#1](https://github.com/j-alicia-long/todo-now/issues/1) into 5 tracer-bullet tickets (`docs/eisenhower-matrix/`) and worked the chain end to end, one commit per slice:
+
+- **`importance` field** ([`94d1c1f`](https://github.com/j-alicia-long/todo-now/commit/94d1c1f)): nullable binary field on Task (null = Unsorted), PUT-writable, defaults null, backfilled on read; no `urgency` field stored per ADR-0001
+- **`matrix-rules` domain module** ([`4911c52`](https://github.com/j-alicia-long/todo-now/commit/4911c52)): pure rules for urgency (due ≤2 days or overdue, injected clock), Quadrant assignment, scoping, Unsorted, and the drop function; 16 behavioral tests
+- **Matrix view** ([`7b2bdec`](https://github.com/j-alicia-long/todo-now/commit/7b2bdec)): Columns ↔ Matrix toggle on the Board tab; 2×2 grid + Unsorted tray reusing Task cards; per-cell empty states; mobile stacks with the tray first; verified with Playwright screenshots
+- **Drag-to-triage** ([`6c84083`](https://github.com/j-alicia-long/todo-now/commit/6c84083)): Quadrants are drop targets; drops write importance and cross-boundary due dates (today+2 in / today+7 out) via the domain module; verified end-to-end with a Playwright drag test against real persistence (data backed up/restored). Desktop only — mobile triage gesture deferred (Board's no-touch-drag convention)
+- **Docs** ([`86f1a7c`](https://github.com/j-alicia-long/todo-now/commit/86f1a7c)): README features + Task Model updated; todo-architecture.md gained a "The Matrix" requirements section
+
+All 129 tests pass; typecheck and lint clean.
+
+---
+
 ## 2026-07-25 — Public demo site
 
 Shipped a shareable demo at **https://j-alicia-long.github.io/todo-now/** — the full app running serverless with sample data (no personal data).

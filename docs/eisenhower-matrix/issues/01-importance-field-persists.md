@@ -6,11 +6,11 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Task type has a nullable binary `importance` field (important / not-important / null)
-- [ ] `importance` is accepted through the tasks family's PUT writable-field whitelist
-- [ ] Newly constructed Tasks default `importance` to null
-- [ ] `importance` survives a persistence round-trip (write → read back unchanged)
-- [ ] Families test suite covers the above (Seam 2), passing under `bun test`
-- [ ] No `urgency` field is stored anywhere
+- [x] Task type has a nullable binary `importance` field (important / not-important / null)
+- [x] `importance` is accepted through the tasks family's PUT writable-field whitelist
+- [x] Newly constructed Tasks default `importance` to null
+- [x] `importance` survives a persistence round-trip (write → read back unchanged)
+- [x] Families test suite covers the above (Seam 2), passing under `bun test`
+- [x] No `urgency` field is stored anywhere

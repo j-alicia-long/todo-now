@@ -14,11 +14,11 @@ Rules it owns (vocabulary per the domain glossary and ADR-0001):
 
 **Blocked by:** 01 — `importance` field persists end-to-end.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Urgency boundary cases covered: due today, tomorrow, +2, +3, overdue, no date
-- [ ] All four Quadrant assignments and Unsorted membership covered
-- [ ] Scoping covered: future, done, and trashed Tasks excluded
-- [ ] Every drop transition covered, including due-date writes and no-op same-Quadrant drops
-- [ ] Tests assert external behavior only (given Tasks + clock → Quadrant; given drop → field changes), passing under `bun test`
-- [ ] Code names match the glossary: Do, Schedule, Quick-hit, Reconsider, Unsorted
+- [x] Urgency boundary cases covered: due today, tomorrow, +2, +3, overdue, no date
+- [x] All four Quadrant assignments and Unsorted membership covered
+- [x] Scoping covered: future, done, and trashed Tasks excluded
+- [x] Every drop transition covered, including due-date writes and no-op same-Quadrant drops
+- [x] Tests assert external behavior only (given Tasks + clock → Quadrant; given drop → field changes), passing under `bun test`
+- [x] Code names match the glossary: Do, Schedule, Quick-hit, Reconsider, Unsorted
