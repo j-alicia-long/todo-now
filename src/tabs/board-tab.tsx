@@ -20,7 +20,7 @@ import {
 } from "../domain/recurrence";
 import { type Settings } from "../stores/hooks";
 import { TaskCard, type TaskActions } from "../components/task-card";
-import { MatrixView } from "../components/matrix-view";
+import { MatrixView, MatrixCard } from "../components/matrix-view";
 import { Icon } from "../components/ui";
 import {
   BoardColumn,
@@ -139,11 +139,7 @@ export const BoardTab = ({
         </button>
       </div>
       {boardView === "matrix" ? (
-        <MatrixView
-          tasks={tasks}
-          taskActions={taskActions}
-          settings={settings}
-        />
+        <MatrixView tasks={tasks} taskActions={taskActions} />
       ) : (
         <div className="board">
           {BOARD_COLUMNS.map((col) => (
@@ -169,16 +165,28 @@ export const BoardTab = ({
       )}
       <DragOverlay>
         {activeTask ? (
-          <TaskCard
-            task={activeTask}
-            actions={{
-              changeStatus: () => {},
-              update: () => {},
-              trash: () => {},
-            }}
-            settings={settings}
-            isDragOverlay
-          />
+          boardView === "matrix" ? (
+            <MatrixCard
+              task={activeTask}
+              actions={{
+                changeStatus: () => {},
+                update: () => {},
+                trash: () => {},
+              }}
+              isDragOverlay
+            />
+          ) : (
+            <TaskCard
+              task={activeTask}
+              actions={{
+                changeStatus: () => {},
+                update: () => {},
+                trash: () => {},
+              }}
+              settings={settings}
+              isDragOverlay
+            />
+          )
         ) : null}
       </DragOverlay>
     </DndContext>

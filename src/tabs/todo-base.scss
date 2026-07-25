@@ -437,6 +437,36 @@
   scrollbar-width: thin;
 }
 
+// Compact triage card: checkbox, title, due tag — nothing else.
+.matrix-card {
+  align-items: center;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  cursor: grab;
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+
+  .card-checkbox {
+    flex-shrink: 0;
+  }
+
+  .card-tag {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+}
+
+.matrix-card-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.3;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 // The tray scrolls internally so a long backlog doesn't stretch the grid.
 .matrix-unsorted .quadrant-cards {
   max-height: 70dvh;

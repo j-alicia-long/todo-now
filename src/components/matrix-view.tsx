@@ -4,13 +4,12 @@
 // are drop targets; the drop itself is handled by the Board tab's
 // DndContext.
 
-import { useDroppable } from "@dnd-kit/core";
+import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { type Task } from "../domain/task-rules";
 import { partitionMatrix, type Quadrant } from "../domain/matrix-rules";
-import { type Settings } from "../stores/hooks";
 import { Icon } from "./ui";
-import { TaskCard, type TaskActions } from "./task-card";
-import { sortTasks } from "../lib/presentation";
+import { type TaskActions } from "./task-card";
+import { dueUrgencyClass, formatDueDate, sortTasks } from "../lib/presentation";
 
 const QUADRANTS: {
   id: Quadrant;
@@ -54,16 +53,68 @@ const QUADRANTS: {
   },
 ];
 
+/** Compact Matrix card: draggable, done checkbox, title, inline due tag.
+ *  Editing happens on the Board — the Matrix is for triage. */
+export const MatrixCard = ({
+  task,
+  actions,
+  isDragOverlay,
+}: {
+  task: Task;
+  actions: TaskActions;
+  isDragOverlay?: boolean;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id: task.id, data: { task } });
+
+  const style: React.CSSProperties = {};
+  if (isDragOverlay) {
+    style.cursor = "grabbing";
+    style.boxShadow = "var(--shadow-lg)";
+    style.transform = "rotate(2deg) scale(1.02)";
+  } else if (transform) {
+    style.transform = `translate3d(${transform.x}px, ${transform.y}px, 0)`;
+  }
+  if (isDragging && !isDragOverlay) {
+    style.opacity = 0.3;
+  }
+
+  return (
+    <div
+      ref={isDragOverlay ? undefined : setNodeRef}
+      className="matrix-card"
+      style={style}
+      {...(isDragOverlay ? {} : { ...attributes, ...listeners })}
+    >
+      <label className="card-checkbox" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="checkbox"
+          checked={task.done}
+          onChange={(e) => {
+            e.stopPropagation();
+            actions.changeStatus(task.id, task.done ? "this-week" : "done");
+          }}
+        />
+        <span className="checkmark" />
+      </label>
+      <span className="matrix-card-title">{task.title}</span>
+      {task.dueDate && (
+        <span className={`card-tag ${dueUrgencyClass(task.dueDate)}`}>
+          {formatDueDate(task.dueDate)}
+        </span>
+      )}
+    </div>
+  );
+};
+
 const MatrixQuadrant = ({
   quadrant,
   tasks,
   taskActions,
-  settings,
 }: {
   quadrant: (typeof QUADRANTS)[number];
   tasks: Task[];
   taskActions: TaskActions;
-  settings: Settings;
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id: quadrant.id });
 
@@ -85,12 +136,7 @@ const MatrixQuadrant = ({
           <div className="column-empty">{quadrant.emptyText}</div>
         ) : (
           sortTasks(tasks).map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              actions={taskActions}
-              settings={settings}
-            />
+            <MatrixCard key={task.id} task={task} actions={taskActions} />
           ))
         )}
       </div>
@@ -101,11 +147,9 @@ const MatrixQuadrant = ({
 export const MatrixView = ({
   tasks,
   taskActions,
-  settings,
 }: {
   tasks: Task[];
   taskActions: TaskActions;
-  settings: Settings;
 }) => {
   const layout = partitionMatrix(tasks, new Date());
 
@@ -118,7 +162,6 @@ export const MatrixView = ({
             quadrant={q}
             tasks={layout.quadrants[q.id]}
             taskActions={taskActions}
-            settings={settings}
           />
         ))}
       </div>
@@ -136,12 +179,7 @@ export const MatrixView = ({
             <div className="column-empty">Everything is sorted</div>
           ) : (
             sortTasks(layout.unsorted).map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                actions={taskActions}
-                settings={settings}
-              />
+              <MatrixCard key={task.id} task={task} actions={taskActions} />
             ))
           )}
         </div>
