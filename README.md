@@ -2,9 +2,9 @@
 
 A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce decision load by surfacing small, actionable tasks and organizing work by time horizon.
 
-![Screenshot](docs/screenshot.png)
+[![Screenshot of the board](docs/screenshot.png)](https://j-alicia-long.github.io/todo-now/)
 
-**Live demo:** [j-alicia-long.github.io/todo-now](https://j-alicia-long.github.io/todo-now/) — static build seeded with sample data (in-memory, changes reset on reload).
+**▶ Try the live demo:** [j-alicia-long.github.io/todo-now](https://j-alicia-long.github.io/todo-now/) — static build seeded with sample data (in-memory, changes reset on reload).
 
 ## Features
 
@@ -58,20 +58,20 @@ todo-now/
 
 ### API
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/tasks` | List all tasks |
-| POST | `/api/tasks` | Create a task |
-| PUT | `/api/tasks/:id` | Update a task |
-| DELETE | `/api/tasks/:id` | Soft-delete (or `?permanent=true` to hard-delete) |
-| GET | `/api/shopping` | List all shopping items |
-| POST | `/api/shopping` | Create a shopping item |
-| PUT | `/api/shopping/:id` | Update a shopping item |
-| DELETE | `/api/shopping/:id` | Delete a shopping item |
-| GET | `/api/groceries` | List all grocery items |
-| POST | `/api/groceries` | Create a grocery item |
-| PUT | `/api/groceries/:id` | Update a grocery item |
-| DELETE | `/api/groceries/:id` | Delete a grocery item |
+| Method | Endpoint             | Description                                       |
+| ------ | -------------------- | ------------------------------------------------- |
+| GET    | `/api/tasks`         | List all tasks                                    |
+| POST   | `/api/tasks`         | Create a task                                     |
+| PUT    | `/api/tasks/:id`     | Update a task                                     |
+| DELETE | `/api/tasks/:id`     | Soft-delete (or `?permanent=true` to hard-delete) |
+| GET    | `/api/shopping`      | List all shopping items                           |
+| POST   | `/api/shopping`      | Create a shopping item                            |
+| PUT    | `/api/shopping/:id`  | Update a shopping item                            |
+| DELETE | `/api/shopping/:id`  | Delete a shopping item                            |
+| GET    | `/api/groceries`     | List all grocery items                            |
+| POST   | `/api/groceries`     | Create a grocery item                             |
+| PUT    | `/api/groceries/:id` | Update a grocery item                             |
+| DELETE | `/api/groceries/:id` | Delete a grocery item                             |
 
 ### Task Model
 
