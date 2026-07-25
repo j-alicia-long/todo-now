@@ -9,6 +9,7 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 ## Features
 
 - **Three-column board**: This Week → This Month → Done, with drag-and-drop
+- **Matrix view**: Eisenhower 2×2 grid on the Board tab (Do / Schedule / Quick-hit / Reconsider) plus an Unsorted tray — importance is set by dragging, urgency is derived from due dates (never stored), and drags across the urgency boundary write the due date
 - **Future tab**: Park tasks you're not ready for yet
 - **Shopping list**: Lightweight checklist with archive support (pastel purple theme)
 - **Grocery list**: Lightweight checklist for groceries (pastel green theme)
@@ -81,16 +82,20 @@ todo-now/
   title: string;
   done: boolean;
   status: "this-week" | "this-month" | "future" | "done" | "trashed";
-  priority: "high" | "medium" | "low";
   effort: "low" | "medium" | "high";
   decisionLoad: "low" | "medium" | "high";
   area: string;
   dueDate: string | null;
+  importance: "important" | "not-important" | null; // null = Unsorted on the Matrix
   createdAt: string;
   completedAt: string | null;
   deletedAt: string | null;
+  source: "board" | "shopping" | "grocery";
+  sourceItemId: string | null;
 }
 ```
+
+Urgency is never stored — a Task is urgent iff its due date is within 2 days or overdue (ADR 0001, `docs/adr/`).
 
 ## Development
 
