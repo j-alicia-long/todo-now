@@ -86,23 +86,25 @@ export const MatrixCard = ({
       style={style}
       {...(isDragOverlay ? {} : { ...attributes, ...listeners })}
     >
-      <label className="card-checkbox" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={task.done}
-          onChange={(e) => {
-            e.stopPropagation();
-            actions.changeStatus(task.id, task.done ? "this-week" : "done");
-          }}
-        />
-        <span className="checkmark" />
-      </label>
+      <div className="matrix-card-top">
+        <label className="card-checkbox" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={task.done}
+            onChange={(e) => {
+              e.stopPropagation();
+              actions.changeStatus(task.id, task.done ? "this-week" : "done");
+            }}
+          />
+          <span className="checkmark" />
+        </label>
+        {task.dueDate && (
+          <span className={`card-tag ${dueUrgencyClass(task.dueDate)}`}>
+            {formatDueDate(task.dueDate)}
+          </span>
+        )}
+      </div>
       <span className="matrix-card-title">{task.title}</span>
-      {task.dueDate && (
-        <span className={`card-tag ${dueUrgencyClass(task.dueDate)}`}>
-          {formatDueDate(task.dueDate)}
-        </span>
-      )}
     </div>
   );
 };

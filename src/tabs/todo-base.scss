@@ -437,17 +437,38 @@
   scrollbar-width: thin;
 }
 
-// Compact triage card: checkbox, title, due tag — nothing else.
+// Quadrant cards flow as two half-width columns of sticky notes,
+// reading order left-to-right, then down (due-date sort row-major).
+.matrix-quadrant .quadrant-cards {
+  align-content: start;
+  align-items: start;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+
+  .column-empty {
+    grid-column: 1 / -1;
+  }
+}
+
+// Compact triage card: a sticky note — checkbox and due tag on top,
+// title below.
 .matrix-card {
-  align-items: center;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
   cursor: grab;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   padding: 8px 10px;
+}
+
+.matrix-card-top {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
 
   .card-checkbox {
     flex-shrink: 0;
@@ -455,7 +476,6 @@
 
   .card-tag {
     flex-shrink: 0;
-    margin-left: auto;
   }
 }
 
@@ -464,7 +484,9 @@
   font-weight: 500;
   line-height: 1.3;
   min-width: 0;
-  overflow-wrap: anywhere;
+
+  // Align with the visible checkmark edge (18px box centered in 20px hit area).
+  padding-left: 1px;
 }
 
 // The tray scrolls internally so a long backlog doesn't stretch the grid.
