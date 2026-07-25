@@ -11,6 +11,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { type Task, type TaskStatus } from "../domain/task-rules";
+import { applyMatrixDrop, type Quadrant } from "../domain/matrix-rules";
 import {
   boardWeeklyItems,
   isWeeklyRecurring,
@@ -82,9 +83,18 @@ export const BoardTab = ({
     const { active, over } = event;
     if (!over) return;
     const taskId = active.id as string;
-    const targetColumn = over.id as TaskStatus;
     const task = tasks.find((t) => t.id === taskId);
-    if (!task || task.status === targetColumn) return;
+    if (!task) return;
+    if (boardView === "matrix") {
+      // Drops on a Quadrant map to field changes via the domain module
+      // (importance write, plus a due-date write when crossing the
+      // urgency boundary per ADR-0001). Same-Quadrant drops are no-ops.
+      const changes = applyMatrixDrop(task, over.id as Quadrant, new Date());
+      if (changes) taskActions.update(taskId, changes);
+      return;
+    }
+    const targetColumn = over.id as TaskStatus;
+    if (task.status === targetColumn) return;
     taskActions.changeStatus(taskId, targetColumn);
   };
 

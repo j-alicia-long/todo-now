@@ -1,7 +1,10 @@
 // Matrix view of the Board: the Eisenhower 2×2 grid (Do / Schedule /
 // Quick-hit / Reconsider) plus the Unsorted tray. A thin consumer of
-// matrix-rules — all placement comes from the domain module.
+// matrix-rules — all placement comes from the domain module. Quadrants
+// are drop targets; the drop itself is handled by the Board tab's
+// DndContext.
 
+import { useDroppable } from "@dnd-kit/core";
 import { type Task } from "../domain/task-rules";
 import { partitionMatrix, type Quadrant } from "../domain/matrix-rules";
 import { type Settings } from "../stores/hooks";
@@ -51,6 +54,50 @@ const QUADRANTS: {
   },
 ];
 
+const MatrixQuadrant = ({
+  quadrant,
+  tasks,
+  taskActions,
+  settings,
+}: {
+  quadrant: (typeof QUADRANTS)[number];
+  tasks: Task[];
+  taskActions: TaskActions;
+  settings: Settings;
+}) => {
+  const { setNodeRef, isOver } = useDroppable({ id: quadrant.id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`matrix-quadrant ${quadrant.colorClass} ${isOver ? "drag-over" : ""}`}
+    >
+      <div className="quadrant-header">
+        <Icon name={quadrant.icon} className="quadrant-icon" />
+        <div className="quadrant-titles">
+          <h2 className="quadrant-title">{quadrant.title}</h2>
+          <span className="quadrant-subtitle">{quadrant.subtitle}</span>
+        </div>
+        <span className="column-count">{tasks.length}</span>
+      </div>
+      <div className="quadrant-cards">
+        {tasks.length === 0 ? (
+          <div className="column-empty">{quadrant.emptyText}</div>
+        ) : (
+          sortTasks(tasks).map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              actions={taskActions}
+              settings={settings}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const MatrixView = ({
   tasks,
   taskActions,
@@ -65,35 +112,15 @@ export const MatrixView = ({
   return (
     <div className="matrix-layout">
       <div className="matrix-grid">
-        {QUADRANTS.map((q) => {
-          const cellTasks = layout.quadrants[q.id];
-          return (
-            <div key={q.id} className={`matrix-quadrant ${q.colorClass}`}>
-              <div className="quadrant-header">
-                <Icon name={q.icon} className="quadrant-icon" />
-                <div className="quadrant-titles">
-                  <h2 className="quadrant-title">{q.title}</h2>
-                  <span className="quadrant-subtitle">{q.subtitle}</span>
-                </div>
-                <span className="column-count">{cellTasks.length}</span>
-              </div>
-              <div className="quadrant-cards">
-                {cellTasks.length === 0 ? (
-                  <div className="column-empty">{q.emptyText}</div>
-                ) : (
-                  sortTasks(cellTasks).map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      actions={taskActions}
-                      settings={settings}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {QUADRANTS.map((q) => (
+          <MatrixQuadrant
+            key={q.id}
+            quadrant={q}
+            tasks={layout.quadrants[q.id]}
+            taskActions={taskActions}
+            settings={settings}
+          />
+        ))}
       </div>
       <div className="matrix-unsorted">
         <div className="quadrant-header">

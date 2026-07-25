@@ -15,5 +15,5 @@
 - [ ] Same-Quadrant drops are no-ops (no writes)
 - [ ] All drop outcomes come from the domain module's drop function — no duplicated rules in the UI
 - [ ] Triage persists across sessions/devices (importance and due-date writes round-trip)
-- [ ] Dragging works on mobile
+- [ ] ~~Dragging works on mobile~~ Deferred: the app disables drag on touch devices (Board convention); mobile triage gesture to be decided separately
 - [ ] No drag-simulation tests (per testing decisions); behavior is covered by the domain module's tests
