@@ -58,8 +58,12 @@ One of the four cells of the Matrix: Do (urgent + important), Schedule (importan
 _Avoid_: Delegate, Eliminate (classic Eisenhower names; this is a one-person system)
 
 **Unsorted**:
-A tray beside the Matrix holding Board Tasks whose importance hasn't been set yet. Dragging one into a Quadrant sorts it.
-_Avoid_: Inbox, unplaced
+A Board Task whose importance hasn't been judged yet. Unsorted Tasks never appear on the Matrix grid — they are sorted through Triage.
+_Avoid_: Inbox, unplaced, tray (retired — the side tray was removed)
+
+**Triage**:
+The flow that presents Unsorted Tasks one at a time, as a stack, for sorting into a Quadrant. Skipping a Task sends it to the back of the stack; leaving Triage keeps remaining Tasks Unsorted. Triage is the only way importance is first judged on the Matrix.
+_Avoid_: Sorting wizard, review mode
 
 ### Deletion & history
 

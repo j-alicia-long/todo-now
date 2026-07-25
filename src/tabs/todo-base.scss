@@ -346,10 +346,11 @@
 }
 
 .matrix-grid {
+  align-content: start;
   display: grid;
   gap: 12px;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: min-content min-content;
   min-height: 0;
 }
 
