@@ -6,11 +6,11 @@
 
 **Blocked by:** 02 — Triage modal with keyboard sorting.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Four corner swipes map to the four Quadrants per the grid's visual layout
-- [ ] Card tracks the finger during the swipe; below-threshold releases spring back with no field changes
-- [ ] Committed swipe applies the existing Matrix drop field changes (per ADR-0001)
-- [ ] Instruction line says swipe on touch devices, drag/keys on desktop
-- [ ] Next Task becomes active after a swipe; last swipe closes Triage
-- [ ] `bun run typecheck` and `bun run lint` pass
+- [x] Four corner swipes map to the four Quadrants per the grid's visual layout
+- [x] Card tracks the finger during the swipe; below-threshold releases spring back with no field changes
+- [x] Committed swipe applies the existing Matrix drop field changes (per ADR-0001)
+- [x] Instruction line says swipe on touch devices, drag/keys on desktop
+- [x] Next Task becomes active after a swipe; last swipe closes Triage
+- [x] `bun run typecheck` and `bun run lint` pass

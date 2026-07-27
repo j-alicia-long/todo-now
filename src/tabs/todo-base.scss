@@ -605,6 +605,13 @@
   padding: 14px 16px;
   position: relative;
   touch-action: none;
+  // Spring-back after a below-threshold swipe release.
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &.swiping {
+    box-shadow: var(--shadow-lg);
+    z-index: 1;
+  }
 }
 
 .triage-card-title {

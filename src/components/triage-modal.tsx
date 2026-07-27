@@ -1,11 +1,12 @@
 // Triage modal: deals Unsorted Tasks one at a time over a dimmed
 // Matrix. Shows the active Task with full details, the rest of the
 // stack peeking behind, and an instruction line. Sorting happens via
-// keyboard (1-4), the on-screen Quadrant buttons, or — in later slices
-// — drag and swipe. All ordering comes from triage-rules; all sort
-// semantics from applyMatrixDrop. This component owns no task state.
+// keyboard (1-4), the on-screen Quadrant buttons, dragging the card
+// into a Quadrant (desktop), or a corner swipe (touch). All ordering
+// comes from triage-rules; all sort semantics from applyMatrixDrop.
+// This component owns no task state.
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { type Task } from "../domain/task-rules";
 import { type Quadrant } from "../domain/matrix-rules";
@@ -24,6 +25,15 @@ const KEY_TO_QUADRANT: Record<string, Quadrant> = {
   "2": "schedule",
   "3": "quick-hit",
   "4": "reconsider",
+};
+
+/** Swipe must travel this far (px) to commit a sort. */
+const SWIPE_COMMIT_DISTANCE = 80;
+
+/** The Quadrant in the corner the swipe points at, per the grid layout. */
+const swipeQuadrant = (dx: number, dy: number): Quadrant => {
+  if (dy < 0) return dx < 0 ? "do" : "schedule";
+  return dx < 0 ? "quick-hit" : "reconsider";
 };
 
 const isTypingTarget = (target: EventTarget | null): boolean =>
@@ -52,10 +62,54 @@ export const TriageModal = ({
 
   // The active card is a normal draggable in the Board tab's DndContext;
   // the Quadrants beneath the backdrop are the existing drop targets.
+  // On touch devices the pointer sensor is off, so the same card takes
+  // a corner swipe instead (tracked below).
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: active.id,
     data: { task: active },
   });
+
+  // Swipe state (touch only): the card follows the finger with a tilt;
+  // releasing past the threshold commits, short of it springs back.
+  const [swipe, setSwipe] = useState<{ dx: number; dy: number } | null>(null);
+  const swipeStart = useRef<{ x: number; y: number; id: number } | null>(null);
+
+  const swipeHandlers = isTouch
+    ? {
+        onPointerDown: (e: React.PointerEvent) => {
+          swipeStart.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
+          e.currentTarget.setPointerCapture(e.pointerId);
+        },
+        onPointerMove: (e: React.PointerEvent) => {
+          if (swipeStart.current?.id !== e.pointerId) return;
+          setSwipe({
+            dx: e.clientX - swipeStart.current.x,
+            dy: e.clientY - swipeStart.current.y,
+          });
+        },
+        onPointerUp: (e: React.PointerEvent) => {
+          if (swipeStart.current?.id !== e.pointerId) return;
+          const dx = e.clientX - swipeStart.current.x;
+          const dy = e.clientY - swipeStart.current.y;
+          swipeStart.current = null;
+          setSwipe(null);
+          if (Math.hypot(dx, dy) >= SWIPE_COMMIT_DISTANCE) {
+            onSort(active.id, swipeQuadrant(dx, dy));
+          }
+        },
+        onPointerCancel: () => {
+          swipeStart.current = null;
+          setSwipe(null);
+        },
+      }
+    : {};
+
+  const swipeStyle: React.CSSProperties = swipe
+    ? {
+        transform: `translate(${swipe.dx}px, ${swipe.dy}px) rotate(${swipe.dx / 20}deg)`,
+        transition: "none",
+      }
+    : {};
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -90,7 +144,7 @@ export const TriageModal = ({
         <div className="triage-header">
           <span className="triage-instruction">
             {isTouch
-              ? "Sort this task into a quadrant below"
+              ? "Swipe toward a quadrant corner — or tap one below"
               : "Drag into a quadrant below — or press 1–4, S to skip"}
           </span>
           <button
@@ -108,9 +162,10 @@ export const TriageModal = ({
           {remaining > 0 && <div className="triage-ghost ghost-1" />}
           <div
             ref={setNodeRef}
-            className="triage-active-card"
+            className={`triage-active-card ${swipe ? "swiping" : ""}`}
+            style={swipeStyle}
             {...attributes}
-            {...listeners}
+            {...(isTouch ? swipeHandlers : listeners)}
           >
             <span className="triage-card-title">{active.title}</span>
             <div className="triage-card-tags">
