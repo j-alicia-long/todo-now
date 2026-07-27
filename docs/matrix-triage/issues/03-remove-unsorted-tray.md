@@ -6,10 +6,10 @@
 
 **Blocked by:** 02 — Triage modal with keyboard sorting (Triage must exist before the only other sorting surface is removed).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] No Unsorted tray renders in the Matrix view in any state
-- [ ] Matrix grid spans the full available width on desktop and mobile
-- [ ] Unsorted Tasks remain reachable solely via the "Sort N tasks" pill / Triage
-- [ ] Orphaned tray styles removed
-- [ ] `bun run typecheck` and `bun run lint` pass
+- [x] No Unsorted tray renders in the Matrix view in any state
+- [x] Matrix grid spans the full available width on desktop and mobile
+- [x] Unsorted Tasks remain reachable solely via the "Sort N tasks" pill / Triage
+- [x] Orphaned tray styles removed
+- [x] `bun run typecheck` and `bun run lint` pass

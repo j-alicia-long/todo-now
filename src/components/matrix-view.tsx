@@ -176,25 +176,6 @@ export const MatrixView = ({
           />
         ))}
       </div>
-      <div className="matrix-unsorted">
-        <div className="quadrant-header">
-          <Icon name="inbox" className="quadrant-icon" />
-          <div className="quadrant-titles">
-            <h2 className="quadrant-title">Unsorted</h2>
-            <span className="quadrant-subtitle">Drag into a quadrant</span>
-          </div>
-          <span className="column-count">{layout.unsorted.length}</span>
-        </div>
-        <div className="quadrant-cards">
-          {layout.unsorted.length === 0 ? (
-            <div className="column-empty">Everything is sorted</div>
-          ) : (
-            sortTasks(layout.unsorted).map((task) => (
-              <MatrixCard key={task.id} task={task} actions={taskActions} />
-            ))
-          )}
-        </div>
-      </div>
     </div>
   );
 };
