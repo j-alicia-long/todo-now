@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-07-27 — Production data moved out of the synced tree
+
+A broken-then-recreated Mutagen sync (Zo desktop app) let stale Mac copies overwrite the live `data/*.json` on Zo — Mutagen's re-created session had no baseline, so every differing file became a conflict and alpha (the Mac) won. Fix: production data now lives at `/home/workspace/todo-data/`, outside the synced `personal-os` tree ([`4f3b4d1`](https://github.com/j-alicia-long/todo-now/commit/4f3b4d1)). The server resolves its data dir as `DATA_DIR` env → `/home/workspace/todo-data` if it exists → `./data` (local dev/tests); the weekly archive follows. Migrated the live files, restarted the service, verified reads/writes hit the new location and the public site returns 200. Repo `data/` is now dev-only.
+
+---
+
 ## 2026-07-27 — Default board view setting
 
 Display Settings gains a **Default Board View** picker (Columns / Matrix) — a segmented pill reusing the board toggle styling — that chooses which view the Board tab opens in ([`5193481`](https://github.com/j-alicia-long/todo-now/commit/5193481)). Stored as `defaultBoardView` in server-synced settings (localStorage fallback); `useSettings` gains a generic `set()` and `toggle()` is now typed to boolean keys only. Verified with Playwright against the real server (data backed up/restored): setting persists and the Board opens straight into the Matrix after reload.
