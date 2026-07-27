@@ -6,15 +6,15 @@
 
 **Blocked by:** 01 — Triage domain rules.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Entering the Matrix view with Unsorted Tasks auto-opens Triage; with none, it never opens
-- [ ] Active card shows full Task details; remaining stack is visible behind it with a count
-- [ ] Instruction line renders at the top of the modal
-- [ ] Matrix quadrants visible below the dimmed backdrop; each sort lands the Task in its Quadrant immediately
-- [ ] Keys 1–4 sort into Do / Schedule / Quick-hit / Reconsider with the same field changes as a grid drag (including due-date writes per ADR-0001)
-- [ ] S sends the active Task to the back of the stack; sorting past the last Task closes Triage
-- [ ] Escape, close button, and backdrop tap dismiss; remaining Tasks stay Unsorted
-- [ ] "Sort N tasks" pill shows on the Matrix whenever Unsorted Tasks exist and Triage is closed; tapping reopens Triage
-- [ ] Shortcuts ignored while typing in an input
-- [ ] `bun run typecheck` and `bun run lint` pass
+- [x] Entering the Matrix view with Unsorted Tasks auto-opens Triage; with none, it never opens
+- [x] Active card shows full Task details; remaining stack is visible behind it with a count
+- [x] Instruction line renders at the top of the modal
+- [x] Matrix quadrants visible below the dimmed backdrop; each sort lands the Task in its Quadrant immediately
+- [x] Keys 1–4 sort into Do / Schedule / Quick-hit / Reconsider with the same field changes as a grid drag (including due-date writes per ADR-0001)
+- [x] S sends the active Task to the back of the stack; sorting past the last Task closes Triage
+- [x] Escape, close button, and backdrop tap dismiss; remaining Tasks stay Unsorted
+- [x] "Sort N tasks" pill shows on the Matrix whenever Unsorted Tasks exist and Triage is closed; tapping reopens Triage
+- [x] Shortcuts ignored while typing in an input
+- [x] `bun run typecheck` and `bun run lint` pass

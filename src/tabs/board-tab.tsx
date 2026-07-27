@@ -12,6 +12,7 @@ import {
 } from "@dnd-kit/core";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import { applyMatrixDrop, type Quadrant } from "../domain/matrix-rules";
+import { triageStack, applySkip } from "../domain/triage-rules";
 import {
   boardWeeklyItems,
   isWeeklyRecurring,
@@ -21,6 +22,7 @@ import {
 import { type Settings } from "../stores/hooks";
 import { TaskCard, type TaskActions } from "../components/task-card";
 import { MatrixView, MatrixCard } from "../components/matrix-view";
+import { TriageModal } from "../components/triage-modal";
 import { Icon } from "../components/ui";
 import {
   BoardColumn,
@@ -63,6 +65,10 @@ export const BoardTab = ({
 }) => {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [boardView, setBoardView] = useState<"columns" | "matrix">("columns");
+  // Triage: open/closed per Matrix visit, plus the skip rotation
+  // (task ids only — the stack itself derives from triage-rules).
+  const [triageOpen, setTriageOpen] = useState(false);
+  const [skippedIds, setSkippedIds] = useState<string[]>([]);
 
   const isTouchDevice =
     typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
@@ -100,6 +106,21 @@ export const BoardTab = ({
 
   const tasksByStatus = (status: TaskStatus) =>
     tasks.filter((t) => t.status === status);
+
+  // Triage stack derives fresh each render, so Tasks sorted, completed,
+  // or created elsewhere flow in and out automatically.
+  const stack = triageStack(tasks, skippedIds, new Date());
+  const openTriage = () => {
+    setSkippedIds([]);
+    setTriageOpen(true);
+  };
+  const sortActive = (taskId: string, quadrant: Quadrant) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    const changes = applyMatrixDrop(task, quadrant, new Date());
+    if (changes) taskActions.update(taskId, changes);
+  };
+
   const recurringTasks = recurringItems.filter((i) => i.category === "task");
   const weeklyTasks = recurringTasks.filter(isWeeklyRecurring);
   const longTermTasks = recurringTasks.filter((i) => !isWeeklyRecurring(i));
@@ -133,13 +154,35 @@ export const BoardTab = ({
           role="tab"
           aria-selected={boardView === "matrix"}
           className={`board-view-btn ${boardView === "matrix" ? "active" : ""}`}
-          onClick={() => setBoardView("matrix")}
+          onClick={() => {
+            setBoardView("matrix");
+            openTriage();
+          }}
         >
           <Icon name="grid_view" /> Matrix
         </button>
       </div>
       {boardView === "matrix" ? (
-        <MatrixView tasks={tasks} taskActions={taskActions} />
+        <>
+          <MatrixView
+            tasks={tasks}
+            taskActions={taskActions}
+            triagePill={
+              stack.length > 0 && !triageOpen
+                ? { count: stack.length, onOpen: openTriage }
+                : undefined
+            }
+          />
+          {triageOpen && stack.length > 0 && (
+            <TriageModal
+              stack={stack}
+              isTouch={isTouchDevice}
+              onSort={sortActive}
+              onSkip={(id) => setSkippedIds(applySkip(skippedIds, id))}
+              onClose={() => setTriageOpen(false)}
+            />
+          )}
+        </>
       ) : (
         <div className="board">
           {BOARD_COLUMNS.map((col) => (

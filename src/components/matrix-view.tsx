@@ -11,7 +11,7 @@ import { Icon } from "./ui";
 import { type TaskActions } from "./task-card";
 import { dueUrgencyClass, formatDueDate, sortTasks } from "../lib/presentation";
 
-const QUADRANTS: {
+export const QUADRANTS: {
   id: Quadrant;
   title: string;
   subtitle: string;
@@ -149,14 +149,23 @@ const MatrixQuadrant = ({
 export const MatrixView = ({
   tasks,
   taskActions,
+  triagePill,
 }: {
   tasks: Task[];
   taskActions: TaskActions;
+  /** Rendered while Unsorted Tasks exist and Triage is closed. */
+  triagePill?: { count: number; onOpen: () => void };
 }) => {
   const layout = partitionMatrix(tasks, new Date());
 
   return (
     <div className="matrix-layout">
+      {triagePill && (
+        <button className="triage-pill" onClick={triagePill.onOpen}>
+          <Icon name="inbox" /> Sort {triagePill.count}{" "}
+          {triagePill.count === 1 ? "task" : "tasks"}
+        </button>
+      )}
       <div className="matrix-grid">
         {QUADRANTS.map((q) => (
           <MatrixQuadrant
