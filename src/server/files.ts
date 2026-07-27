@@ -5,12 +5,23 @@
 // weekly reset) run on every read and write back when anything changed.
 // This is the app's only scheduler; there is no background job.
 
+import { existsSync } from "node:fs";
 import { promoteDueSoon, purgeTrash, type Task } from "../domain/task-rules";
 import { resetWeeklyItems, type RecurringItem } from "../domain/recurrence";
 import type { ShoppingItem, GroceryItem } from "../domain/entities";
 import type { ListStore } from "./resource";
 
-const dataDir = import.meta.dir + "/../../data";
+// In production on Zo, data lives OUTSIDE the Mutagen-synced personal-os
+// tree so a broken/re-created file sync can never overwrite the live
+// database (see docs/DEPLOY.md). Resolution order:
+//   1. DATA_DIR env var (explicit override)
+//   2. /home/workspace/todo-data — the Zo production location, used
+//      whenever it exists so no env configuration is required there
+//   3. ./data in the repo — local development and tests
+const ZO_DATA_DIR = "/home/workspace/todo-data";
+export const dataDir =
+  process.env.DATA_DIR ??
+  (existsSync(ZO_DATA_DIR) ? ZO_DATA_DIR : import.meta.dir + "/../../data");
 
 const TASKS_PATH = dataDir + "/tasks.json";
 const SHOPPING_PATH = dataDir + "/shopping.json";

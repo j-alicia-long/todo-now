@@ -11,6 +11,7 @@ import {
   recurringFamily,
 } from "./src/server/families";
 import {
+  dataDir,
   tasksStore,
   shoppingStore,
   groceriesStore,
@@ -66,7 +67,7 @@ createResourceRoutes(app, "/api/recurring", recurringFamily, recurringStore);
 
 // ── Weekly Archive ──
 
-const ARCHIVE_PATH = import.meta.dir + "/data/archive.md";
+const ARCHIVE_PATH = dataDir + "/archive.md";
 const FOUR_WEEKS_MS = 4 * 7 * 24 * 60 * 60 * 1000;
 
 app.post("/api/archive", async (c) => {

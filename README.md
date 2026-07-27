@@ -40,10 +40,10 @@ todo-now/
 │   │   └── TodoPage.scss   # Page-specific styles
 │   └── components/
 │       └── theme-provider.tsx  # Light/dark mode context
-├── data/
-│   ├── tasks.json     # Task storage (gitignored)
-│   ├── shopping.json  # Shopping list (gitignored)
-│   └── groceries.json # Grocery list (gitignored)
+├── data/              # Local-dev storage (gitignored; prod uses /home/workspace/todo-data)
+│   ├── tasks.json     # Task storage
+│   ├── shopping.json  # Shopping list
+│   └── groceries.json # Grocery list
 └── public/
     └── favicon.svg
 ```
@@ -56,7 +56,7 @@ todo-now/
 - **Styling**: SASS with CSS custom properties (no Tailwind)
 - **Drag & drop**: [@dnd-kit/core](https://dndkit.com)
 - **Build**: [Vite](https://vite.dev)
-- **Storage**: JSON file on disk (`data/tasks.json`)
+- **Storage**: JSON files on disk — `DATA_DIR` env var if set, else `/home/workspace/todo-data/` when present (Zo production, outside the synced tree), else `./data/` (local dev)
 
 ### API
 

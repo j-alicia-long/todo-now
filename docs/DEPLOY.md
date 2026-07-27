@@ -3,7 +3,7 @@
 The site is a **published Zo Site** running as a supervised HTTP service (label `todo`)
 on port `57863`, served live at **https://todo-jlong.zocomputer.io/todo**.
 
-You don't need to prompt chat to redeploy. In production, `server.ts` serves the
+You don't need to prompt chat to redeploy. In production, `file server.ts` serves the
 built files from `./dist` on every request, and a supervisor keeps the service
 alive — kill it and it restarts itself.
 
@@ -17,7 +17,7 @@ cd /home/workspace/personal-os/02-projects/todo-app/todo
 That rebuilds the bundle, restarts the service, and waits until the site returns
 HTTP 200. (First run only: `chmod +x redeploy.sh`.)
 
-**Frontend-only change** (anything in `src/`, `index.tsx`, styles — not `server.ts`)?
+**Frontend-only change** (anything in `src/`, `file index.tsx`, styles — not `file server.ts`)?
 Skip the restart for a zero-downtime deploy:
 
 ```bash
@@ -26,11 +26,11 @@ Skip the restart for a zero-downtime deploy:
 
 ## What each command actually does
 
-| Command | Rebuilds `dist/` | Restarts server | Downtime | Use when |
-|---|---|---|---|---|
-| `bun run build` | ✅ | ❌ | none | frontend changed; server serves new `dist/` immediately |
-| `./redeploy.sh --fast` | ✅ | ❌ | none | same as above, with a health check |
-| `./redeploy.sh` | ✅ | ✅ | ~5–6s | `server.ts` / API changed, or when in doubt |
+| Command                | Rebuilds `dist/` | Restarts server | Downtime | Use when                                                |
+| ---------------------- | ---------------- | --------------- | -------- | ------------------------------------------------------- |
+| `bun run build`        | ✅               | ❌              | none     | frontend changed; server serves new `dist/` immediately |
+| `./redeploy.sh --fast` | ✅               | ❌              | none     | same as above, with a health check                      |
+|                        | ✅               | ✅              | \~5–6s   | `file server.ts` / API changed, or when in doubt        |
 
 ## Manual equivalents (if you'd rather not use the script)
 
@@ -58,6 +58,11 @@ tail -f /dev/shm/todo_err.log
 
 ## Notes
 
+- **Live data lives at** `/home/workspace/todo-data/`, outside the Mutagen-synced
+  `personal-os` tree, so a broken/re-created file sync can never overwrite it
+  (that happened once — see `file src/server/files.ts` for the resolution order:
+  `DATA_DIR` env → `/home/workspace/todo-data` if it exists → `./data`).
+  The repo's `data/` folder is only used for local development.
 - The live site runs from **this workspace directory**, not from GitHub. Pushing to
   `github.com/j-alicia-long/todo-now` does **not** deploy — running the commands above does.
   Commit/push separately if you want the repo in sync.
