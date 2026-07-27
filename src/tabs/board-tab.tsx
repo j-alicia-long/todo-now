@@ -19,7 +19,7 @@ import {
   upcomingLongTermItems,
   type RecurringItem,
 } from "../domain/recurrence";
-import { type Settings } from "../stores/hooks";
+import { type BoardView, type Settings } from "../stores/hooks";
 import { TaskCard, type TaskActions } from "../components/task-card";
 import { MatrixView, MatrixCard } from "../components/matrix-view";
 import { TriageModal } from "../components/triage-modal";
@@ -64,7 +64,9 @@ export const BoardTab = ({
   settings: Settings;
 }) => {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [boardView, setBoardView] = useState<"columns" | "matrix">("columns");
+  const [boardView, setBoardView] = useState<BoardView>(
+    settings.defaultBoardView
+  );
   // Triage: open/closed per Matrix visit, plus the skip rotation
   // (task ids only — the stack itself derives from triage-rules).
   const [triageOpen, setTriageOpen] = useState(false);

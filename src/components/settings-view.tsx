@@ -1,25 +1,56 @@
-// Settings drawer panel: card-label visibility toggles.
+// Settings drawer panel: default board view picker and card-label
+// visibility toggles.
 
-import { type Settings } from "../stores/hooks";
+import {
+  type BoardView,
+  type BooleanSettingKey,
+  type Settings,
+} from "../stores/hooks";
+import { Icon } from "./ui";
+
+const VIEW_OPTIONS: { value: BoardView; label: string; icon: string }[] = [
+  { value: "columns", label: "Columns", icon: "view_week" },
+  { value: "matrix", label: "Matrix", icon: "grid_view" },
+];
 
 export const SettingsView = ({
   settings,
   onToggle,
+  onSetDefaultView,
 }: {
   settings: Settings;
-  onToggle: (key: keyof Settings) => void;
+  onToggle: (key: BooleanSettingKey) => void;
+  onSetDefaultView: (view: BoardView) => void;
 }) => {
-  const toggles: { key: keyof Settings; label: string; description: string }[] =
-    [
-      {
-        key: "showArea",
-        label: "Area",
-        description: "Show category label (Life Admin, Social, etc.)",
-      },
-    ];
+  const toggles: {
+    key: BooleanSettingKey;
+    label: string;
+    description: string;
+  }[] = [
+    {
+      key: "showArea",
+      label: "Area",
+      description: "Show category label (Life Admin, Social, etc.)",
+    },
+  ];
 
   return (
     <div className="settings-view">
+      <h2 className="settings-title">Default Board View</h2>
+      <p className="settings-desc">Choose which view the Board tab opens in.</p>
+      <div className="board-view-toggle settings-view-picker" role="radiogroup">
+        {VIEW_OPTIONS.map(({ value, label, icon }) => (
+          <button
+            key={value}
+            role="radio"
+            aria-checked={settings.defaultBoardView === value}
+            className={`board-view-btn ${settings.defaultBoardView === value ? "active" : ""}`}
+            onClick={() => onSetDefaultView(value)}
+          >
+            <Icon name={icon} /> {label}
+          </button>
+        ))}
+      </div>
       <h2 className="settings-title">Card Labels</h2>
       <p className="settings-desc">Choose which labels appear on task cards.</p>
       <div className="settings-list">

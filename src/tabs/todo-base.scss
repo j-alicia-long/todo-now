@@ -1490,6 +1490,11 @@
   padding: 8px 0;
 }
 
+// Default-view picker reuses the board pill toggle; add section spacing.
+.settings-view-picker {
+  margin-bottom: 24px;
+}
+
 .settings-title {
   font-size: 1.1rem;
   font-weight: 700;

@@ -2,7 +2,12 @@
 // display settings panels.
 
 import { type Task } from "../domain/task-rules";
-import { type ShoppingItem, type Settings } from "../stores/hooks";
+import {
+  type BoardView,
+  type BooleanSettingKey,
+  type Settings,
+  type ShoppingItem,
+} from "../stores/hooks";
 import { Icon } from "../components/ui";
 import { FutureTaskCard } from "../components/future-task-card";
 import { TrashCard } from "../components/trash-card";
@@ -20,7 +25,8 @@ export type SidebarDrawerActions = {
   permanentDeleteTask: (id: string) => void;
   unarchiveShoppingItem: (id: string) => void;
   deleteShoppingItem: (id: string) => void;
-  toggleSetting: (key: keyof Settings) => void;
+  toggleSetting: (key: BooleanSettingKey) => void;
+  setDefaultBoardView: (view: BoardView) => void;
 };
 
 export const SidebarDrawer = ({
@@ -164,6 +170,7 @@ export const SidebarDrawer = ({
             <SettingsView
               settings={settings}
               onToggle={actions.toggleSetting}
+              onSetDefaultView={actions.setDefaultBoardView}
             />
           )}
         </div>

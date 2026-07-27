@@ -18,7 +18,8 @@ import {
   useShopping,
   useTasks,
   type RecurringItem,
-  type Settings,
+  type BoardView,
+  type BooleanSettingKey,
 } from "../stores/hooks";
 import { BoardTab } from "./board-tab";
 import { GroceriesTab } from "./groceries-tab";
@@ -198,6 +199,7 @@ const TodoBase = () => {
   const {
     settings,
     toggle: toggleSettingKey,
+    set: setSettingKey,
     pushTheme,
   } = useSettings({ onServerTheme: setTheme });
   const tasks = tasksStore.tasks;
@@ -224,8 +226,12 @@ const TodoBase = () => {
         : "light"
       : theme;
 
-  const toggleSetting = (key: keyof Settings) => {
+  const toggleSetting = (key: BooleanSettingKey) => {
     toggleSettingKey(key, resolvedTheme as "light" | "dark");
+  };
+
+  const setDefaultBoardView = (view: BoardView) => {
+    setSettingKey("defaultBoardView", view, resolvedTheme as "light" | "dark");
   };
 
   const addTask = async (e: React.FormEvent) => {
@@ -410,6 +416,7 @@ const TodoBase = () => {
     unarchiveShoppingItem,
     deleteShoppingItem,
     toggleSetting,
+    setDefaultBoardView,
   };
 
   // Tab badge counts (each tab derives its own view slices internally).

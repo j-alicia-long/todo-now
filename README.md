@@ -18,7 +18,7 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 - **Inline tag editing**: Tap priority, area, effort, or decision load to change it
 - **Due date urgency**: Color-coded countdown (red → orange → yellow → green), shown first on every card
 - **Tappable due date**: Tap to open a calendar modal and change or set the date
-- **Settings**: Toggle which labels appear on cards
+- **Settings**: Toggle which labels appear on cards, and pick the default Board view (Columns or Matrix)
 - **Trash**: Soft delete with 30-day auto-purge and restore
 - **Dark mode**: Warm cream (light) / deep cocoa (dark) theme
 - **Mobile-first**: Horizontal-scroll board on small screens

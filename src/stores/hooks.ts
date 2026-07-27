@@ -175,13 +175,22 @@ export const useRecurring = (transport: Transport = defaultTransport) => {
 
 // ── Settings ──
 
+export type BoardView = "columns" | "matrix";
+
 export type Settings = {
   showArea: boolean;
+  defaultBoardView: BoardView;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   showArea: true,
+  defaultBoardView: "columns",
 };
+
+/** Settings keys with boolean values — the ones `toggle` can flip. */
+export type BooleanSettingKey = {
+  [K in keyof Settings]: Settings[K] extends boolean ? K : never;
+}[keyof Settings];
 
 export type SyncedSettings = Settings & { theme?: "light" | "dark" };
 
@@ -239,7 +248,20 @@ export const useSettings = ({
       });
   }, [transport]);
 
-  const toggle = (key: keyof Settings, theme?: "light" | "dark") => {
+  const set = <K extends keyof Settings>(
+    key: K,
+    value: Settings[K],
+    theme?: "light" | "dark"
+  ) => {
+    setSettings((prev) => {
+      const next = { ...prev, [key]: value };
+      saveSettingsLocal(next);
+      push({ ...next, theme });
+      return next;
+    });
+  };
+
+  const toggle = (key: BooleanSettingKey, theme?: "light" | "dark") => {
     setSettings((prev) => {
       const next = { ...prev, [key]: !prev[key] };
       saveSettingsLocal(next);
@@ -252,5 +274,5 @@ export const useSettings = ({
     push({ ...settings, theme });
   };
 
-  return { settings, toggle, pushTheme };
+  return { settings, toggle, set, pushTheme };
 };
