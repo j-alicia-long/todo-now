@@ -6,10 +6,10 @@
 
 **Blocked by:** 02, 03, 04, 05.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Product spec / architecture docs describe Triage and no longer describe the Unsorted tray
-- [ ] README feature list updated
-- [ ] Visual/interaction conventions note the Triage modal, keyboard shortcuts, and swipe mapping
-- [ ] Devlog entry added for the shipped feature
-- [ ] Ticket statuses in this folder updated to done
+- [x] Product spec / architecture docs describe Triage and no longer describe the Unsorted tray
+- [x] README feature list updated
+- [x] Visual/interaction conventions note the Triage modal, keyboard shortcuts, and swipe mapping
+- [x] Devlog entry added for the shipped feature
+- [x] Ticket statuses in this folder updated to done

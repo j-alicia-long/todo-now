@@ -6,6 +6,20 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-07-27 — Matrix Triage shipped
+
+Replaced the Matrix's Unsorted tray with **Triage**: a one-Task-at-a-time sorting modal. Spec + 6 tickets in `docs/matrix-triage/`, worked frontier-first, one commit per slice:
+
+- **`triage-rules` domain module** ([`f974793`](https://github.com/j-alicia-long/todo-now/commit/f974793)): pure stack derivation (the Matrix partition's Unsorted list) and skip rotation (send-to-back, wraps); UI holds only skipped ids, never a task-list copy; 8 behavioral tests
+- **Triage modal + keyboard** ([`9b8f97d`](https://github.com/j-alicia-long/todo-now/commit/9b8f97d)): auto-opens on every Matrix visit with Unsorted Tasks; full-detail active card with the stack peeking behind; keys 1–4 mirror the grid (S skips, Escape dismisses); floating "Sort N tasks" pill reopens it; sorts reuse `applyMatrixDrop` (ADR-0001 due-date writes included)
+- **Tray removal** ([`d170af2`](https://github.com/j-alicia-long/todo-now/commit/d170af2)): Matrix grid goes full-width; the pill is the only Unsorted surface
+- **Drag from the modal** ([`772619c`](https://github.com/j-alicia-long/todo-now/commit/772619c)): active card is a normal dnd-kit draggable; modal fades while dragging so the Quadrants show through; drop-outside is a no-op
+- **Mobile corner swipe** ([`571409f`](https://github.com/j-alicia-long/todo-now/commit/571409f)): swipe toward a Quadrant's corner (up-left Do … down-right Reconsider) with finger-tracking tilt and spring-back below the 80px threshold
+
+Glossary: _Triage_ added to `CONTEXT.md`; _Unsorted_ redefined (tray retired). All 137 tests pass; typecheck clean; verified on desktop + iPhone emulation with Playwright drag/swipe tests against real persistence (data backed up and restored).
+
+---
+
 ## 2026-07-25 — Eisenhower Matrix shipped
 
 Broke spec issue [#1](https://github.com/j-alicia-long/todo-now/issues/1) into 5 tracer-bullet tickets (`docs/eisenhower-matrix/`) and worked the chain end to end, one commit per slice:

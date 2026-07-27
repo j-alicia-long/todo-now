@@ -9,7 +9,8 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 ## Features
 
 - **Three-column board**: This Week → This Month → Done, with drag-and-drop
-- **Matrix view**: Eisenhower 2×2 grid on the Board tab (Do / Schedule / Quick-hit / Reconsider) plus an Unsorted tray — importance is set by dragging, urgency is derived from due dates (never stored), and drags across the urgency boundary write the due date
+- **Matrix view**: Eisenhower 2×2 grid on the Board tab (Do / Schedule / Quick-hit / Reconsider) — importance is set by dragging, urgency is derived from due dates (never stored), and drags across the urgency boundary write the due date
+- **Triage**: switching to the Matrix with unjudged tasks auto-opens a one-at-a-time sorting modal — sort by drag (desktop), corner swipe (mobile), or keys 1–4 (S skips, Escape dismisses); a "Sort N tasks" pill reopens it
 - **Future tab**: Park tasks you're not ready for yet
 - **Shopping list**: Lightweight checklist with archive support (pastel purple theme)
 - **Grocery list**: Lightweight checklist for groceries (pastel green theme)

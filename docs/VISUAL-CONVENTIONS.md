@@ -6,4 +6,5 @@
 - Shopping: purple theme (#b48cdc). Groceries: green theme (#78be82).
 - Recurring tasks appear in Board's This Week column with green left accent
 - Task titles editable by double-click (desktop) / double-tap (mobile); Enter to save, Escape to cancel
+- Triage modal: dimmed backdrop over the Matrix; active card drags into Quadrants (desktop) or corner-swipes with tilt + spring-back (mobile); keys 1–4 mirror the grid layout, S skips, Escape closes; floating accent "Sort N tasks" pill bottom-center
 - Mobile: icon-only tabs below 768px, swipe support within board columns
