@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-07-27 — Default board view setting
+
+Display Settings gains a **Default Board View** picker (Columns / Matrix) — a segmented pill reusing the board toggle styling — that chooses which view the Board tab opens in ([`5193481`](https://github.com/j-alicia-long/todo-now/commit/5193481)). Stored as `defaultBoardView` in server-synced settings (localStorage fallback); `useSettings` gains a generic `set()` and `toggle()` is now typed to boolean keys only. Verified with Playwright against the real server (data backed up/restored): setting persists and the Board opens straight into the Matrix after reload.
+
+---
+
 ## 2026-07-27 — Matrix Triage shipped
 
 Replaced the Matrix's Unsorted tray with **Triage**: a one-Task-at-a-time sorting modal. Spec + 6 tickets in `docs/matrix-triage/`, worked frontier-first, one commit per slice:
