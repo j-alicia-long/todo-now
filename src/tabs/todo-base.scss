@@ -543,7 +543,18 @@
   margin-top: 7dvh;
   max-width: 440px;
   padding: 16px 20px 20px;
+  transition: opacity var(--transition);
   width: 100%;
+}
+
+// While the active card is being dragged out, get out of the way: the
+// grid beneath becomes the whole point.
+.triage-overlay.dragging {
+  background: rgb(0, 0, 0, 0.12);
+
+  .triage-modal {
+    opacity: 0.25;
+  }
 }
 
 .triage-header {
@@ -587,6 +598,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
+  cursor: grab;
   display: flex;
   flex-direction: column;
   gap: 10px;

@@ -6,6 +6,7 @@
 // semantics from applyMatrixDrop. This component owns no task state.
 
 import { useEffect } from "react";
+import { useDraggable } from "@dnd-kit/core";
 import { type Task } from "../domain/task-rules";
 import { type Quadrant } from "../domain/matrix-rules";
 import { QUADRANTS } from "./matrix-view";
@@ -49,9 +50,17 @@ export const TriageModal = ({
   const active = stack[0];
   const remaining = stack.length - 1;
 
+  // The active card is a normal draggable in the Board tab's DndContext;
+  // the Quadrants beneath the backdrop are the existing drop targets.
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: active.id,
+    data: { task: active },
+  });
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target)) return;
+      if (isDragging) return; // let dnd-kit own Escape mid-drag
       if (e.key === "Escape") {
         e.preventDefault();
         onClose();
@@ -70,16 +79,19 @@ export const TriageModal = ({
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [active.id, remaining, onSort, onSkip, onClose]);
+  }, [active.id, remaining, isDragging, onSort, onSkip, onClose]);
 
   return (
-    <div className="triage-overlay" onClick={onClose}>
+    <div
+      className={`triage-overlay ${isDragging ? "dragging" : ""}`}
+      onClick={onClose}
+    >
       <div className="triage-modal" onClick={(e) => e.stopPropagation()}>
         <div className="triage-header">
           <span className="triage-instruction">
             {isTouch
               ? "Sort this task into a quadrant below"
-              : "Sort into a quadrant — press 1–4, or S to skip"}
+              : "Drag into a quadrant below — or press 1–4, S to skip"}
           </span>
           <button
             className="recurring-modal-close"
@@ -94,7 +106,12 @@ export const TriageModal = ({
         <div className="triage-stack">
           {remaining > 1 && <div className="triage-ghost ghost-2" />}
           {remaining > 0 && <div className="triage-ghost ghost-1" />}
-          <div className="triage-active-card">
+          <div
+            ref={setNodeRef}
+            className="triage-active-card"
+            {...attributes}
+            {...listeners}
+          >
             <span className="triage-card-title">{active.title}</span>
             <div className="triage-card-tags">
               {active.dueDate && (

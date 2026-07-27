@@ -6,11 +6,11 @@
 
 **Blocked by:** 02 — Triage modal with keyboard sorting.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Active card is draggable from the modal; Quadrants beneath the overlay accept the drop
-- [ ] Drop applies the existing Matrix drop field changes (importance, boundary due-date writes per ADR-0001)
-- [ ] Hovered Quadrant highlights during the drag, as on the grid today
-- [ ] Drop outside a Quadrant is a no-op; the card returns to the modal
-- [ ] Next Task becomes active after a drop; last drop closes Triage
-- [ ] `bun run typecheck` and `bun run lint` pass
+- [x] Active card is draggable from the modal; Quadrants beneath the overlay accept the drop
+- [x] Drop applies the existing Matrix drop field changes (importance, boundary due-date writes per ADR-0001)
+- [x] Hovered Quadrant highlights during the drag, as on the grid today
+- [x] Drop outside a Quadrant is a no-op; the card returns to the modal
+- [x] Next Task becomes active after a drop; last drop closes Triage
+- [x] `bun run typecheck` and `bun run lint` pass
