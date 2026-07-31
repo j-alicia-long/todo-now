@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import TodoBase from "./tabs/todo-base";
+import { CardsPage } from "./tabs/cards-page";
 import { ThemeProvider } from "@/components/theme-provider";
 import { isDemo } from "@/stores/default-transport";
 
@@ -27,6 +28,7 @@ const App = () => {
       <BrowserRouter basename={isDemo ? import.meta.env.BASE_URL : "/todo"}>
         <Routes>
           <Route path="/" element={<TodoBase />} />
+          <Route path="/cards" element={<CardsPage />} />
         </Routes>
       </BrowserRouter>
       {isDemo && (

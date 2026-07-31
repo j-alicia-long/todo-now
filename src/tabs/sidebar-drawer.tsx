@@ -1,6 +1,7 @@
 // Sidebar drawer: todo archive, todo trash, shopping archive, and
 // display settings panels.
 
+import { Link } from "react-router-dom";
 import { type Task } from "../domain/task-rules";
 import {
   type BoardView,
@@ -93,6 +94,9 @@ export const SidebarDrawer = ({
           >
             <Icon name="tune" /> Display Settings
           </button>
+          <Link className="sidebar-nav-item" to="/cards">
+            <Icon name="credit_card" /> Credit Cards
+          </Link>
         </nav>
         <div className="sidebar-content">
           {panel === "todo-archive" && (

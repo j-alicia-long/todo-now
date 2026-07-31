@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-07-31 — Credit Cards reference page
+
+New static reference page at `/cards`: a cheat-sheet table (purchase category → card → rate), a callout showing the current Chase Freedom 5% quarter (derived from today's date against a hardcoded quarter map in `cards-page.tsx` — update it as quarters are announced), and `<details>` dropdowns with per-card playbooks. Reachable only from the settings drawer ("Credit Cards" link); a home button in the page header returns to the board. Content distilled from the card-maximization guide.
+
+---
+
 ## 2026-07-27 — Production data moved out of the synced tree
 
 A broken-then-recreated Mutagen sync (Zo desktop app) let stale Mac copies overwrite the live `data/*.json` on Zo — Mutagen's re-created session had no baseline, so every differing file became a conflict and alpha (the Mac) won. Fix: production data now lives at `/home/workspace/todo-data/`, outside the synced `personal-os` tree ([`4f3b4d1`](https://github.com/j-alicia-long/todo-now/commit/4f3b4d1)). The server resolves its data dir as `DATA_DIR` env → `/home/workspace/todo-data` if it exists → `./data` (local dev/tests); the weekly archive follows. Migrated the live files, restarted the service, verified reads/writes hit the new location and the public site returns 200. Repo `data/` is now dev-only.
