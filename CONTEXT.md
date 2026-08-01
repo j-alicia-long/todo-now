@@ -90,6 +90,50 @@ _Avoid_: Habit, routine
 **Reference**:
 A Recurring Item that carries information (a link, a note) rather than something to complete.
 
+### Cards
+
+**Card**:
+One of Jennifer's physical credit cards, identified by a short key (usbar, amex, savorone, bofa, freedom, autograph). Fixed facts about a Card include whether it charges an FTF and whether its points are Transferable.
+_Avoid_: Credit card (in code), payment method
+
+**Spend Category**:
+A kind of purchase used to pick a Card: dining, groceries, drugstores, gas/transit, online shopping, flights, hotels/cars, streaming, entertainment, cell phone, Amazon/Walmart/Target, and Everything Else.
+_Avoid_: Purchase type, merchant category
+
+**Earn Rate**:
+What one Card pays in one Spend Category — a nominal percentage plus any Strings. The atom of the rewards data; the cheat-sheet table is derived from Earn Rates, never hand-written.
+_Avoid_: Multiplier, cashback rate
+
+**Strings**:
+Conditions attached to an Earn Rate: a spend cap, a merchant exclusion, tap-required, or a user-set choice category. A rate with no Strings is "clean."
+_Avoid_: Caveats, conditions, restrictions
+
+**Wildcard**:
+An Earn Rate that competes in every Spend Category rather than one (USBAR's mobile-wallet 3%). A Wildcard is suppressed in any category where a clean, equal-or-better on-hand Card exists.
+
+**FTF**:
+Foreign transaction fee — a ~3% surcharge some Cards add abroad (BofA CCR, Freedom Unlimited). FTF Cards are excluded from Recommendations when Abroad.
+_Avoid_: Foreign fee, forex fee
+
+**Transferable**:
+A Card whose points can move to airline/hotel partners and thus may beat face value (Amex MR). Shown as a badge; never affects ranking — ranking uses nominal rate only.
+
+**Wallet**:
+The set of Cards Jennifer has on hand right now. Part of Settings — persisted, not per-visit. The Wallet is the filter every Recommendation is computed against.
+_Avoid_: Selected cards, active cards
+
+**Abroad**:
+A toggle indicating Jennifer is traveling internationally. When on, FTF Cards are excluded from Recommendations entirely. Independent of the Wallet — an FTF Card stays in the Wallet, it's just never recommended.
+_Avoid_: Travel mode
+
+**Recommendation**:
+The best on-hand Card for a Spend Category — computed from Earn Rates, the Wallet, and Abroad; never stored. Ties on nominal rate break by fewest Strings; the runner-up shows as tied-with-caveat. Only ties surface a second Card.
+_Avoid_: Suggestion, best pick
+
+**Everything Else**:
+The catch-all pseudo-category for purchases matching no Spend Category. Its Recommendation always shows two picks: the tap-to-pay choice and the no-tap fallback, since tap availability isn't known in advance.
+_Avoid_: Default, non-category, other
+
 ### Time
 
 **Week**:

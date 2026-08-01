@@ -4,6 +4,7 @@ Planned and deferred work. Shipped work is logged in `../devlog.md`.
 
 ## Planned
 
+- **Filterable card recommendations** — evolve the static `/cards` cheat-sheet into a computed view: a flat Earn Rate list (Card × Spend Category + Strings) in its own data module, a persisted Wallet filter in Settings, and an Abroad toggle. Recommendation engine: best nominal rate per category among on-hand cards; ties break by fewest Strings (runner-up shown as tied-with-caveat); USBAR mobile-wallet 3% competes everywhere as a Wildcard but is suppressed where a clean equal-or-better card is on hand; Abroad excludes FTF cards entirely; transferable-points cards get a badge, not a rate bump. New categories: Drugstores (Duane Reade, CVS, Walgreens, Rite Aid), Amazon/Walmart/Target (grocery-exclusion trap). "Everything else" is one row showing both the tap pick and the no-tap fallback. Domain model settled (see `CONTEXT.md` Cards terms); not yet built
 - **Eisenhower Matrix view** — 2×2 grid mapping Board Tasks by importance × derived urgency, with an Unsorted tray. Domain model settled (see `CONTEXT.md` Matrix terms and `docs/adr/0001-derived-urgency-on-the-matrix.md`); not yet built
 - **Weekly momentum view** — encouraging progress tracking
 - **Service worker + offline support** — app currently requires internet
