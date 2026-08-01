@@ -176,7 +176,7 @@ export const EARN_RATES: EarnRate[] = [
     scope: "cell-phone",
     rate: 3,
     strings: [],
-    note: "3x + $600/claim phone protection",
+    note: "3x + $600/claim phone protection (Plat: $800/claim but only 1x)",
   },
   { card: "savorone", scope: "streaming", rate: 3, strings: [], note: "3%" },
   { card: "autograph", scope: "streaming", rate: 3, strings: [], note: "3x" },

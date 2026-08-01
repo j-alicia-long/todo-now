@@ -94,6 +94,7 @@ const CARD_DETAILS: CardDetail[] = [
     tagline: "The credits card, not a spend card",
     points: [
       "Spend only flights (5x) on it. Everything else is 1x — never daily-drive it.",
+      "Cell phone protection: $800/claim if you pay the bill with it — beats Autograph's $600, but you trade 3x for 1x.",
       "Justify the fee with credits: airline incidental, Uber, digital entertainment, Saks, Clear, hotel credits (FHR/THC), lounge access.",
       "MR transfer partners: Delta direct, or Virgin Atlantic for cheaper Delta awards. Hold MR for awards — don't cash out at 0.6¢.",
     ],
