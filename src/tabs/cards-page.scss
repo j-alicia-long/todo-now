@@ -188,6 +188,49 @@
   white-space: normal;
 }
 
+// ── Wallet chip filter row ──
+
+.wallet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.wallet-chip {
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 600;
+  gap: 5px;
+  padding: 5px 12px;
+
+  &.off {
+    background: transparent;
+    color: var(--text-tertiary);
+
+    .card-icon {
+      color: var(--text-tertiary);
+    }
+  }
+}
+
+.cards-empty {
+  align-items: center;
+  color: var(--text-tertiary);
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
 // ── Per-card detail dropdowns ──
 
 .cards-section-title {

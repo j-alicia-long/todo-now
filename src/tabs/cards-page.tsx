@@ -10,6 +10,7 @@ import {
   recommendAll,
   everythingElse,
 } from "../domain/card-recommendations";
+import { useSettings } from "../stores/hooks";
 import "./cards-page.scss";
 
 // Material credit_card icon tinted in the card's brand color.
@@ -138,9 +139,18 @@ const CARD_DETAILS: CardDetail[] = [
 ];
 
 export const CardsPage = () => {
-  const wallet = [...CARD_KEYS];
+  const { settings, set } = useSettings();
+  const wallet = settings.walletCards;
   const recommendations = recommendAll({ wallet });
   const catchAll = everythingElse({ wallet });
+
+  const toggleCard = (card: CardKey) =>
+    set(
+      "walletCards",
+      wallet.includes(card)
+        ? wallet.filter((c) => c !== card)
+        : [...wallet, card]
+    );
 
   return (
     <div className="todo-page cards-page">
@@ -156,11 +166,32 @@ export const CardsPage = () => {
       </header>
 
       <p className="cards-intro">
-        Which card to pull out, at a glance. Tap-to-pay with no better category
-        → USBAR (3%). Category spend → the matching 3x card. No tap → Freedom
-        Unlimited (1.5%).
+        Which card to pull out, at a glance. Toggle off any card you don't
+        have on hand — the table recomputes to what's actually in your
+        pocket.
       </p>
 
+      <div className="wallet-chips" role="group" aria-label="Cards on hand">
+        {CARD_KEYS.map((key) => (
+          <button
+            key={key}
+            type="button"
+            className={`wallet-chip ${wallet.includes(key) ? "on" : "off"}`}
+            aria-pressed={wallet.includes(key)}
+            onClick={() => toggleCard(key)}
+          >
+            <MiniCard card={key} />
+            {CARDS[key].name}
+          </button>
+        ))}
+      </div>
+
+      {recommendations.length === 0 ? (
+        <p className="cards-empty">
+          <Icon name="wallet" /> No cards on hand — tap a card above to add
+          it back to your wallet.
+        </p>
+      ) : (
       <div className="cheat-table-wrapper">
         <table className="cheat-table">
           <thead>
@@ -217,6 +248,7 @@ export const CardsPage = () => {
           </tbody>
         </table>
       </div>
+      )}
 
       <h2 className="cards-section-title">Per-card details</h2>
       <div className="card-details-list">

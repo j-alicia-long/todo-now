@@ -18,6 +18,7 @@ import {
 import { useEntityList } from "./entity-store";
 import { defaultTransport } from "./default-transport";
 import type { Transport } from "./transport";
+import { CARD_KEYS, type CardKey } from "../domain/card-rewards";
 import type { ShoppingItem, GroceryItem } from "../domain/entities";
 
 // Re-exported so store consumers keep a single import site.
@@ -180,11 +181,14 @@ export type BoardView = "columns" | "matrix";
 export type Settings = {
   showArea: boolean;
   defaultBoardView: BoardView;
+  /** The Wallet: cards on hand, filtering /cards recommendations. */
+  walletCards: CardKey[];
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   showArea: true,
   defaultBoardView: "columns",
+  walletCards: [...CARD_KEYS],
 };
 
 /** Settings keys with boolean values — the ones `toggle` can flip. */
