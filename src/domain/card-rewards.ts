@@ -168,7 +168,7 @@ export const EARN_RATES: EarnRate[] = [
       choice("set choice category"),
       cap("$2.5k/quarter combined cap"),
     ],
-    note: "3% choice category",
+    note: "3%",
   },
   { card: "autograph", scope: "gas-transit", rate: 3, strings: [], note: "3x" },
   {
@@ -201,7 +201,7 @@ export const EARN_RATES: EarnRate[] = [
     scope: "wildcard",
     rate: 3,
     strings: [tap(), cap("$5k/cycle cap")],
-    note: "3x mobile wallet @ 1¢ = 3%",
+    note: "3x @ 1¢ = 3%",
   },
 
   // ── Flat catch-alls: the floor everywhere + Everything-Else ranking ──
