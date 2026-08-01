@@ -5,7 +5,7 @@
 // every Recommendation on render. Vocabulary from CONTEXT.md ("Cards").
 
 import type { CardKey, EarnRate, SpendCategory } from "./card-rewards";
-import { EARN_RATES, SPEND_CATEGORIES } from "./card-rewards";
+import { CARDS, EARN_RATES, SPEND_CATEGORIES } from "./card-rewards";
 
 export type Recommendation = {
   category: SpendCategory;
@@ -17,7 +17,15 @@ export type Recommendation = {
 type EngineInput = {
   /** Cards on hand. Every Recommendation is computed against this. */
   wallet: CardKey[];
+  /** Traveling internationally: FTF cards are excluded entirely. */
+  abroad?: boolean;
 };
+
+/** The rates that may compete: on-hand cards, minus FTF cards abroad. */
+const usableRates = ({ wallet, abroad = false }: EngineInput): EarnRate[] =>
+  EARN_RATES.filter(
+    (r) => wallet.includes(r.card) && !(abroad && CARDS[r.card].ftf)
+  );
 
 /** Candidates for a category: its own rates, then the Wildcard, then
  * the flat catch-alls — array order is the deterministic tiebreak after
@@ -51,18 +59,19 @@ const suppressWildcards = (candidates: EarnRate[]): EarnRate[] =>
       )
   );
 
-export const recommendAll = ({ wallet }: EngineInput): Recommendation[] => {
-  const onHand = EARN_RATES.filter((r) => wallet.includes(r.card));
-  return SPEND_CATEGORIES.map((category) => {
+export const recommendAll = (input: EngineInput): Recommendation[] => {
+  const onHand = usableRates(input);
+  return SPEND_CATEGORIES.flatMap((category) => {
     const ranked = rank(
       suppressWildcards(candidatesFor(category, onHand))
     );
     const [pick, next] = ranked;
+    if (!pick) return [];
     const tiedWith =
       next && next.card !== pick.card && next.rate === pick.rate
         ? next
         : undefined;
-    return tiedWith ? { category, pick, tiedWith } : { category, pick };
+    return [tiedWith ? { category, pick, tiedWith } : { category, pick }];
   });
 };
 
@@ -78,12 +87,10 @@ const requiresTap = (r: EarnRate): boolean =>
 
 /** The single "Everything else" row: best tap-capable pick and best
  * no-tap fallback among Wildcard + flat catch-all rates on hand. */
-export const everythingElse = ({ wallet }: EngineInput): EverythingElsePicks => {
+export const everythingElse = (input: EngineInput): EverythingElsePicks => {
   const ranked = rank(
-    EARN_RATES.filter(
-      (r) =>
-        wallet.includes(r.card) &&
-        (r.scope === "wildcard" || r.scope === "everything-else")
+    usableRates(input).filter(
+      (r) => r.scope === "wildcard" || r.scope === "everything-else"
     )
   );
   return { tap: ranked[0], noTap: ranked.filter((r) => !requiresTap(r))[0] };

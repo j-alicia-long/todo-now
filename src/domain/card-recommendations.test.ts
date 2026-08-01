@@ -94,3 +94,63 @@ describe("everythingElse — dual pick", () => {
     expect(ee.noTap?.card).toBe("freedom");
   });
 });
+
+describe("recommendAll — Wallet filtering", () => {
+  test("no SavorOne: dining falls to the Autograph/CFU tie", () => {
+    const recs = recommendAll({
+      wallet: ["usbar", "amex", "bofa", "freedom", "autograph"],
+    });
+    const dining = recs.find((r) => r.category === "dining")!;
+    expect(dining.pick.card).toBe("autograph");
+    expect(dining.tiedWith?.card).toBe("freedom");
+  });
+
+  test("recommendations never name an off-hand card", () => {
+    const wallet: typeof FULL_WALLET = ["usbar", "freedom"];
+    const recs = recommendAll({ wallet });
+    for (const r of recs) {
+      expect(wallet).toContain(r.pick.card);
+      if (r.tiedWith) expect(wallet).toContain(r.tiedWith.card);
+    }
+  });
+
+  test("empty Wallet yields no recommendations and no catch-all picks", () => {
+    expect(recommendAll({ wallet: [] })).toEqual([]);
+    const ee = everythingElse({ wallet: [] });
+    expect(ee.tap).toBeUndefined();
+    expect(ee.noTap).toBeUndefined();
+  });
+});
+
+describe("recommendAll — Abroad", () => {
+  test("FTF cards (BofA, Freedom) are never recommended abroad", () => {
+    const recs = recommendAll({ wallet: FULL_WALLET, abroad: true });
+    for (const r of recs) {
+      expect(["bofa", "freedom"]).not.toContain(r.pick.card);
+      if (r.tiedWith) {
+        expect(["bofa", "freedom"]).not.toContain(r.tiedWith.card);
+      }
+    }
+  });
+
+  test("drugstores re-ranks abroad: Freedom's 3% gives way to the USBAR wildcard", () => {
+    const recs = recommendAll({ wallet: FULL_WALLET, abroad: true });
+    const drugstores = recs.find((r) => r.category === "drugstores")!;
+    expect(drugstores.pick.card).toBe("usbar");
+  });
+
+  test("no-tap catch-all abroad falls past Freedom to a no-FTF card", () => {
+    const ee = everythingElse({ wallet: FULL_WALLET, abroad: true });
+    expect(ee.tap?.card).toBe("usbar");
+    expect(ee.noTap?.card).not.toBe("freedom");
+    expect(ee.noTap?.card).not.toBe("bofa");
+  });
+
+  test("abroad composes with the Wallet, it does not modify it", () => {
+    // Freedom stays in the Wallet; domestic answers are unchanged.
+    const home = recommendAll({ wallet: FULL_WALLET, abroad: false });
+    expect(home.find((r) => r.category === "drugstores")!.pick.card).toBe(
+      "freedom"
+    );
+  });
+});

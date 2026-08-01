@@ -220,6 +220,19 @@
   }
 }
 
+.abroad-chip {
+  margin-left: auto;
+
+  &.on {
+    border-color: var(--accent);
+    color: var(--accent);
+
+    .card-icon {
+      color: var(--accent);
+    }
+  }
+}
+
 .cards-empty {
   align-items: center;
   color: var(--text-tertiary);

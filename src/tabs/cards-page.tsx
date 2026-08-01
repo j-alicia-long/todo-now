@@ -2,6 +2,7 @@
 // the Recommendation engine over the Earn Rate data — never hand-written.
 // Reachable only via the settings drawer.
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "../components/ui";
 import type { CardKey, EarnRate, SpendCategory } from "../domain/card-rewards";
@@ -141,8 +142,11 @@ const CARD_DETAILS: CardDetail[] = [
 export const CardsPage = () => {
   const { settings, set } = useSettings();
   const wallet = settings.walletCards;
-  const recommendations = recommendAll({ wallet });
-  const catchAll = everythingElse({ wallet });
+  // Ephemeral by design: trips end, and a persisted stale Abroad toggle
+  // would silently hide two cards.
+  const [abroad, setAbroad] = useState(false);
+  const recommendations = recommendAll({ wallet, abroad });
+  const catchAll = everythingElse({ wallet, abroad });
 
   const toggleCard = (card: CardKey) =>
     set(
@@ -184,6 +188,15 @@ export const CardsPage = () => {
             {CARDS[key].name}
           </button>
         ))}
+        <button
+          type="button"
+          className={`wallet-chip abroad-chip ${abroad ? "on" : "off"}`}
+          aria-pressed={abroad}
+          onClick={() => setAbroad((a) => !a)}
+        >
+          <Icon name="public" className="card-icon" />
+          Abroad
+        </button>
       </div>
 
       {recommendations.length === 0 ? (
