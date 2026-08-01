@@ -6,7 +6,12 @@ Planned and deferred work. Shipped work is logged in `../devlog.md`.
 
 - **Weekly momentum view** — encouraging progress tracking
 - **Service worker + offline support** — app currently requires internet
-- **STR feedback loop** — speak text, submit directly to agent
+- **STR feedback loop** — speak text, submit directly to agent or issues to Github
+
+Bugs
+
+- Redirect incorrect URLs to home at /todo
+-
 
 ## Deferred architecture candidates
 

@@ -106,6 +106,13 @@ bun install
 bun run dev
 ```
 
+If `bun run dev` fails with "port in use", a stale dev server is still holding the port (`local_port` in `zosite.json`). Find and kill it:
+
+```bash
+lsof -i :57460 -P -n   # find the PID holding the port
+kill <PID>
+```
+
 ## Hosting
 
 Currently hosted on [Zo Computer](https://zo.computer) as a Zo Site.

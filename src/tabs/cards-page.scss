@@ -39,7 +39,29 @@
 .cheat-table {
   border-collapse: collapse;
   font-size: 0.82rem;
+
+  // Fixed layout sizes columns from the width rules below (a share of the
+  // table's viewport-driven width), not from cell content — so columns
+  // don't shift when card filters change the rows. Below 640px the table
+  // keeps its minimum width and the wrapper scrolls horizontally.
+  min-width: 640px;
+  table-layout: fixed;
   width: 100%;
+
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 25%;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 25%;
+  }
+
+  th:nth-child(3),
+  td:nth-child(3) {
+    width: 50%;
+  }
 
   th {
     background: var(--bg-sunken);
@@ -74,11 +96,6 @@
 .cheat-card-name {
   color: var(--accent) !important;
   font-weight: 600;
-  min-width: 130px;
-}
-
-.cheat-purchase {
-  min-width: 140px;
 }
 
 // On narrow (iPhone-width) screens the Purchase and Card columns
@@ -87,7 +104,7 @@
 // Fixed layout enforces the column widths so long card names wrap.
 @media (width <= 480px) {
   .cheat-table {
-    table-layout: fixed;
+    min-width: 0;
     width: calc(90vw + 210px);
 
     th:nth-child(1),

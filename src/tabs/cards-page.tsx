@@ -5,12 +5,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "../components/ui";
+import { everythingElse, recommendAll } from "../domain/card-recommendations";
 import type { CardKey, EarnRate, SpendCategory } from "../domain/card-rewards";
 import { CARDS, CARD_KEYS } from "../domain/card-rewards";
-import {
-  recommendAll,
-  everythingElse,
-} from "../domain/card-recommendations";
 import { useSettings } from "../stores/hooks";
 import "./cards-page.scss";
 
@@ -55,9 +52,6 @@ const PickCell = ({
   <span className="cheat-pick">
     <MiniCard card={rate.card} />
     {CARDS[rate.card].name}
-    {CARDS[rate.card].transferable && (
-      <span className="cheat-badge">transferable</span>
-    )}
     {caveat && rate.strings.length > 0 && (
       <span className="cheat-caveat">
         ({rate.strings.map((s) => s.display).join(", ")})
@@ -65,7 +59,6 @@ const PickCell = ({
     )}
   </span>
 );
-
 
 type CardDetail = {
   cardKey: CardKey;
@@ -171,9 +164,8 @@ export const CardsPage = () => {
       </header>
 
       <p className="cards-intro">
-        Which card to pull out, at a glance. Toggle off any card you don't
-        have on hand — the table recomputes to what's actually in your
-        pocket.
+        Which card to pull out, at a glance. Toggle off any card you don't have
+        on hand — the table recomputes to what's actually in your pocket.
       </p>
 
       <div className="wallet-chips" role="group" aria-label="Cards on hand">
@@ -202,66 +194,74 @@ export const CardsPage = () => {
 
       {recommendations.length === 0 ? (
         <p className="cards-empty">
-          <Icon name="wallet" /> No cards on hand — tap a card above to add
-          it back to your wallet.
+          <Icon name="wallet" /> No cards on hand — tap a card above to add it
+          back to your wallet.
         </p>
       ) : (
-      <div className="cheat-table-wrapper">
-        <table className="cheat-table">
-          <thead>
-            <tr>
-              <th>Purchase</th>
-              <th>Card</th>
-              <th>Rate / Why</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recommendations.map(({ category, pick, tiedWith }) => (
-              <tr key={category}>
+        <div className="cheat-table-wrapper">
+          <table className="cheat-table">
+            <thead>
+              <tr>
+                <th>Purchase</th>
+                <th>Card</th>
+                <th>Rate / Why</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recommendations.map(({ category, pick, tiedWith }) => (
+                <tr key={category}>
+                  <td className="cheat-purchase">
+                    <Icon
+                      name={CATEGORY_LABELS[category].icon}
+                      className="cheat-purchase-icon"
+                    />
+                    {CATEGORY_LABELS[category].label}
+                  </td>
+                  <td className="cheat-card-name">
+                    <PickCell rate={pick} />
+                    {tiedWith && (
+                      <>
+                        <br />
+                        <PickCell rate={tiedWith} caveat />
+                      </>
+                    )}
+                  </td>
+                  <td>{whyText(pick)}</td>
+                </tr>
+              ))}
+              <tr>
                 <td className="cheat-purchase">
-                  <Icon
-                    name={CATEGORY_LABELS[category].icon}
-                    className="cheat-purchase-icon"
-                  />
-                  {CATEGORY_LABELS[category].label}
+                  <Icon name="contactless" className="cheat-purchase-icon" />
+                  Everything else
                 </td>
                 <td className="cheat-card-name">
-                  <PickCell rate={pick} />
-                  {tiedWith && (
+                  {catchAll.tap && (
                     <>
-                      {" or "}
-                      <PickCell rate={tiedWith} caveat />
+                      <PickCell rate={catchAll.tap} />
+                      {" (tap)"}
                     </>
                   )}
+                  {catchAll.noTap &&
+                    catchAll.noTap.card !== catchAll.tap?.card && (
+                      <>
+                        {catchAll.tap && <br />}
+                        <PickCell rate={catchAll.noTap} />
+                        {" (no tap)"}
+                      </>
+                    )}
                 </td>
-                <td>{whyText(pick)}</td>
+                <td>
+                  Tap: {catchAll.tap && whyText(catchAll.tap)}
+                  <br />
+                  No tap:{" "}
+                  {catchAll.noTap &&
+                    catchAll.noTap.card !== catchAll.tap?.card &&
+                    whyText(catchAll.noTap)}
+                </td>
               </tr>
-            ))}
-            <tr>
-              <td className="cheat-purchase">
-                <Icon name="contactless" className="cheat-purchase-icon" />
-                Everything else
-              </td>
-              <td className="cheat-card-name">
-                {catchAll.tap && <PickCell rate={catchAll.tap} />}
-                {catchAll.noTap &&
-                  catchAll.noTap.card !== catchAll.tap?.card && (
-                    <>
-                      {" · no tap: "}
-                      <PickCell rate={catchAll.noTap} />
-                    </>
-                  )}
-              </td>
-              <td>
-                {catchAll.tap && whyText(catchAll.tap)}
-                {catchAll.noTap &&
-                  catchAll.noTap.card !== catchAll.tap?.card &&
-                  ` · no tap: ${whyText(catchAll.noTap)}`}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+            </tbody>
+          </table>
+        </div>
       )}
 
       <h2 className="cards-section-title">Per-card details</h2>

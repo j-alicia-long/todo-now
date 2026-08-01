@@ -5,12 +5,7 @@
 // only reader. Vocabulary from CONTEXT.md ("Cards").
 
 export type CardKey =
-  | "usbar"
-  | "amex"
-  | "savorone"
-  | "bofa"
-  | "freedom"
-  | "autograph";
+  "usbar" | "amex" | "savorone" | "bofa" | "freedom" | "autograph";
 
 export const CARD_KEYS: CardKey[] = [
   "usbar",
@@ -26,7 +21,7 @@ export type Card = {
   name: string;
   /** Charges a ~3% foreign transaction fee — excluded when Abroad. */
   ftf: boolean;
-  /** Points can move to airline/hotel partners. Badge only, never a rate bump. */
+  /** Points can move to airline/hotel partners for better rewards. */
   transferable: boolean;
 };
 
@@ -72,10 +67,7 @@ export const CARDS: Record<CardKey, Card> = {
 // Strings are structured, not prose: the tiebreak counts them, the UI
 // prints their display text. A rate with no Strings is "clean".
 export type EarnStringKind =
-  | "spend-cap"
-  | "merchant-exclusion"
-  | "tap-required"
-  | "choice-category";
+  "spend-cap" | "merchant-exclusion" | "tap-required" | "choice-category";
 
 export type EarnString = {
   kind: EarnStringKind;
@@ -141,7 +133,13 @@ const choice = (display: string): EarnString => ({
 
 export const EARN_RATES: EarnRate[] = [
   // ── Category rates ──
-  { card: "amex", scope: "flights", rate: 5, strings: [], note: "5x MR points" },
+  {
+    card: "amex",
+    scope: "flights",
+    rate: 5,
+    strings: [],
+    note: "5x MR points",
+  },
   { card: "savorone", scope: "dining", rate: 3, strings: [], note: "3%" },
   { card: "autograph", scope: "dining", rate: 3, strings: [], note: "3x" },
   { card: "freedom", scope: "dining", rate: 3, strings: [], note: "3%" },
@@ -164,10 +162,7 @@ export const EARN_RATES: EarnRate[] = [
     card: "bofa",
     scope: "online-shopping",
     rate: 3,
-    strings: [
-      choice("set choice category"),
-      cap("$2.5k/quarter combined cap"),
-    ],
+    strings: [choice("set choice category"), cap("$2.5k/quarter combined cap")],
     note: "3%",
   },
   { card: "autograph", scope: "gas-transit", rate: 3, strings: [], note: "3x" },
@@ -212,9 +207,33 @@ export const EARN_RATES: EarnRate[] = [
     strings: [],
     note: "1.5% flat — best no-tap catch-all",
   },
-  { card: "savorone", scope: "everything-else", rate: 1, strings: [], note: "1%" },
-  { card: "autograph", scope: "everything-else", rate: 1, strings: [], note: "1x" },
+  {
+    card: "savorone",
+    scope: "everything-else",
+    rate: 1,
+    strings: [],
+    note: "1%",
+  },
+  {
+    card: "autograph",
+    scope: "everything-else",
+    rate: 1,
+    strings: [],
+    note: "1x",
+  },
   { card: "bofa", scope: "everything-else", rate: 1, strings: [], note: "1%" },
-  { card: "amex", scope: "everything-else", rate: 1, strings: [], note: "1x MR" },
-  { card: "usbar", scope: "everything-else", rate: 1, strings: [], note: "1x without mobile wallet" },
+  {
+    card: "amex",
+    scope: "everything-else",
+    rate: 1,
+    strings: [],
+    note: "1x MR",
+  },
+  {
+    card: "usbar",
+    scope: "everything-else",
+    rate: 1,
+    strings: [],
+    note: "1x without mobile wallet",
+  },
 ];
