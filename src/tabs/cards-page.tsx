@@ -5,64 +5,104 @@ import { Link } from "react-router-dom";
 import { Icon } from "../components/ui";
 import "./cards-page.scss";
 
-type CheatRow = { purchase: string; card: string; why: string };
+type CardKey = "usbar" | "amex" | "savorone" | "bofa" | "freedom" | "autograph";
+
+// Material credit_card icon tinted in the card's brand color.
+const MiniCard = ({ card }: { card: CardKey }) => (
+  <Icon name="credit_card" className={`card-icon card-icon-${card}`} />
+);
+
+type CheatRow = {
+  purchase: string;
+  icon: string;
+  card: string;
+  cards: CardKey[];
+  why: string;
+};
 
 const CHEAT_SHEET: CheatRow[] = [
   {
-    purchase: "Freedom 5% rotating category",
-    card: "Chase Freedom",
-    why: "5% up to $1,500/qtr — activate quarterly",
-  },
-  {
     purchase: "Flights (booked direct)",
+    icon: "flight",
     card: "Amex Platinum",
-    why: "5x MR — best flight multiplier",
+    cards: ["amex"],
+    why: "5x MR points",
   },
   {
     purchase: "Dining",
+    icon: "restaurant",
     card: "SavorOne or Autograph",
-    why: "3% — SavorOne if Venture X later (transferable)",
+    cards: ["savorone", "autograph"],
+    why: "3%",
   },
   {
     purchase: "Groceries",
+    icon: "grocery",
     card: "SavorOne",
+    cards: ["savorone"],
     why: "3% (excl. Walmart/Target)",
   },
   {
     purchase: "Online shopping",
+    icon: "shopping_cart",
     card: "BofA CCR",
-    why: "3% (set choice category) — 5.25% w/ Platinum Honors",
+    cards: ["bofa"],
+    why: "3% (set choice category)",
   },
-  { purchase: "Gas / EV, transit", card: "Autograph", why: "3x" },
+  {
+    purchase: "Gas / EV, transit",
+    icon: "local_gas_station",
+    card: "Autograph",
+    cards: ["autograph"],
+    why: "3x",
+  },
   {
     purchase: "Cell phone bill",
+    icon: "smartphone",
     card: "Amex Plat or Autograph",
+    cards: ["amex", "autograph"],
     why: "Plat: $800/claim protection, 1x · Autograph: $600/claim, 3x",
   },
   {
     purchase: "Streaming",
+    icon: "play_circle",
     card: "SavorOne or Autograph",
+    cards: ["savorone", "autograph"],
     why: "3%",
   },
-  { purchase: "Entertainment", card: "SavorOne", why: "3%" },
+  {
+    purchase: "Entertainment",
+    icon: "theater_comedy",
+    card: "SavorOne",
+    cards: ["savorone"],
+    why: "3%, in-person venues only",
+  },
   {
     purchase: "Hotels / rental cars (direct)",
+    icon: "hotel",
     card: "Autograph",
-    why: "3x travel, no FTF — direct keeps loyalty perks",
+    cards: ["autograph"],
+    why: "3x travel, no FTF",
   },
   {
     purchase: "Foreign transactions",
+    icon: "public",
     card: "SavorOne / Autograph / USBAR / Plat",
+    cards: ["savorone", "autograph", "usbar", "amex"],
     why: "All no-FTF — avoid BofA CCR & Freedom (3% FTF)",
   },
   {
     purchase: "Everything else (tap-to-pay)",
+    icon: "contactless",
     card: "USBAR (mobile wallet)",
+    cards: ["usbar"],
     why: "3x @ 1¢ = 3%, capped at $5k/cycle",
   },
   {
     purchase: "Everything else (no tap)",
+    icon: "payments",
     card: "Any 1–1.5%",
+    cards: [],
     why: "Weakest spot — 2% catch-all would plug this gap",
   },
 ];
@@ -84,7 +124,7 @@ const getCurrentQuarter = (now: Date) => {
 };
 
 type CardDetail = {
-  emoji: string;
+  cardKey: CardKey;
   name: string;
   tagline: string;
   points: string[];
@@ -92,19 +132,20 @@ type CardDetail = {
 
 const CARD_DETAILS: CardDetail[] = [
   {
-    emoji: "🏆",
+    cardKey: "usbar",
     name: "USBAR (U.S. Bank Altitude Reserve)",
     tagline: "The catch-all (post-nerf)",
     points: [
       "3x on mobile wallet (Apple/Google/Samsung Pay), capped at $5,000/billing cycle, then 1x.",
       "Points worth 1¢ everywhere post-nerf → mobile wallet = flat 3%. 5% discount on gift card redemptions.",
       "Use the US Bank Travel Center only to burn the $325 credit — ideally on a flight (5x portal). Book hotels/cars direct for loyalty perks.",
-      "$325 credit only triggers on Travel Center bookings. If you won't book ≥$325/yr through the portal, the $400 AF is a real cost — decide at renewal: keep only if you'll use the portal credit, otherwise downgrade to a no-AF US Bank card.",
+      "$325 credit only triggers on Travel Center bookings.",
+      "Decide at renewal: keep only if you'll use the portal credit, otherwise downgrade to a no-AF US Bank card.",
       "Travel protections when paying with the card: trip cancellation/interruption, trip delay, baggage, primary rental CDW.",
     ],
   },
   {
-    emoji: "💳",
+    cardKey: "amex",
     name: "Amex Platinum",
     tagline: "The credits card, not a spend card",
     points: [
@@ -114,7 +155,7 @@ const CARD_DETAILS: CardDetail[] = [
     ],
   },
   {
-    emoji: "🍿",
+    cardKey: "savorone",
     name: "Capital One SavorOne",
     tagline: "Dining / grocery / entertainment backup",
     points: [
@@ -123,18 +164,17 @@ const CARD_DETAILS: CardDetail[] = [
     ],
   },
   {
-    emoji: "🛒",
+    cardKey: "bofa",
     name: "BofA Customized Cash Rewards",
-    tagline: "Choice-category specialist",
+    tagline: "Online shopping specialist",
     points: [
       "Set the 3% choice category deliberately — Online Shopping is usually best since dining/gas are covered elsewhere.",
       "3% choice + 2% grocery/wholesale, capped at $2,500 combined spend/quarter.",
-      "With ≥$100k at BofA/Merrill (Platinum Honors): 5.25%/3.5% — then it can beat USBAR for online shopping.",
       "3% foreign transaction fee — don't use abroad.",
     ],
   },
   {
-    emoji: "🔄",
+    cardKey: "freedom",
     name: "Chase Freedom",
     tagline: "The 5% specialist",
     points: [
@@ -145,7 +185,7 @@ const CARD_DETAILS: CardDetail[] = [
     ],
   },
   {
-    emoji: "✍️",
+    cardKey: "autograph",
     name: "WF Autograph",
     tagline: "Demoted to niche duty",
     points: [
@@ -178,27 +218,6 @@ export const CardsPage = () => {
         beats everything.
       </p>
 
-      <div className="cheat-table-wrapper">
-        <table className="cheat-table">
-          <thead>
-            <tr>
-              <th>Purchase</th>
-              <th>Card</th>
-              <th>Rate / Why</th>
-            </tr>
-          </thead>
-          <tbody>
-            {CHEAT_SHEET.map((row) => (
-              <tr key={row.purchase}>
-                <td>{row.purchase}</td>
-                <td className="cheat-card-name">{row.card}</td>
-                <td>{row.why}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
       <div className="chase-quarter">
         <Icon name="autorenew" />
         <div>
@@ -212,12 +231,45 @@ export const CardsPage = () => {
         </div>
       </div>
 
+      <div className="cheat-table-wrapper">
+        <table className="cheat-table">
+          <thead>
+            <tr>
+              <th>Purchase</th>
+              <th>Card</th>
+              <th>Rate / Why</th>
+            </tr>
+          </thead>
+          <tbody>
+            {CHEAT_SHEET.map((row) => (
+              <tr key={row.purchase}>
+                <td className="cheat-purchase">
+                  <Icon name={row.icon} className="cheat-purchase-icon" />
+                  {row.purchase}
+                </td>
+                <td className="cheat-card-name">
+                  {row.cards.length > 0 && (
+                    <span className="cheat-card-icons">
+                      {row.cards.map((c) => (
+                        <MiniCard key={c} card={c} />
+                      ))}
+                    </span>
+                  )}
+                  {row.card}
+                </td>
+                <td>{row.why}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <h2 className="cards-section-title">Per-card details</h2>
       <div className="card-details-list">
         {CARD_DETAILS.map((card) => (
           <details key={card.name} className="card-detail">
             <summary>
-              <span className="card-detail-emoji">{card.emoji}</span>
+              <MiniCard card={card.cardKey} />
               <span className="card-detail-name">{card.name}</span>
               <span className="card-detail-tagline">{card.tagline}</span>
               <Icon name="expand_more" className="card-detail-chevron" />

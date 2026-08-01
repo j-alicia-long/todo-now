@@ -74,7 +74,87 @@
 .cheat-card-name {
   color: var(--accent) !important;
   font-weight: 600;
-  white-space: nowrap;
+  min-width: 130px;
+}
+
+.cheat-purchase {
+  min-width: 140px;
+}
+
+// On narrow (iPhone-width) screens the Purchase and Card columns
+// share the full visible width (90vw ≈ screen minus page padding);
+// the Rate column keeps a readable width and scrolls into view.
+// Fixed layout enforces the column widths so long card names wrap.
+@media (width <= 480px) {
+  .cheat-table {
+    table-layout: fixed;
+    width: calc(90vw + 210px);
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 45vw;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 45vw;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 210px;
+    }
+  }
+}
+
+.cheat-purchase-icon {
+  color: var(--text-tertiary);
+  font-size: 16px !important;
+  margin-right: 7px;
+  vertical-align: -3px;
+}
+
+// ── Brand-colored card icons ──
+
+.card-icon {
+  flex-shrink: 0;
+  font-size: 18px !important;
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 20;
+}
+
+.card-icon-usbar {
+  color: #9aa1ab;
+}
+
+.card-icon-amex {
+  color: #aab2bc;
+}
+
+.card-icon-savorone {
+  color: #e8862e;
+}
+
+.card-icon-bofa {
+  color: #c43a3a;
+}
+
+.card-icon-autograph {
+  color: #8a63c0;
+}
+
+.card-icon-freedom {
+  color: #3a77c2;
+}
+
+.cheat-card-icons {
+  display: inline-flex;
+  gap: 2px;
+  margin-right: 6px;
+  vertical-align: -4px;
 }
 
 // ── Chase quarter callout ──
@@ -125,6 +205,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-bottom: 48px;
 }
 
 .card-detail {
@@ -174,10 +255,6 @@
   }
 }
 
-.card-detail-emoji {
-  font-size: 1rem;
-}
-
 .card-detail-name {
   font-size: 0.9rem;
   font-weight: 600;
@@ -198,9 +275,16 @@
   .card-detail summary {
     flex-wrap: wrap;
 
+    // Name flexes so the chevron stays inline on the first row;
+    // the tagline wraps to its own row below.
+    .card-detail-name {
+      flex: 1;
+    }
+
     .card-detail-tagline {
       flex-basis: 100%;
-      padding-left: 26px;
+      order: 1;
+      padding-left: 34px;
     }
   }
 }
