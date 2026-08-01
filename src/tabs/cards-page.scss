@@ -157,6 +157,37 @@
   vertical-align: -4px;
 }
 
+// ── Engine-derived pick cells ──
+
+.cheat-pick {
+  white-space: nowrap;
+
+  .card-icon {
+    margin-right: 4px;
+    vertical-align: -4px;
+  }
+}
+
+.cheat-badge {
+  background: var(--bg-hover);
+  border-radius: 8px;
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-left: 5px;
+  padding: 1px 6px;
+  text-transform: lowercase;
+  vertical-align: 1px;
+}
+
+.cheat-caveat {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: 4px;
+  white-space: normal;
+}
+
 // ── Per-card detail dropdowns ──
 
 .cards-section-title {

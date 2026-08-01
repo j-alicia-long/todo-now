@@ -1,118 +1,69 @@
-// Credit card cheat-sheet reference page. Static content distilled from
-// the card-maximization guide; reachable only via the settings drawer.
+// Credit card cheat-sheet reference page. The table is a projection of
+// the Recommendation engine over the Earn Rate data — never hand-written.
+// Reachable only via the settings drawer.
 
 import { Link } from "react-router-dom";
 import { Icon } from "../components/ui";
+import type { CardKey, EarnRate, SpendCategory } from "../domain/card-rewards";
+import { CARDS, CARD_KEYS } from "../domain/card-rewards";
+import {
+  recommendAll,
+  everythingElse,
+} from "../domain/card-recommendations";
 import "./cards-page.scss";
-
-type CardKey = "usbar" | "amex" | "savorone" | "bofa" | "freedom" | "autograph";
 
 // Material credit_card icon tinted in the card's brand color.
 const MiniCard = ({ card }: { card: CardKey }) => (
   <Icon name="credit_card" className={`card-icon card-icon-${card}`} />
 );
 
-type CheatRow = {
-  purchase: string;
-  icon: string;
-  card: string;
-  cards: CardKey[];
-  why: string;
+// Presentation metadata only — the picks themselves come from the engine.
+const CATEGORY_LABELS: Record<SpendCategory, { label: string; icon: string }> =
+  {
+    flights: { label: "Flights (booked direct)", icon: "flight" },
+    dining: { label: "Dining", icon: "restaurant" },
+    groceries: { label: "Groceries", icon: "grocery" },
+    drugstores: { label: "Drugstores / pharmacies", icon: "local_pharmacy" },
+    "online-shopping": { label: "Online shopping", icon: "shopping_cart" },
+    "gas-transit": { label: "Gas / EV, transit", icon: "local_gas_station" },
+    "cell-phone": { label: "Cell phone bill", icon: "smartphone" },
+    streaming: { label: "Streaming", icon: "play_circle" },
+    entertainment: { label: "Entertainment", icon: "theater_comedy" },
+    "hotels-cars": { label: "Hotels / rental cars (direct)", icon: "hotel" },
+    "amazon-walmart-target": {
+      label: "Amazon / Walmart / Target",
+      icon: "storefront",
+    },
+  };
+
+const whyText = (rate: EarnRate): string => {
+  const strings = rate.strings.map((s) => s.display);
+  return [rate.note, ...strings].join(" · ");
 };
 
-const CHEAT_SHEET: CheatRow[] = [
-  {
-    purchase: "Flights (booked direct)",
-    icon: "flight",
-    card: "Amex Platinum",
-    cards: ["amex"],
-    why: "5x MR points",
-  },
-  {
-    purchase: "Dining",
-    icon: "restaurant",
-    card: "SavorOne, Autograph, or CFU",
-    cards: ["savorone", "autograph", "freedom"],
-    why: "3%",
-  },
-  {
-    purchase: "Groceries",
-    icon: "grocery",
-    card: "SavorOne",
-    cards: ["savorone"],
-    why: "3% (excl. Walmart/Target)",
-  },
-  {
-    purchase: "Drugstores / pharmacies",
-    icon: "local_pharmacy",
-    card: "Freedom Unlimited",
-    cards: ["freedom"],
-    why: "3%",
-  },
-  {
-    purchase: "Online shopping",
-    icon: "shopping_cart",
-    card: "BofA CCR",
-    cards: ["bofa"],
-    why: "3% (set choice category)",
-  },
-  {
-    purchase: "Gas / EV, transit",
-    icon: "local_gas_station",
-    card: "Autograph",
-    cards: ["autograph"],
-    why: "3x",
-  },
-  {
-    purchase: "Cell phone bill",
-    icon: "smartphone",
-    card: "Amex Plat or Autograph",
-    cards: ["amex", "autograph"],
-    why: "Plat: $800/claim protection, 1x · Autograph: $600/claim, 3x",
-  },
-  {
-    purchase: "Streaming",
-    icon: "play_circle",
-    card: "SavorOne or Autograph",
-    cards: ["savorone", "autograph"],
-    why: "3%",
-  },
-  {
-    purchase: "Entertainment",
-    icon: "theater_comedy",
-    card: "SavorOne",
-    cards: ["savorone"],
-    why: "3%, in-person venues only",
-  },
-  {
-    purchase: "Hotels / rental cars (direct)",
-    icon: "hotel",
-    card: "Autograph",
-    cards: ["autograph"],
-    why: "3x travel, no FTF",
-  },
-  {
-    purchase: "Foreign transactions",
-    icon: "public",
-    card: "SavorOne / Autograph / USBAR / Plat",
-    cards: ["savorone", "autograph", "usbar", "amex"],
-    why: "All no-FTF — avoid BofA CCR & Freedom Unlimited (3% FTF)",
-  },
-  {
-    purchase: "Everything else (tap-to-pay)",
-    icon: "contactless",
-    card: "USBAR (mobile wallet)",
-    cards: ["usbar"],
-    why: "3x @ 1¢ = 3%, capped at $5k/cycle",
-  },
-  {
-    purchase: "Everything else (no tap)",
-    icon: "payments",
-    card: "Freedom Unlimited",
-    cards: ["freedom"],
-    why: "1.5% flat — best no-tap catch-all",
-  },
-];
+// One pick inside a card cell: brand icon, name, transferable badge,
+// and — for a tied runner-up — its caveat inline.
+const PickCell = ({
+  rate,
+  caveat = false,
+}: {
+  rate: EarnRate;
+  caveat?: boolean;
+}) => (
+  <span className="cheat-pick">
+    <MiniCard card={rate.card} />
+    {CARDS[rate.card].name}
+    {CARDS[rate.card].transferable && (
+      <span className="cheat-badge">transferable</span>
+    )}
+    {caveat && rate.strings.length > 0 && (
+      <span className="cheat-caveat">
+        ({rate.strings.map((s) => s.display).join(", ")})
+      </span>
+    )}
+  </span>
+);
+
 
 type CardDetail = {
   cardKey: CardKey;
@@ -187,6 +138,10 @@ const CARD_DETAILS: CardDetail[] = [
 ];
 
 export const CardsPage = () => {
+  const wallet = [...CARD_KEYS];
+  const recommendations = recommendAll({ wallet });
+  const catchAll = everythingElse({ wallet });
+
   return (
     <div className="todo-page cards-page">
       <header className="todo-header">
@@ -216,25 +171,49 @@ export const CardsPage = () => {
             </tr>
           </thead>
           <tbody>
-            {CHEAT_SHEET.map((row) => (
-              <tr key={row.purchase}>
+            {recommendations.map(({ category, pick, tiedWith }) => (
+              <tr key={category}>
                 <td className="cheat-purchase">
-                  <Icon name={row.icon} className="cheat-purchase-icon" />
-                  {row.purchase}
+                  <Icon
+                    name={CATEGORY_LABELS[category].icon}
+                    className="cheat-purchase-icon"
+                  />
+                  {CATEGORY_LABELS[category].label}
                 </td>
                 <td className="cheat-card-name">
-                  {row.cards.length > 0 && (
-                    <span className="cheat-card-icons">
-                      {row.cards.map((c) => (
-                        <MiniCard key={c} card={c} />
-                      ))}
-                    </span>
+                  <PickCell rate={pick} />
+                  {tiedWith && (
+                    <>
+                      {" or "}
+                      <PickCell rate={tiedWith} caveat />
+                    </>
                   )}
-                  {row.card}
                 </td>
-                <td>{row.why}</td>
+                <td>{whyText(pick)}</td>
               </tr>
             ))}
+            <tr>
+              <td className="cheat-purchase">
+                <Icon name="contactless" className="cheat-purchase-icon" />
+                Everything else
+              </td>
+              <td className="cheat-card-name">
+                {catchAll.tap && <PickCell rate={catchAll.tap} />}
+                {catchAll.noTap &&
+                  catchAll.noTap.card !== catchAll.tap?.card && (
+                    <>
+                      {" · no tap: "}
+                      <PickCell rate={catchAll.noTap} />
+                    </>
+                  )}
+              </td>
+              <td>
+                {catchAll.tap && whyText(catchAll.tap)}
+                {catchAll.noTap &&
+                  catchAll.noTap.card !== catchAll.tap?.card &&
+                  ` · no tap: ${whyText(catchAll.noTap)}`}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
