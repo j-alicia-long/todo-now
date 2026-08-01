@@ -10,12 +10,12 @@ Tracer-bullet breakdown of `spec.md` (filterable `/cards` page). Work the fronti
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Rewards data lives in its own domain data module as Card facts + a flat Earn Rate array; Strings are a structured union (spend cap, merchant exclusion, tap-required, choice-category) each with a display string
-- [ ] A pure recommendation engine module (sibling to task-rules/matrix-rules) computes Recommendations per Spend Category from Earn Rates; `bun test src` covers: full-wallet baseline matches the current cheat-sheet, tied-with-caveat output shape, Wildcard suppression when an equal clean card is present and surfacing when absent, Everything-Else returning both tap and no-tap picks
-- [ ] The `/cards` table rows are rendered from engine output (no hand-written CHEAT_SHEET rows); Drugstores and Amazon/Walmart/Target appear as categories; Transferable cards show a badge
-- [ ] Vocabulary matches CONTEXT.md (Card, Spend Category, Earn Rate, Strings, Wildcard, Recommendation, Everything Else); typecheck and lint pass
+- [x] Rewards data lives in its own domain data module as Card facts + a flat Earn Rate array; Strings are a structured union (spend cap, merchant exclusion, tap-required, choice-category) each with a display string
+- [x] A pure recommendation engine module (sibling to task-rules/matrix-rules) computes Recommendations per Spend Category from Earn Rates; `bun test src` covers: full-wallet baseline matches the current cheat-sheet, tied-with-caveat output shape, Wildcard suppression when an equal clean card is present and surfacing when absent, Everything-Else returning both tap and no-tap picks
+- [x] The `/cards` table rows are rendered from engine output (no hand-written CHEAT_SHEET rows); Drugstores and Amazon/Walmart/Target appear as categories; Transferable cards show a badge
+- [x] Vocabulary matches CONTEXT.md (Card, Spend Category, Earn Rate, Strings, Wildcard, Recommendation, Everything Else); typecheck and lint pass
 
 ---
 
@@ -25,12 +25,12 @@ Tracer-bullet breakdown of `spec.md` (filterable `/cards` page). Work the fronti
 
 **Blocked by:** 01 — Computed cheat-sheet from Earn Rate data.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Settings gains `walletCards` (array of card keys, default all) flowing through the existing settings hook and server persistence; no dedicated settings tests (plain field, no behavior)
-- [ ] Engine accepts a Wallet and only recommends on-hand Cards; `bun test src` covers missing-card scenarios (no SavorOne → dining tie broken by Strings; Wildcard surfaces when its suppressor is off-hand) and empty Wallet → empty result
-- [ ] `/cards` shows a card-chip filter row above the table; toggling a chip updates rows immediately and persists across reloads
-- [ ] Deselecting all cards shows a calm empty state instead of an empty/broken table
+- [x] Settings gains `walletCards` (array of card keys, default all) flowing through the existing settings hook and server persistence; no dedicated settings tests (plain field, no behavior)
+- [x] Engine accepts a Wallet and only recommends on-hand Cards; `bun test src` covers missing-card scenarios (no SavorOne → dining tie broken by Strings; Wildcard surfaces when its suppressor is off-hand) and empty Wallet → empty result
+- [x] `/cards` shows a card-chip filter row above the table; toggling a chip updates rows immediately and persists across reloads
+- [x] Deselecting all cards shows a calm empty state instead of an empty/broken table
 
 ---
 
@@ -40,12 +40,12 @@ Tracer-bullet breakdown of `spec.md` (filterable `/cards` page). Work the fronti
 
 **Blocked by:** 01 — Computed cheat-sheet from Earn Rate data.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Engine accepts an Abroad flag; `bun test src` covers Abroad excluding BofA + CFU and re-ranking affected categories (e.g. drugstores, no-tap Everything Else fallback)
-- [ ] `/cards` shows an Abroad toggle near the card-chip row; toggling re-renders rows immediately
-- [ ] Abroad resets on page load (not persisted to Settings or localStorage)
-- [ ] Abroad composes with the Wallet: an FTF card stays selected in the Wallet but is never recommended while Abroad
+- [x] Engine accepts an Abroad flag; `bun test src` covers Abroad excluding BofA + CFU and re-ranking affected categories (e.g. drugstores, no-tap Everything Else fallback)
+- [x] `/cards` shows an Abroad toggle near the card-chip row; toggling re-renders rows immediately
+- [x] Abroad resets on page load (not persisted to Settings or localStorage)
+- [x] Abroad composes with the Wallet: an FTF card stays selected in the Wallet but is never recommended while Abroad
 
 ---
 
@@ -55,9 +55,9 @@ Tracer-bullet breakdown of `spec.md` (filterable `/cards` page). Work the fronti
 
 **Blocked by:** 01, 02, 03.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `../todo-architecture.md` product spec updated for the filterable cards page
-- [ ] `README.md` updated; notable work logged in `devlog.md`
-- [ ] CONTEXT.md Cards vocabulary matches shipped code names (no doc changes needed if already aligned)
-- [ ] Shipped as its own commit(s), separate from feature commits
+- [x] `../todo-architecture.md` product spec updated for the filterable cards page
+- [x] `README.md` updated; notable work logged in `devlog.md`
+- [x] CONTEXT.md Cards vocabulary matches shipped code names (no doc changes needed if already aligned)
+- [x] Shipped as its own commit(s), separate from feature commits

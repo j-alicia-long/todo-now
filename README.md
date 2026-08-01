@@ -19,7 +19,7 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 - **Due date urgency**: Color-coded countdown (red → orange → yellow → green), shown first on every card
 - **Tappable due date**: Tap to open a calendar modal and change or set the date
 - **Settings**: Toggle which labels appear on cards, and pick the default Board view (Columns or Matrix)
-- **Credit Cards page**: static cheat-sheet at `/cards` (which card to use per purchase category, expandable per-card details) — reachable from the settings drawer
+- **Credit Cards page**: filterable cheat-sheet at `/cards` — a recommendation engine derives the best card per purchase category from structured earn-rate data, filtered by which cards you have on hand (persisted "Wallet" chips) and an ephemeral Abroad toggle that excludes foreign-transaction-fee cards; expandable per-card details — reachable from the settings drawer
 - **Trash**: Soft delete with 30-day auto-purge and restore
 - **Dark mode**: Warm cream (light) / deep cocoa (dark) theme
 - **Mobile-first**: Horizontal-scroll board on small screens
