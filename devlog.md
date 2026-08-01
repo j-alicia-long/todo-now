@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-01 — Restore Amex Plat phone-protection note
+
+The engine migration silently dropped a nuance from the old hand-written table: paying the cell phone bill with Amex Plat gets $800/claim phone protection (vs Autograph's $600) at the cost of 3x→1x. Restored it in the cell-phone Earn Rate note and the Amex Plat details card; ranking unchanged (perks never bump rates). `d7767ea`
+
+---
+
 ## 2026-07-31 — Filterable card recommendations
 
 The `/cards` cheat-sheet is no longer hand-written: card facts and a flat Earn Rate list live in `src/domain/card-rewards.ts`, and a pure recommendation engine (`src/domain/card-recommendations.ts`, tested at the engine seam with `bun test`) derives the best card per spend category — highest nominal rate among on-hand cards, ties broken by fewest Strings (runner-up shown tied-with-caveat), the USBAR mobile-wallet Wildcard suppressed wherever a clean equal-or-better card is on hand, and an Everything-Else tap/no-tap dual pick. A persisted `walletCards` setting drives a card-chip filter row (deselect a card you left at home; empty wallet shows a calm empty state), and an ephemeral Abroad chip excludes the FTF cards (BofA CCR, Freedom Unlimited) without touching the Wallet. Added Drugstores and Amazon/Walmart/Target categories; transferable-points cards get a badge. Built from the spec + ticket breakdown in `docs/card-recommendations/`.
