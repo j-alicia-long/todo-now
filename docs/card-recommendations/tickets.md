@@ -6,14 +6,14 @@ Tracer-bullet breakdown of `spec.md` (filterable `/cards` page). Work the fronti
 
 ## 01 — Computed cheat-sheet from Earn Rate data (full-wallet baseline)
 
-**What to build:** The `/cards` cheat-sheet table stops being hand-written and becomes a projection of structured data. All rewards knowledge lives as Card facts (key, name, FTF flag, Transferable flag) plus a flat list of Earn Rates (one Card × one Spend Category → nominal rate + Strings). A pure Recommendation engine derives the best Card per Spend Category: highest nominal rate wins; ties on rate break by fewest Strings, with the stringier runner-up shown as tied-with-caveat; USBAR's mobile-wallet 3% competes everywhere as a Wildcard but is suppressed in any category where a clean, equal-or-better on-hand Card exists; the single "Everything else" row shows both the tap-to-pay pick and the no-tap fallback. Transferable Cards get a badge in the output, never a rate bump. With the default full Wallet and Abroad off, the rendered table gives the same answers as today's static sheet — including the new Drugstores and Amazon/Walmart/Target categories from the spec. Per-card detail dropdowns remain unchanged.
+**What to build:** The `/cards` cheat-sheet table stops being hand-written and becomes a projection of structured data. All rewards knowledge lives as Card facts (key, name, FTF flag, Transferable flag) plus a flat list of Earn Rates (one Card × one Spend Category → nominal rate + Strings). A pure Recommendation engine derives the best Card per Spend Category: highest nominal rate wins; ties on rate break by fewest Strings, with the stringier runner-up shown as tied-with-caveat; USBAR's mobile-wallet 3% competes everywhere as a Wildcard but is suppressed in any category where a clean, equal-or-better on-hand Card exists; the single "Everything else" row shows both the mobile-wallet pick and the physical-card fallback. Transferable Cards get a badge in the output, never a rate bump. With the default full Wallet and Abroad off, the rendered table gives the same answers as today's static sheet — including the new Drugstores and Amazon/Walmart/Target categories from the spec. Per-card detail dropdowns remain unchanged.
 
 **Blocked by:** None — can start immediately.
 
 **Status:** done
 
-- [x] Rewards data lives in its own domain data module as Card facts + a flat Earn Rate array; Strings are a structured union (spend cap, merchant exclusion, tap-required, choice-category) each with a display string
-- [x] A pure recommendation engine module (sibling to task-rules/matrix-rules) computes Recommendations per Spend Category from Earn Rates; `bun test src` covers: full-wallet baseline matches the current cheat-sheet, tied-with-caveat output shape, Wildcard suppression when an equal clean card is present and surfacing when absent, Everything-Else returning both tap and no-tap picks
+- [x] Rewards data lives in its own domain data module as Card facts + a flat Earn Rate array; Strings are a structured union (spend cap, merchant exclusion, mobile-wallet-required, choice-category) each with a display string
+- [x] A pure recommendation engine module (sibling to task-rules/matrix-rules) computes Recommendations per Spend Category from Earn Rates; `bun test src` covers: full-wallet baseline matches the current cheat-sheet, tied-with-caveat output shape, Wildcard suppression when an equal clean card is present and surfacing when absent, Everything-Else returning both mobile-wallet and physical-card picks
 - [x] The `/cards` table rows are rendered from engine output (no hand-written CHEAT_SHEET rows); Drugstores and Amazon/Walmart/Target appear as categories; Transferable cards show a badge
 - [x] Vocabulary matches CONTEXT.md (Card, Spend Category, Earn Rate, Strings, Wildcard, Recommendation, Everything Else); typecheck and lint pass
 
@@ -42,7 +42,7 @@ Tracer-bullet breakdown of `spec.md` (filterable `/cards` page). Work the fronti
 
 **Status:** done
 
-- [x] Engine accepts an Abroad flag; `bun test src` covers Abroad excluding BofA + CFU and re-ranking affected categories (e.g. drugstores, no-tap Everything Else fallback)
+- [x] Engine accepts an Abroad flag; `bun test src` covers Abroad excluding BofA + CFU and re-ranking affected categories (e.g. drugstores, physical-card Everything Else fallback)
 - [x] `/cards` shows an Abroad toggle near the card-chip row; toggling re-renders rows immediately
 - [x] Abroad resets on page load (not persisted to Settings or localStorage)
 - [x] Abroad composes with the Wallet: an FTF card stays selected in the Wallet but is never recommended while Abroad

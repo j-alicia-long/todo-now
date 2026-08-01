@@ -114,9 +114,9 @@ const CARD_DETAILS: CardDetail[] = [
   {
     cardKey: "freedom",
     name: "Chase Freedom Unlimited",
-    tagline: "The no-tap catch-all",
+    tagline: "The physical-card catch-all",
     points: [
-      "1.5% flat on everything — no activation, no rotating categories, no cap. Best option when a merchant doesn't take tap-to-pay.",
+      "1.5% flat on everything — no activation, no rotating categories, no cap. Best option when you can't pay by mobile wallet (Apple Pay etc).",
       "3% on dining and drugstores; 5% on Chase Travel bookings (prefer direct bookings, so mostly ignore).",
       "Points (Ultimate Rewards) are cash-only for now — with a Sapphire Reserve you could pool CFU points and transfer to partners (Virgin Atlantic → Delta, Hyatt).",
       "3% foreign transaction fee — don't use abroad.",
@@ -235,28 +235,31 @@ export const CardsPage = () => {
                   Everything else
                 </td>
                 <td className="cheat-card-name">
-                  {catchAll.tap && (
+                  {catchAll.mobileWallet && (
                     <>
-                      <PickCell rate={catchAll.tap} />
-                      {" (tap)"}
+                      <PickCell rate={catchAll.mobileWallet} />
+                      {" (mobile wallet)"}
                     </>
                   )}
-                  {catchAll.noTap &&
-                    catchAll.noTap.card !== catchAll.tap?.card && (
+                  {catchAll.physicalCard &&
+                    catchAll.physicalCard.card !==
+                      catchAll.mobileWallet?.card && (
                       <>
-                        {catchAll.tap && <br />}
-                        <PickCell rate={catchAll.noTap} />
-                        {" (no tap)"}
+                        {catchAll.mobileWallet && <br />}
+                        <PickCell rate={catchAll.physicalCard} />
+                        {" (physical card)"}
                       </>
                     )}
                 </td>
                 <td>
-                  Tap: {catchAll.tap && whyText(catchAll.tap)}
+                  Mobile wallet:{" "}
+                  {catchAll.mobileWallet && whyText(catchAll.mobileWallet)}
                   <br />
-                  No tap:{" "}
-                  {catchAll.noTap &&
-                    catchAll.noTap.card !== catchAll.tap?.card &&
-                    whyText(catchAll.noTap)}
+                  Physical card:{" "}
+                  {catchAll.physicalCard &&
+                    catchAll.physicalCard.card !==
+                      catchAll.mobileWallet?.card &&
+                    whyText(catchAll.physicalCard)}
                 </td>
               </tr>
             </tbody>

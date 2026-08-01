@@ -62,9 +62,7 @@ const suppressWildcards = (candidates: EarnRate[]): EarnRate[] =>
 export const recommendAll = (input: EngineInput): Recommendation[] => {
   const onHand = usableRates(input);
   return SPEND_CATEGORIES.flatMap((category) => {
-    const ranked = rank(
-      suppressWildcards(candidatesFor(category, onHand))
-    );
+    const ranked = rank(suppressWildcards(candidatesFor(category, onHand)));
     const [pick, next] = ranked;
     if (!pick) return [];
     const tiedWith =
@@ -76,22 +74,25 @@ export const recommendAll = (input: EngineInput): Recommendation[] => {
 };
 
 export type EverythingElsePicks = {
-  /** Best catch-all when the terminal takes tap-to-pay. */
-  tap?: EarnRate;
-  /** Best catch-all without tap — the physical-card fallback. */
-  noTap?: EarnRate;
+  /** Best catch-all when the terminal takes mobile wallet (Apple Pay etc). */
+  mobileWallet?: EarnRate;
+  /** Best catch-all without a mobile wallet — the physical-card fallback. */
+  physicalCard?: EarnRate;
 };
 
-const requiresTap = (r: EarnRate): boolean =>
-  r.strings.some((s) => s.kind === "tap-required");
+const requiresMobileWallet = (r: EarnRate): boolean =>
+  r.strings.some((s) => s.kind === "mobile-wallet-required");
 
-/** The single "Everything else" row: best tap-capable pick and best
- * no-tap fallback among Wildcard + flat catch-all rates on hand. */
+/** The single "Everything else" row: best mobile-wallet pick and best
+ * physical-card fallback among Wildcard + flat catch-all rates on hand. */
 export const everythingElse = (input: EngineInput): EverythingElsePicks => {
   const ranked = rank(
     usableRates(input).filter(
       (r) => r.scope === "wildcard" || r.scope === "everything-else"
     )
   );
-  return { tap: ranked[0], noTap: ranked.filter((r) => !requiresTap(r))[0] };
+  return {
+    mobileWallet: ranked[0],
+    physicalCard: ranked.filter((r) => !requiresMobileWallet(r))[0],
+  };
 };

@@ -78,20 +78,20 @@ describe("recommendAll — tied-with-caveat", () => {
 });
 
 describe("everythingElse — dual pick", () => {
-  test("full wallet: USBAR tap-to-pay pick and Freedom no-tap fallback", () => {
+  test("full wallet: USBAR mobile-wallet pick and Freedom physical-card fallback", () => {
     const ee = everythingElse({ wallet: FULL_WALLET });
-    expect(ee.tap?.card).toBe("usbar");
-    expect(ee.tap?.rate).toBe(3);
-    expect(ee.noTap?.card).toBe("freedom");
-    expect(ee.noTap?.rate).toBe(1.5);
+    expect(ee.mobileWallet?.card).toBe("usbar");
+    expect(ee.mobileWallet?.rate).toBe(3);
+    expect(ee.physicalCard?.card).toBe("freedom");
+    expect(ee.physicalCard?.rate).toBe(1.5);
   });
 
   test("no USBAR: both picks fall to the best flat card", () => {
     const ee = everythingElse({
       wallet: ["amex", "savorone", "bofa", "freedom", "autograph"],
     });
-    expect(ee.tap?.card).toBe("freedom");
-    expect(ee.noTap?.card).toBe("freedom");
+    expect(ee.mobileWallet?.card).toBe("freedom");
+    expect(ee.physicalCard?.card).toBe("freedom");
   });
 });
 
@@ -117,8 +117,8 @@ describe("recommendAll — Wallet filtering", () => {
   test("empty Wallet yields no recommendations and no catch-all picks", () => {
     expect(recommendAll({ wallet: [] })).toEqual([]);
     const ee = everythingElse({ wallet: [] });
-    expect(ee.tap).toBeUndefined();
-    expect(ee.noTap).toBeUndefined();
+    expect(ee.mobileWallet).toBeUndefined();
+    expect(ee.physicalCard).toBeUndefined();
   });
 });
 
@@ -139,11 +139,11 @@ describe("recommendAll — Abroad", () => {
     expect(drugstores.pick.card).toBe("usbar");
   });
 
-  test("no-tap catch-all abroad falls past Freedom to a no-FTF card", () => {
+  test("physical-card catch-all abroad falls past Freedom to a no-FTF card", () => {
     const ee = everythingElse({ wallet: FULL_WALLET, abroad: true });
-    expect(ee.tap?.card).toBe("usbar");
-    expect(ee.noTap?.card).not.toBe("freedom");
-    expect(ee.noTap?.card).not.toBe("bofa");
+    expect(ee.mobileWallet?.card).toBe("usbar");
+    expect(ee.physicalCard?.card).not.toBe("freedom");
+    expect(ee.physicalCard?.card).not.toBe("bofa");
   });
 
   test("abroad composes with the Wallet, it does not modify it", () => {

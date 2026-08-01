@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-01 — Rename "tap/no tap" to mobile wallet / physical card
+
+"Tap" was ambiguous — physical credit cards can also tap, but USBAR's 3x specifically requires a mobile wallet (Apple Pay etc). Renamed throughout: the `tap-required` String kind is now `mobile-wallet-required`, the Everything-Else picks are `mobileWallet`/`physicalCard` (was `tap`/`noTap`), and the `/cards` page now labels the dual pick "(mobile wallet)" / "(physical card)". Docs (CONTEXT.md glossary, card-recommendations spec/tickets) updated to match.
+
+---
+
 ## 2026-08-01 — Restore Amex Plat phone-protection note
 
 The engine migration silently dropped a nuance from the old hand-written table: paying the cell phone bill with Amex Plat gets $800/claim phone protection (vs Autograph's $600) at the cost of 3x→1x. Restored it in the cell-phone Earn Rate note and the Amex Plat details card; ranking unchanged (perks never bump rates). `d7767ea`

@@ -105,7 +105,7 @@ What one Card pays in one Spend Category — a nominal percentage plus any Strin
 _Avoid_: Multiplier, cashback rate
 
 **Strings**:
-Conditions attached to an Earn Rate: a spend cap, a merchant exclusion, tap-required, or a user-set choice category. A rate with no Strings is "clean."
+Conditions attached to an Earn Rate: a spend cap, a merchant exclusion, mobile-wallet-required, or a user-set choice category. A rate with no Strings is "clean."
 _Avoid_: Caveats, conditions, restrictions
 
 **Wildcard**:
@@ -131,7 +131,7 @@ The best on-hand Card for a Spend Category — computed from Earn Rates, the Wal
 _Avoid_: Suggestion, best pick
 
 **Everything Else**:
-The catch-all pseudo-category for purchases matching no Spend Category. Its Recommendation always shows two picks: the tap-to-pay choice and the no-tap fallback, since tap availability isn't known in advance.
+The catch-all pseudo-category for purchases matching no Spend Category. Its Recommendation always shows two picks: the mobile-wallet choice and the physical-card fallback, since mobile-wallet acceptance isn't known in advance.
 _Avoid_: Default, non-category, other
 
 ### Time

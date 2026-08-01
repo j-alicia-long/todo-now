@@ -67,7 +67,10 @@ export const CARDS: Record<CardKey, Card> = {
 // Strings are structured, not prose: the tiebreak counts them, the UI
 // prints their display text. A rate with no Strings is "clean".
 export type EarnStringKind =
-  "spend-cap" | "merchant-exclusion" | "tap-required" | "choice-category";
+  | "spend-cap"
+  | "merchant-exclusion"
+  | "mobile-wallet-required"
+  | "choice-category";
 
 export type EarnString = {
   kind: EarnStringKind;
@@ -122,8 +125,8 @@ const excl = (display: string): EarnString => ({
   kind: "merchant-exclusion",
   display,
 });
-const tap = (): EarnString => ({
-  kind: "tap-required",
+const mobileWallet = (): EarnString => ({
+  kind: "mobile-wallet-required",
   display: "mobile wallet only",
 });
 const choice = (display: string): EarnString => ({
@@ -195,7 +198,7 @@ export const EARN_RATES: EarnRate[] = [
     card: "usbar",
     scope: "wildcard",
     rate: 3,
-    strings: [tap(), cap("$5k/cycle cap")],
+    strings: [mobileWallet(), cap("$5k/cycle cap")],
     note: "3x @ 1¢ = 3%",
   },
 
@@ -205,7 +208,7 @@ export const EARN_RATES: EarnRate[] = [
     scope: "everything-else",
     rate: 1.5,
     strings: [],
-    note: "1.5% flat — best no-tap catch-all",
+    note: "1.5% flat — best physical-card catch-all",
   },
   {
     card: "savorone",

@@ -8,7 +8,7 @@ The `/cards` page is a hand-written table that assumes Jennifer has all six card
 
 ## Solution
 
-Replace the hand-written table with data plus a small engine. All rewards knowledge moves into a flat list of **Earn Rates** (one Card × one Spend Category → nominal rate + **Strings** like caps, exclusions, or tap-required) in its own data module. A persisted **Wallet** (which cards are on hand, part of Settings) and an **Abroad** toggle filter that data, and a pure **Recommendation** function derives the best card per category: highest nominal rate among on-hand cards, ties broken by fewest Strings (the runner-up shown as tied-with-caveat), FTF cards excluded entirely when Abroad. USBAR's mobile-wallet 3% competes in every category as a **Wildcard** but is suppressed wherever a clean, equal-or-better card is on hand. Transferable-points cards (Amex MR) get a badge, never a rate bump. The visible table becomes a projection of this engine — same page, but its answers now reflect what's actually in Jennifer's pocket.
+Replace the hand-written table with data plus a small engine. All rewards knowledge moves into a flat list of **Earn Rates** (one Card × one Spend Category → nominal rate + **Strings** like caps, exclusions, or mobile-wallet-required) in its own data module. A persisted **Wallet** (which cards are on hand, part of Settings) and an **Abroad** toggle filter that data, and a pure **Recommendation** function derives the best card per category: highest nominal rate among on-hand cards, ties broken by fewest Strings (the runner-up shown as tied-with-caveat), FTF cards excluded entirely when Abroad. USBAR's mobile-wallet 3% competes in every category as a **Wildcard** but is suppressed wherever a clean, equal-or-better card is on hand. Transferable-points cards (Amex MR) get a badge, never a rate bump. The visible table becomes a projection of this engine — same page, but its answers now reflect what's actually in Jennifer's pocket.
 
 ## User Stories
 
@@ -22,15 +22,15 @@ Replace the hand-written table with data plus a small engine. All rewards knowle
 8. As the app's user, I want point-earning cards badged as "transferable" while ranking stays on nominal rate, so that I see the upside without the model pretending to know point valuations.
 9. As the app's user, I want Drugstores as a category (Duane Reade, CVS, Walgreens, Rite Aid), so that CFU's 3% there isn't invisible.
 10. As the app's user, I want Amazon / Walmart / Target as a category, so that the grocery-exclusion trap (SavorOne's 3% not applying) steers me to the right card instead of the wrong habit.
-11. As the app's user, I want a single "Everything else" row showing both the tap-to-pay pick and the no-tap fallback, so that I have an answer whether or not the terminal takes Apple Pay.
+11. As the app's user, I want a single "Everything else" row showing both the mobile-wallet pick and the physical-card fallback, so that I have an answer whether or not the terminal takes Apple Pay.
 12. As the app's user, I want the per-card detail dropdowns to remain, so that the playbook context (credits, renewal decisions) stays one tap away.
 13. As the app's user, I want deselecting every card to produce a calm empty state, so that a nonsensical filter reads as empty, not broken.
 
 ## Implementation Decisions
 
 - **New data module `src/domain/card-rewards.ts`**: card facts (key, name, FTF flag, transferable flag) and the flat Earn Rate list. A sparse matrix as a flat array — easy to filter, sort, and extend; no nesting to fight.
-- **New pure domain module for the recommendation engine** (sibling to task-rules, matrix-rules, recurrence). It owns: Wallet filtering, Abroad exclusion, nominal-rate ranking, the fewest-Strings tiebreak, Wildcard suppression ("suppress where a clean on-hand card has rate ≥ wildcard's"), and the Everything-Else dual pick (best tap-capable + best no-tap).
-- **Strings are structured, not prose**: a small union (spend cap, merchant exclusion, tap-required, choice-category) with a display string. The tiebreak counts them; the UI prints them.
+- **New pure domain module for the recommendation engine** (sibling to task-rules, matrix-rules, recurrence). It owns: Wallet filtering, Abroad exclusion, nominal-rate ranking, the fewest-Strings tiebreak, Wildcard suppression ("suppress where a clean on-hand card has rate ≥ wildcard's"), and the Everything-Else dual pick (best mobile-wallet pick + best physical-card fallback).
+- **Strings are structured, not prose**: a small union (spend cap, merchant exclusion, mobile-wallet-required, choice-category) with a display string. The tiebreak counts them; the UI prints them.
 - **Settings gains `walletCards`** (array of card keys; default = all). Abroad is ephemeral UI state, not persisted — trips end, and a stale Abroad toggle would silently hide two cards. Server change is minimal: whitelist the new Settings field.
 - **UI stays on the existing `/cards` page**: a card-chip filter row and Abroad toggle above the table; table rows become computed Recommendations. Per-card details section unchanged.
 - **Freedom Unlimited replaces the old rotating-Freedom logic** everywhere (already shipped: no quarter map, no activation reminders).
