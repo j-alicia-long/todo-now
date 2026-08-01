@@ -8,7 +8,9 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ## 2026-07-31 — Credit Cards reference page
 
-New static reference page at `/cards`: a cheat-sheet table (purchase category → card → rate), a callout showing the current Chase Freedom 5% quarter (derived from today's date against a hardcoded quarter map in `cards-page.tsx` — update it as quarters are announced), and `<details>` dropdowns with per-card playbooks. Reachable only from the settings drawer ("Credit Cards" link); a home button in the page header returns to the board. Content distilled from the card-maximization guide.
+New static reference page at `/cards`: a cheat-sheet table (purchase category → card → rate) and `<details>` dropdowns with per-card playbooks. Reachable only from the settings drawer ("Credit Cards" link); a home button in the page header returns to the board. Content distilled from the card-maximization guide.
+
+Correction later the same day: the card is a **Chase Freedom Unlimited** (flat 1.5% + 3% dining/drugstores), not a rotating-category Chase Freedom — removed the 5%-quarter callout and hardcoded quarter map, added a drugstores row, and made CFU the "everything else (no tap)" pick.
 
 ---
 

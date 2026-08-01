@@ -157,42 +157,6 @@
   vertical-align: -4px;
 }
 
-// ── Chase quarter callout ──
-
-.chase-quarter {
-  align-items: flex-start;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  display: flex;
-  gap: 10px;
-  margin-bottom: 24px;
-  padding: 12px 14px;
-
-  .material-symbols-outlined {
-    color: var(--accent);
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  > div {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-}
-
-.chase-quarter-label {
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.chase-quarter-categories {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  line-height: 1.45;
-}
-
 // ── Per-card detail dropdowns ──
 
 .cards-section-title {

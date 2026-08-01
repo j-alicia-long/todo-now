@@ -31,8 +31,8 @@ const CHEAT_SHEET: CheatRow[] = [
   {
     purchase: "Dining",
     icon: "restaurant",
-    card: "SavorOne or Autograph",
-    cards: ["savorone", "autograph"],
+    card: "SavorOne, Autograph, or CFU",
+    cards: ["savorone", "autograph", "freedom"],
     why: "3%",
   },
   {
@@ -41,6 +41,13 @@ const CHEAT_SHEET: CheatRow[] = [
     card: "SavorOne",
     cards: ["savorone"],
     why: "3% (excl. Walmart/Target)",
+  },
+  {
+    purchase: "Drugstores / pharmacies",
+    icon: "local_pharmacy",
+    card: "Freedom Unlimited",
+    cards: ["freedom"],
+    why: "3%",
   },
   {
     purchase: "Online shopping",
@@ -89,7 +96,7 @@ const CHEAT_SHEET: CheatRow[] = [
     icon: "public",
     card: "SavorOne / Autograph / USBAR / Plat",
     cards: ["savorone", "autograph", "usbar", "amex"],
-    why: "All no-FTF — avoid BofA CCR & Freedom (3% FTF)",
+    why: "All no-FTF — avoid BofA CCR & Freedom Unlimited (3% FTF)",
   },
   {
     purchase: "Everything else (tap-to-pay)",
@@ -101,27 +108,11 @@ const CHEAT_SHEET: CheatRow[] = [
   {
     purchase: "Everything else (no tap)",
     icon: "payments",
-    card: "Any 1–1.5%",
-    cards: [],
-    why: "Weakest spot — 2% catch-all would plug this gap",
+    card: "Freedom Unlimited",
+    cards: ["freedom"],
+    why: "1.5% flat — best no-tap catch-all",
   },
 ];
-
-// Known Chase Freedom 5% rotating categories, keyed by "<year>-Q<n>".
-// Update as quarters get announced (chase.com/freedomfive).
-const CHASE_QUARTERS: Record<string, string> = {
-  "2026-Q2": "Amazon, Whole Foods, Chase Travel, Feeding America",
-  "2026-Q3":
-    "Gas stations, public transit, EV charging, select live entertainment, United Way — activate by Sep 14, 2026",
-};
-
-const getCurrentQuarter = (now: Date) => {
-  const q = Math.floor(now.getMonth() / 3) + 1;
-  return {
-    key: `${now.getFullYear()}-Q${q}`,
-    label: `Q${q} ${now.getFullYear()}`,
-  };
-};
 
 type CardDetail = {
   cardKey: CardKey;
@@ -175,12 +166,12 @@ const CARD_DETAILS: CardDetail[] = [
   },
   {
     cardKey: "freedom",
-    name: "Chase Freedom",
-    tagline: "The 5% specialist",
+    name: "Chase Freedom Unlimited",
+    tagline: "The no-tap catch-all",
     points: [
-      "Activate the rotating category every quarter (reminder: mid-Mar/Jun/Sep/Dec).",
-      "Max the $1,500/quarter cap when the category is good (grocery, gas, Amazon quarters).",
-      "Points are cash-only for now — with a Sapphire Reserve you could pool Freedom points and transfer to partners (Virgin Atlantic → Delta, Hyatt).",
+      "1.5% flat on everything — no activation, no rotating categories, no cap. Best option when a merchant doesn't take tap-to-pay.",
+      "3% on dining and drugstores; 5% on Chase Travel bookings (prefer direct bookings, so mostly ignore).",
+      "Points (Ultimate Rewards) are cash-only for now — with a Sapphire Reserve you could pool CFU points and transfer to partners (Virgin Atlantic → Delta, Hyatt).",
       "3% foreign transaction fee — don't use abroad.",
     ],
   },
@@ -196,9 +187,6 @@ const CARD_DETAILS: CardDetail[] = [
 ];
 
 export const CardsPage = () => {
-  const { key, label } = getCurrentQuarter(new Date());
-  const categories = CHASE_QUARTERS[key];
-
   return (
     <div className="todo-page cards-page">
       <header className="todo-header">
@@ -214,22 +202,9 @@ export const CardsPage = () => {
 
       <p className="cards-intro">
         Which card to pull out, at a glance. Tap-to-pay with no better category
-        → USBAR (3%). Category spend → the matching 3x card. Freedom 5% quarter
-        beats everything.
+        → USBAR (3%). Category spend → the matching 3x card. No tap → Freedom
+        Unlimited (1.5%).
       </p>
-
-      <div className="chase-quarter">
-        <Icon name="autorenew" />
-        <div>
-          <span className="chase-quarter-label">
-            Chase Freedom 5% — {label}
-          </span>
-          <span className="chase-quarter-categories">
-            {categories ??
-              "Not yet announced — check chase.com/freedomfive and update this page."}
-          </span>
-        </div>
-      </div>
 
       <div className="cheat-table-wrapper">
         <table className="cheat-table">
