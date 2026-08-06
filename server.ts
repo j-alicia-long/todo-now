@@ -152,6 +152,11 @@ app.post("/api/archive", async (c) => {
   });
 });
 
+// ── Root redirect ──
+// The SPA router is based at "/todo", so the bare root renders nothing.
+// Send it to the app. Registered before the static/SPA catch-all below.
+app.get("/", (c) => c.redirect("/todo", 302));
+
 // ── Static / SPA serving ──
 // (configured at the bottom of this file, after the helpers are defined)
 
