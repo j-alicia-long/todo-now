@@ -898,10 +898,12 @@
   margin-left: 28px;
 }
 
-// ── Card Links (link pills, aligned under the title) ──
+// ── Card Links (link pills + clip, inline in the tag row beside the due date) ──
 .card-links {
-  margin-left: 28px;
-  margin-top: 8px;
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-right: auto; // spacer: keeps due tag + links + clip left, area tag right
 }
 
 // ── Card Tags ──
@@ -920,6 +922,19 @@
   .card-tag.due-green,
   .card-tag.due-none {
     margin-right: auto;
+  }
+
+  // When a card has inline links/clip, the links wrapper (not the due tag)
+  // becomes the spacer, so the due tag + links + clip cluster stays together
+  // on the left and the area tag is pushed to the right.
+  &:has(.card-links) {
+    .card-tag.due-red,
+    .card-tag.due-orange,
+    .card-tag.due-yellow,
+    .card-tag.due-green,
+    .card-tag.due-none {
+      margin-right: 0;
+    }
   }
 }
 
@@ -1949,17 +1964,21 @@
   }
 
   &.add {
-    background: var(--bg-sunken);
-    border: 1px dashed var(--border);
+    align-items: center;
+    background: transparent;
     color: var(--text-tertiary);
     cursor: pointer;
-    font-size: 0.7rem;
-    padding: 1px 7px;
-    transition: all var(--transition);
+    display: inline-flex;
+    justify-content: center;
+    padding: 0 2px;
+    transition: color var(--transition);
+
+    .material-symbols-outlined {
+      font-size: 17px;
+    }
 
     &:hover {
-      border-color: var(--border-strong);
-      color: var(--text-secondary);
+      color: var(--accent);
     }
   }
 }

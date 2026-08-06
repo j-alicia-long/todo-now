@@ -74,8 +74,13 @@ export const LinkPills = ({
           }}
         />
       ) : (
-        <button className="link-pill add" onClick={() => setAdding(true)}>
-          + link
+        <button
+          className="link-pill add"
+          onClick={() => setAdding(true)}
+          title="Add link"
+          aria-label="Add link"
+        >
+          <Icon name="attach_file" />
         </button>
       )}
     </div>

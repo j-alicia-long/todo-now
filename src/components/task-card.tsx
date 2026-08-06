@@ -177,6 +177,16 @@ export const TaskCard = ({
               onClose={() => setEditingTag(null)}
             />
           )}
+          <div
+            className="card-links"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <LinkPills
+              links={task.links ?? []}
+              onChange={(links) => actions.update(task.id, { links })}
+            />
+          </div>
           {settings.showArea && task.area && (
             <span className="tag-anchor">
               <span
@@ -251,17 +261,6 @@ export const TaskCard = ({
             </>
           )}
         </div>
-      </div>
-
-      <div
-        className="card-links"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <LinkPills
-          links={task.links ?? []}
-          onChange={(links) => actions.update(task.id, { links })}
-        />
       </div>
     </div>
   );
