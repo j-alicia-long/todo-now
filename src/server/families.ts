@@ -33,6 +33,7 @@ export const tasksFamily: FamilyConfig<Task> = {
     "area",
     "dueDate",
     "importance",
+    "links",
   ],
   construct: (body, now) => ({
     id: newId(),
@@ -49,6 +50,7 @@ export const tasksFamily: FamilyConfig<Task> = {
     deletedAt: null,
     source: (body.source as Task["source"]) || "board",
     sourceItemId: (body.sourceItemId as string) || null,
+    links: Array.isArray(body.links) ? (body.links as string[]) : [],
   }),
   applyUpdate: (prev, merged, body, now) => {
     if (body.status === undefined && body.done === undefined) return merged;

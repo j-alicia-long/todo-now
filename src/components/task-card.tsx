@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import { type Settings } from "../stores/hooks";
-import { Icon, TagSelect } from "./ui";
+import { Icon, TagSelect, LinkPills } from "./ui";
 import { DatePickerModal } from "./date-picker";
 import {
   AREA_COLORS,
@@ -251,6 +251,17 @@ export const TaskCard = ({
             </>
           )}
         </div>
+      </div>
+
+      <div
+        className="card-links"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <LinkPills
+          links={task.links ?? []}
+          onChange={(links) => actions.update(task.id, { links })}
+        />
       </div>
     </div>
   );

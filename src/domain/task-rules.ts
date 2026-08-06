@@ -25,6 +25,7 @@ export type Task = {
   deletedAt: string | null;
   source: "board" | "shopping" | "grocery";
   sourceItemId: string | null;
+  links?: string[];
 };
 
 export type StatusChange = {
