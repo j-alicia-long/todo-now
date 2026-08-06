@@ -41,24 +41,36 @@ const whyText = (rate: EarnRate): string => {
 };
 
 // One pick inside a card cell: brand icon, name, transferable badge,
-// and — for a tied runner-up — its caveat inline.
+// and — for a tied runner-up — its caveat inline. A mobile-wallet
+// caveat collapses to a contactless icon (full text on hover) to
+// keep the column compact.
 const PickCell = ({
   rate,
   caveat = false,
 }: {
   rate: EarnRate;
   caveat?: boolean;
-}) => (
-  <span className="cheat-pick">
-    <MiniCard card={rate.card} />
-    {CARDS[rate.card].name}
-    {caveat && rate.strings.length > 0 && (
-      <span className="cheat-caveat">
-        ({rate.strings.map((s) => s.display).join(", ")})
-      </span>
-    )}
-  </span>
-);
+}) => {
+  const caveatText = rate.strings.map((s) => s.display).join(", ");
+  const mobileWallet = rate.strings.some(
+    (s) => s.kind === "mobile-wallet-required"
+  );
+  return (
+    <span className="cheat-pick">
+      <MiniCard card={rate.card} />
+      {CARDS[rate.card].name}
+      {caveat && rate.strings.length > 0 && (
+        <span className="cheat-caveat" title={caveatText}>
+          {mobileWallet ? (
+            <Icon name="contactless" className="cheat-caveat-icon" />
+          ) : (
+            `(${caveatText})`
+          )}
+        </span>
+      )}
+    </span>
+  );
+};
 
 type CardDetail = {
   cardKey: CardKey;
