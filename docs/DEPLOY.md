@@ -9,6 +9,21 @@ alive — kill it and it restarts itself.
 
 ## TL;DR — one command
 
+**From the local Mac** (no Zo chat/terminal needed):
+
+```bash
+cd ~/Documents/personal-os/02-projects/todo-app/todo
+./scripts/deploy-zo.sh          # full redeploy (server.ts changes too)
+./scripts/deploy-zo.sh --fast   # frontend only, zero downtime
+```
+
+`file scripts/deploy-zo.sh` (adapted from ai-carbon-footprint's deploy script) waits for
+the Mutagen file sync to catch up, then triggers `file redeploy.sh` on Zo via the Zo MCP
+`bash` tool. Requires `mcporter` (`npm i -g mcporter`) and a Zo API token at
+`~/.config/ai-cost-tracker/zo_token` (override with `ZO_TOKEN_FILE`).
+
+**Directly on Zo:**
+
 ```bash
 cd /home/workspace/personal-os/02-projects/todo-app/todo
 ./redeploy.sh
@@ -26,11 +41,11 @@ Skip the restart for a zero-downtime deploy:
 
 ## What each command actually does
 
-| Command                | Rebuilds `dist/` | Restarts server | Downtime | Use when                                                |
-| ---------------------- | ---------------- | --------------- | -------- | ------------------------------------------------------- |
-| `bun run build`        | ✅               | ❌              | none     | frontend changed; server serves new `dist/` immediately |
-| `./redeploy.sh --fast` | ✅               | ❌              | none     | same as above, with a health check                      |
-|                        | ✅               | ✅              | \~5–6s   | `file server.ts` / API changed, or when in doubt        |
+| Command | Rebuilds `dist/` | Restarts server | Downtime | Use when |
+| --- | --- | --- | --- | --- |
+| `bun run build` | ✅ | ❌ | none | frontend changed; server serves new `dist/` immediately |
+| `./redeploy.sh --fast` | ✅ | ❌ | none | same as above, with a health check |
+|  | ✅ | ✅ | \~5–6s | `file server.ts` / API changed, or when in doubt |
 
 ## Manual equivalents (if you'd rather not use the script)
 

@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-06 — Local deploy script (`scripts/deploy-zo.sh`)
+
+Repurposed ai-carbon-footprint's `deploy-zo.sh` for this app: deploy to Zo straight from the local Mac without opening Zo chat. Unlike the carbon app's per-file `write_file` uploads (which would corrupt our binary assets), this one leans on the existing Mutagen sync — it writes a nonce file, polls Zo via the MCP `bash` tool until the sync catches up, then triggers the on-Zo `redeploy.sh` (passing through `--fast`). Needs `mcporter` + the Zo token at `~/.config/ai-cost-tracker/zo_token`. DEPLOY.md updated; `.deploy-nonce` gitignored.
+
+---
+
 ## 2026-08-06 — Cards page column-shift fix + tied-pick polish
 
 `/cards` UI polish: the cheat table now uses `table-layout: fixed` with viewport-relative column widths (22/36/42%, min-width 640px scrolling below that), so columns no longer shift when wallet chips are toggled — previously auto layout resized columns to content. Tied picks stack on separate lines instead of joining with "or", the mobile-wallet caveat collapses to a `contactless` icon (full text on hover), and the Everything-Else dual pick gets a line break too.
