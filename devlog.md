@@ -6,6 +6,18 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-06 — Cards page column-shift fix + tied-pick polish
+
+`/cards` UI polish: the cheat table now uses `table-layout: fixed` with viewport-relative column widths (22/36/42%, min-width 640px scrolling below that), so columns no longer shift when wallet chips are toggled — previously auto layout resized columns to content. Tied picks stack on separate lines instead of joining with "or", the mobile-wallet caveat collapses to a `contactless` icon (full text on hover), and the Everything-Else dual pick gets a line break too.
+
+---
+
+## 2026-08-01 — Pinned rates: Amex Plat wins cell phone
+
+Reverses the earlier "ranking unchanged (perks never bump rates)" call: Jennifer prefers Amex Plat's $800/claim phone protection over Autograph's 3x, so the cell-phone recommendation should say Amex. Added an optional `pinned` flag to `EarnRate` — a pinned rate wins its category outright, before the rate/Strings tiebreaks — and set it on Amex's cell-phone rate. The judgment call lives in the data module next to the protection note; the engine stays generic. If Amex leaves the Wallet, cell phone falls back to the normal rate winner. Tests + CONTEXT.md/spec updated.
+
+---
+
 ## 2026-08-01 — Rename "tap/no tap" to mobile wallet / physical card
 
 "Tap" was ambiguous — physical credit cards can also tap, but USBAR's 3x specifically requires a mobile wallet (Apple Pay etc). Renamed throughout: the `tap-required` String kind is now `mobile-wallet-required`, the Everything-Else picks are `mobileWallet`/`physicalCard` (was `tap`/`noTap`), and the `/cards` page now labels the dual pick "(mobile wallet)" / "(physical card)". Docs (CONTEXT.md glossary, card-recommendations spec/tickets) updated to match.
