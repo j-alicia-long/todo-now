@@ -39,10 +39,14 @@ const candidatesFor = (
   ...rates.filter((r) => r.scope === "everything-else"),
 ];
 
-/** Highest rate wins; ties break by fewest Strings; stable order last. */
+/** Pinned rates win outright; then highest rate; ties break by fewest
+ * Strings; stable order last. */
 const rank = (candidates: EarnRate[]): EarnRate[] =>
   [...candidates].sort(
-    (a, b) => b.rate - a.rate || a.strings.length - b.strings.length
+    (a, b) =>
+      Number(b.pinned ?? false) - Number(a.pinned ?? false) ||
+      b.rate - a.rate ||
+      a.strings.length - b.strings.length
   );
 
 /** A Wildcard is suppressed wherever a clean rate on another on-hand

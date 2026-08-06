@@ -108,6 +108,9 @@ _Avoid_: Multiplier, cashback rate
 Conditions attached to an Earn Rate: a spend cap, a merchant exclusion, mobile-wallet-required, or a user-set choice category. A rate with no Strings is "clean."
 _Avoid_: Caveats, conditions, restrictions
 
+**Pinned**:
+An Earn Rate flagged to win its Spend Category outright, regardless of nominal rate — a judgment call that a non-rate perk beats the rate winner (Amex Plat's $800/claim phone protection over Autograph's 3x on cell phone). The one exception to "ranking uses nominal rate only."
+
 **Wildcard**:
 An Earn Rate that competes in every Spend Category rather than one (USBAR's mobile-wallet 3%). A Wildcard is suppressed in any category where a clean, equal-or-better on-hand Card exists.
 
@@ -127,7 +130,7 @@ A toggle indicating Jennifer is traveling internationally. When on, FTF Cards ar
 _Avoid_: Travel mode
 
 **Recommendation**:
-The best on-hand Card for a Spend Category — computed from Earn Rates, the Wallet, and Abroad; never stored. Ties on nominal rate break by fewest Strings; the runner-up shows as tied-with-caveat. Only ties surface a second Card.
+The best on-hand Card for a Spend Category — computed from Earn Rates, the Wallet, and Abroad; never stored. A Pinned rate wins outright; otherwise highest nominal rate wins. Ties on nominal rate break by fewest Strings; the runner-up shows as tied-with-caveat. Only ties surface a second Card.
 _Avoid_: Suggestion, best pick
 
 **Everything Else**:

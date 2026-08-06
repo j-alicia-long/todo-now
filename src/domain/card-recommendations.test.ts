@@ -22,12 +22,29 @@ describe("recommendAll — full-wallet baseline", () => {
       drugstores: "freedom",
       "online-shopping": "bofa",
       "gas-transit": "autograph",
-      "cell-phone": "autograph",
+      "cell-phone": "amex",
       streaming: "savorone",
       entertainment: "savorone",
       "hotels-cars": "autograph",
       "amazon-walmart-target": "usbar",
     });
+  });
+});
+
+describe("recommendAll — pinned rates", () => {
+  test("Amex's pinned phone protection beats Autograph's 3x on cell phone", () => {
+    const recs = recommendAll({ wallet: FULL_WALLET });
+    const cellPhone = recs.find((r) => r.category === "cell-phone")!;
+    expect(cellPhone.pick.card).toBe("amex");
+    expect(cellPhone.pick.pinned).toBe(true);
+  });
+
+  test("no Amex: cell phone falls back to the rate winner", () => {
+    const recs = recommendAll({
+      wallet: ["usbar", "savorone", "bofa", "freedom", "autograph"],
+    });
+    const cellPhone = recs.find((r) => r.category === "cell-phone")!;
+    expect(cellPhone.pick.card).toBe("autograph");
   });
 });
 

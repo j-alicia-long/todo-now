@@ -118,6 +118,9 @@ export type EarnRate = {
   strings: EarnString[];
   /** Short "why" text for the table row. */
   note: string;
+  /** Wins its category regardless of rate — a non-rate perk (e.g.
+   * phone protection) judged to beat the nominal-rate winner. */
+  pinned?: boolean;
 };
 
 const cap = (display: string): EarnString => ({ kind: "spend-cap", display });
@@ -170,11 +173,19 @@ export const EARN_RATES: EarnRate[] = [
   },
   { card: "autograph", scope: "gas-transit", rate: 3, strings: [], note: "3x" },
   {
+    card: "amex",
+    scope: "cell-phone",
+    rate: 1,
+    strings: [],
+    note: "1x, but $800/claim phone protection beats the 3x",
+    pinned: true,
+  },
+  {
     card: "autograph",
     scope: "cell-phone",
     rate: 3,
     strings: [],
-    note: "3x + $600/claim phone protection (Plat: $800/claim but only 1x)",
+    note: "3x + $600/claim phone protection",
   },
   { card: "savorone", scope: "streaming", rate: 3, strings: [], note: "3%" },
   { card: "autograph", scope: "streaming", rate: 3, strings: [], note: "3x" },
@@ -208,7 +219,7 @@ export const EARN_RATES: EarnRate[] = [
     scope: "everything-else",
     rate: 1.5,
     strings: [],
-    note: "1.5% flat — best physical-card catch-all",
+    note: "1.5% flat — general catch-all",
   },
   {
     card: "savorone",
