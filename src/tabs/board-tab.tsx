@@ -67,6 +67,9 @@ export const BoardTab = ({
   const [boardView, setBoardView] = useState<BoardView>(
     settings.defaultBoardView
   );
+  // Move mode: shows the arrow/archive buttons on cards. Deliberately plain
+  // state (not persisted) so it resets to off whenever the board remounts.
+  const [moveMode, setMoveMode] = useState(false);
   // Triage: open/closed per Matrix visit, plus the skip rotation
   // (task ids only — the stack itself derives from triage-rules).
   const [triageOpen, setTriageOpen] = useState(false);
@@ -143,26 +146,38 @@ export const BoardTab = ({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="board-view-toggle" role="tablist">
-        <button
-          role="tab"
-          aria-selected={boardView === "columns"}
-          className={`board-view-btn ${boardView === "columns" ? "active" : ""}`}
-          onClick={() => setBoardView("columns")}
-        >
-          <Icon name="view_week" /> Columns
-        </button>
-        <button
-          role="tab"
-          aria-selected={boardView === "matrix"}
-          className={`board-view-btn ${boardView === "matrix" ? "active" : ""}`}
-          onClick={() => {
-            setBoardView("matrix");
-            openTriage();
-          }}
-        >
-          <Icon name="grid_view" /> Matrix
-        </button>
+      <div className="board-toolbar">
+        <div className="board-view-toggle" role="tablist">
+          <button
+            role="tab"
+            aria-selected={boardView === "columns"}
+            className={`board-view-btn ${boardView === "columns" ? "active" : ""}`}
+            onClick={() => setBoardView("columns")}
+          >
+            <Icon name="view_week" /> Columns
+          </button>
+          <button
+            role="tab"
+            aria-selected={boardView === "matrix"}
+            className={`board-view-btn ${boardView === "matrix" ? "active" : ""}`}
+            onClick={() => {
+              setBoardView("matrix");
+              openTriage();
+            }}
+          >
+            <Icon name="grid_view" /> Matrix
+          </button>
+        </div>
+        {boardView === "columns" && (
+          <button
+            className={`move-mode-btn ${moveMode ? "active" : ""}`}
+            aria-pressed={moveMode}
+            onClick={() => setMoveMode((m) => !m)}
+            title="Show move and archive buttons on cards"
+          >
+            <Icon name="swap_horiz" /> Move
+          </button>
+        )}
       </div>
       {boardView === "matrix" ? (
         <>
@@ -197,6 +212,7 @@ export const BoardTab = ({
               tasks={tasksByStatus(col.id)}
               taskActions={taskActions}
               settings={settings}
+              moveMode={moveMode}
               recurring={
                 col.id === "this-week"
                   ? { items: boardRecurringTasks, actions: recurringActions }

@@ -300,14 +300,50 @@
 }
 
 // ── Matrix view ──
+.board-toolbar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
 .board-view-toggle {
   align-self: flex-start;
   background: var(--bg-sunken);
   border-radius: 999px;
   display: inline-flex;
   gap: 2px;
-  margin-bottom: 12px;
   padding: 3px;
+}
+
+.move-mode-btn {
+  align-items: center;
+  background: var(--bg-sunken);
+  border: 0;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 600;
+  gap: 6px;
+  padding: 6px 14px;
+  transition:
+    background var(--transition),
+    color var(--transition);
+
+  .material-symbols-outlined {
+    font-size: 17px;
+  }
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &.active {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
 }
 
 .board-view-btn {
@@ -902,8 +938,8 @@
 .card-links {
   align-items: center;
   display: inline-flex;
-  flex-shrink: 0;
   margin-right: auto; // spacer: keeps due tag + links + clip left, area tag right
+  min-width: 0; // allow shrinking so link pills wrap instead of overflowing
 }
 
 // ── Card Tags ──
@@ -912,7 +948,10 @@
   flex: 1;
   flex-wrap: wrap;
   gap: 4px;
-  justify-content: flex-end;
+  // Left-align by default so wrapped rows (links, area pill) hug the left
+  // edge; the auto-margin spacers below push the area tag right only when
+  // it shares a row with the due/links cluster.
+  justify-content: flex-start;
   min-width: 0;
   position: relative;
 
@@ -1260,6 +1299,7 @@
 
 // ── Inline Date Picker Dropdown ──
 .add-date-picker-wrapper {
+  display: flex;
   position: relative;
 }
 
@@ -1377,6 +1417,7 @@
 // ── Card Action Buttons ──
 .card-actions {
   align-items: center;
+  align-self: flex-end; // pin to bottom when the tag cluster wraps taller
   display: flex;
   flex-shrink: 0;
   gap: 4px;

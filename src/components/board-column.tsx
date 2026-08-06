@@ -119,6 +119,7 @@ export const BoardColumn = ({
   tasks,
   taskActions,
   settings,
+  moveMode,
   recurring,
 }: {
   id: TaskStatus;
@@ -128,6 +129,7 @@ export const BoardColumn = ({
   tasks: Task[];
   taskActions: TaskActions;
   settings: Settings;
+  moveMode?: boolean;
   recurring?: { items: RecurringItem[]; actions: RecurringCardActions };
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -164,7 +166,7 @@ export const BoardColumn = ({
             {id === "done"
               ? "Nothing completed yet"
               : id === "this-month"
-                ? "Drag tasks here or use the arrow"
+                ? "Drag tasks here"
                 : "All clear!"}
           </div>
         ) : doneGroups ? (
@@ -207,6 +209,7 @@ export const BoardColumn = ({
                       task={task}
                       actions={taskActions}
                       settings={settings}
+                      moveMode={moveMode}
                     />
                   ))}
                 </div>
@@ -220,6 +223,7 @@ export const BoardColumn = ({
               task={task}
               actions={taskActions}
               settings={settings}
+              moveMode={moveMode}
             />
           ))
         )}

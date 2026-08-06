@@ -28,11 +28,13 @@ export const TaskCard = ({
   task,
   actions,
   settings,
+  moveMode,
   isDragOverlay,
 }: {
   task: Task;
   actions: TaskActions;
   settings: Settings;
+  moveMode?: boolean;
   isDragOverlay?: boolean;
 }) => {
   const [editingTag, setEditingTag] = useState<string | null>(null);
@@ -177,17 +179,19 @@ export const TaskCard = ({
               onClose={() => setEditingTag(null)}
             />
           )}
-          <div
-            className="card-links"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <LinkPills
-              links={task.links ?? []}
-              onChange={(links) => actions.update(task.id, { links })}
-            />
-          </div>
-          {settings.showArea && task.area && (
+          {!moveMode && (
+            <div
+              className="card-links"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <LinkPills
+                links={task.links ?? []}
+                onChange={(links) => actions.update(task.id, { links })}
+              />
+            </div>
+          )}
+          {!moveMode && settings.showArea && task.area && (
             <span className="tag-anchor">
               <span
                 className={`card-tag area ${AREA_COLORS[task.area] || ""} tappable`}
@@ -212,7 +216,7 @@ export const TaskCard = ({
           )}
         </div>
         <div className="card-actions">
-          {task.status === "this-week" && (
+          {moveMode && task.status === "this-week" && (
             <>
               <button
                 className="card-action-btn move-right"
@@ -236,7 +240,7 @@ export const TaskCard = ({
               </button>
             </>
           )}
-          {task.status === "this-month" && (
+          {moveMode && task.status === "this-month" && (
             <>
               <button
                 className="card-action-btn move-left"
