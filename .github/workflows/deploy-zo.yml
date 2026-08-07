@@ -23,7 +23,8 @@ jobs:
         env:
           ZO_TOKEN: ${{ secrets.ZO_TOKEN }}
         run: |
-          out="$(npx -y mcporter call "https://api.zo.computer/mcp.bash" \
+          # mcporter pinned: 0.13.0 moved --header off the call command
+          out="$(npx -y mcporter@0.12.3 call "https://api.zo.computer/mcp.bash" \
             --header "Authorization=Bearer $ZO_TOKEN" \
             --args '{"cmd":"cd /home/workspace/personal-os/02-projects/todo-app/todo && git pull --ff-only origin main && ./redeploy.sh","description":"todo deploy (GitHub Actions)"}')"
           echo "$out"
