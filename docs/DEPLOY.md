@@ -7,7 +7,16 @@ You don't need to prompt chat to redeploy. In production, `file server.ts` serve
 built files from `./dist` on every request, and a supervisor keeps the service
 alive — kill it and it restarts itself.
 
-## TL;DR — one command
+## TL;DR — just push
+
+**Pushing to `main` deploys automatically.** The `Deploy to Zo` GitHub Action
+(`file .github/workflows/deploy-zo.yml`) runs on every push to main: it calls the Zo
+MCP `bash` tool (auth via the `ZO_TOKEN` repo secret) to `git pull --ff-only` +
+`./redeploy.sh` on Zo, then health-checks the live URL. Watch it with
+`gh run watch --repo j-alicia-long/todo-now`, or trigger manually from the Actions tab
+(workflow_dispatch).
+
+## Manual fallback — one command
 
 **From the local Mac** (no Zo chat/terminal needed):
 
@@ -90,9 +99,12 @@ tail -f /dev/shm/todo_err.log
   `DATA_DIR` env → `/home/workspace/todo-data` if it exists → `./data`).
   The repo's `data/` folder is only used for local development.
 - The live site runs from **Zo's checkout of this directory**, not from GitHub directly.
-  Pushing to `github.com/j-alicia-long/todo-now` does **not** deploy by itself — but the
-  default `deploy-zo.sh` (git mode) pulls main onto Zo and redeploys, so push + script
-  is the normal flow.
+  Pushing to `github.com/j-alicia-long/todo-now` deploys via the `Deploy to Zo` Action,
+  which pulls main onto Zo's checkout and redeploys. `deploy-zo.sh` remains as a manual
+  fallback (e.g., if the Action or its `ZO_TOKEN` secret breaks).
+- If the Zo API token rotates, update both the local file
+  (`~/.config/ai-cost-tracker/zo_token`) and the repo secret:
+  `gh secret set ZO_TOKEN --repo j-alicia-long/todo-now < ~/.config/ai-cost-tracker/zo_token`.
 - `pkill -f "bun run prod"` only matches the published service, not the dev server
   (`bun run dev`), so it's safe to run.
 - If a redeploy ever hangs or the port is stuck, killing the process is safe — the

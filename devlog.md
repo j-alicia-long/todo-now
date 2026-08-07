@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-07 — Auto-deploy to Zo on push (GitHub Action)
+
+Push to main now deploys the live site — no manual script run needed. New `Deploy to Zo` workflow (`.github/workflows/deploy-zo.yml`) does exactly what `deploy-zo.sh` git mode did: calls the Zo MCP `bash` tool via `npx mcporter` to `git pull --ff-only` + `./redeploy.sh` on Zo, then curl-checks the live URL for HTTP 200. Zo API token lives in the `ZO_TOKEN` repo secret; `concurrency: deploy-zo` serializes overlapping pushes. `deploy-zo.sh` stays as the manual fallback. DEPLOY.md updated.
+
+---
+
 ## 2026-08-06 — Deploy script: git-pull is now the default
 
 Tonight's deploy failed because the Mutagen sync was stalled, while `git pull` + `redeploy.sh` on Zo worked fine — so that's the default now. `deploy-zo.sh` git mode pulls pushed main onto Zo's checkout and redeploys (warns when the local tree is dirty or ahead of origin/main); the old Mutagen-nonce path survives behind `--sync` for deploying the local tree without pushing. DEPLOY.md updated.

@@ -1,0 +1,35 @@
+# Deploys the live Zo site on every push to main.
+# Same as `scripts/deploy-zo.sh` (git mode): runs `git pull` + `./redeploy.sh`
+# on Zo via the Zo MCP bash tool. Needs the ZO_TOKEN repo secret (Zo API token).
+name: Deploy to Zo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-zo
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pull main + redeploy on Zo
+        env:
+          ZO_TOKEN: ${{ secrets.ZO_TOKEN }}
+        run: |
+          out="$(npx -y mcporter call "https://api.zo.computer/mcp.bash" \
+            --header "Authorization=Bearer $ZO_TOKEN" \
+            --args '{"cmd":"cd /home/workspace/personal-os/02-projects/todo-app/todo && git pull --ff-only origin main && ./redeploy.sh","description":"todo deploy (GitHub Actions)"}')"
+          echo "$out"
+          # redeploy.sh prints "✅ Live:" once the site returns HTTP 200.
+          echo "$out" | grep -q "✅ Live" || { echo "::error::Redeploy did not report success"; exit 1; }
+      - run: |
+          code="$(curl -s -o /dev/null -w '%{http_code}' https://todo-jlong.zocomputer.io/todo)"
+          echo "Live site returned HTTP $code"
+          [ "$code" = "200" ]
