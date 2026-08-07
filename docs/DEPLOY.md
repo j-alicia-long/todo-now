@@ -17,10 +17,21 @@ cd ~/Documents/personal-os/02-projects/todo-app/todo
 ./scripts/deploy-zo.sh --fast   # frontend only, zero downtime
 ```
 
-`file scripts/deploy-zo.sh` (adapted from ai-carbon-footprint's deploy script) waits for
-the Mutagen file sync to catch up, then triggers `file redeploy.sh` on Zo via the Zo MCP
-`bash` tool. Requires `mcporter` (`npm i -g mcporter`) and a Zo API token at
+`file scripts/deploy-zo.sh` deploys **GitHub main**: it runs `git pull` +
+`file redeploy.sh` on Zo via the Zo MCP `bash` tool. This is the default because it
+doesn't depend on the Mutagen file sync being healthy and it keeps Zo's checkout up to
+date. **Commit & push first** — the script warns if the local tree is dirty or ahead of
+`origin/main`. Requires `mcporter` (`npm i -g mcporter`) and a Zo API token at
 `~/.config/ai-cost-tracker/zo_token` (override with `ZO_TOKEN_FILE`).
+
+**Fallback — deploy the local tree without pushing** (`--sync`): the older Mutagen-sync
+path. Waits for the file sync to deliver local edits (including uncommitted ones) to Zo,
+then redeploys. Only works while the Mutagen session is healthy:
+
+```bash
+./scripts/deploy-zo.sh --sync          # full redeploy of the synced local tree
+./scripts/deploy-zo.sh --sync --fast   # frontend only
+```
 
 **Directly on Zo:**
 
@@ -78,9 +89,10 @@ tail -f /dev/shm/todo_err.log
   (that happened once — see `file src/server/files.ts` for the resolution order:
   `DATA_DIR` env → `/home/workspace/todo-data` if it exists → `./data`).
   The repo's `data/` folder is only used for local development.
-- The live site runs from **this workspace directory**, not from GitHub. Pushing to
-  `github.com/j-alicia-long/todo-now` does **not** deploy — running the commands above does.
-  Commit/push separately if you want the repo in sync.
+- The live site runs from **Zo's checkout of this directory**, not from GitHub directly.
+  Pushing to `github.com/j-alicia-long/todo-now` does **not** deploy by itself — but the
+  default `deploy-zo.sh` (git mode) pulls main onto Zo and redeploys, so push + script
+  is the normal flow.
 - `pkill -f "bun run prod"` only matches the published service, not the dev server
   (`bun run dev`), so it's safe to run.
 - If a redeploy ever hangs or the port is stuck, killing the process is safe — the

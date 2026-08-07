@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-06 — Deploy script: git-pull is now the default
+
+Tonight's deploy failed because the Mutagen sync was stalled, while `git pull` + `redeploy.sh` on Zo worked fine — so that's the default now. `deploy-zo.sh` git mode pulls pushed main onto Zo's checkout and redeploys (warns when the local tree is dirty or ahead of origin/main); the old Mutagen-nonce path survives behind `--sync` for deploying the local tree without pushing. DEPLOY.md updated.
+
+---
+
 ## 2026-08-06 — Board move mode + card layout fixes
 
 Decluttered board task cards. New "Move" pill toggle sits right-aligned in a `board-toolbar` row opposite the Columns/Matrix switcher (columns view only); the per-card arrow/archive buttons render only while it's on. Move mode also hides link pills and the area label, leaving just title + due date + move buttons. The toggle is deliberately unpersisted React state, so it resets to off whenever the board remounts (tab switch, reload). Card-row layout fixes: `.card-tags` now left-aligns (`flex-start`) so wrapped rows hug the left edge — date/links/clip always left, area pill right only when it shares a row; `.card-links` lost `flex-shrink: 0` so pills wrap instead of overflowing; `.card-actions` gets `align-self: flex-end` to pin move buttons bottom-right; the add-form date button now stretches to match the input/Add heights. This Month empty-state copy updated ("use the arrow" no longer visible by default).
