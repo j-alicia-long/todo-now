@@ -6,6 +6,15 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Keyboard Shortcuts section in Settings
+
+- Settings panel gains a "Keyboard Shortcuts" section listing the app's real shortcuts (Report Mode open/compose/save/exit, Matrix triage sort/skip)
+- Keycaps reuse the existing `KeyHint` kit component; modifier shown as ⌘ on Mac, Ctrl elsewhere
+- Also added top spacing between stacked settings sections (`.settings-title:not(:first-child)`)
+- Report: `2026-08-09-0829-add-keyboard-shortcut-menu-to-settings-p.md`
+
+---
+
 ## 2026-08-09 — Reporter keyboard shortcuts: Enter opens compose, Shift+Enter saves
 
 - While picking Targets, pressing **Enter** now opens the compose modal (previously only the FAB did)

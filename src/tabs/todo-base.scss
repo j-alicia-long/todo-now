@@ -1607,6 +1607,33 @@
   font-size: 0.75rem;
 }
 
+// Give stacked settings sections room to breathe (first title hugs the top).
+.settings-view .settings-title:not(:first-child) {
+  margin-top: 24px;
+}
+
+.settings-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-shortcut-row {
+  align-items: center;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.settings-shortcut-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .toggle-switch {
   background: var(--bg-sunken);
   border: 1px solid var(--border);
