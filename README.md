@@ -22,6 +22,9 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 - **Credit Cards page**: filterable cheat-sheet at `/cards` — a recommendation engine derives the best card per purchase category from structured earn-rate data, filtered by which cards you have on hand (persisted "Wallet" chips) and an ephemeral Abroad toggle that excludes foreign-transaction-fee cards; expandable per-card details — reachable from the settings drawer
 - **Trash**: Soft delete with 30-day auto-purge and restore
 - **Bug Reporter**: shake (mobile) or ⌘⇧P (desktop) opens Report Mode — tap elements to highlight them, then file a bug or idea; reports save as Markdown files (with element selectors and HTML snippets) for an agent to pick up later
+
+  ![Reporter compose modal: two highlighted targets with an inline mention chip in the note](docs/screenshot-reporter.png)
+
 - **Dark mode**: Warm cream (light) / deep cocoa (dark) theme
 - **Mobile-first**: Horizontal-scroll board on small screens
 
