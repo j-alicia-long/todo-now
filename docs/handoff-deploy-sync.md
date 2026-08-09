@@ -1,5 +1,12 @@
 # Handoff: Zo deploy pipeline — stale-build investigation (2026-08-09)
 
+> **Resolved 2026-08-09 (later that night):** the structural fix landed — both
+> clones moved out of the Mutagen-synced `personal-os` tree (Zo:
+> `/home/workspace/repos/todo`, Mac: `~/Documents/repos/todo` + symlink at the
+> old path). Git + GitHub is now the only channel between them; `--sync` mode
+> was removed. See `devlog.md` 2026-08-09 and `docs/DEPLOY.md`. Kept for
+> historical context.
+
 Compacted from a live debugging session so a fresh agent can pick this up.
 Context docs: `docs/DEPLOY.md` (deploy how-to), `devlog.md` 2026-08-09 entries,
 `AGENTS.md` (repo rules). Domain glossary: `CONTEXT.md`.

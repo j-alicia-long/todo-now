@@ -11,8 +11,9 @@ alive — kill it and it restarts itself.
 
 **Pushing to `main` deploys automatically.** The `Deploy to Zo` GitHub Action
 (`file .github/workflows/deploy-zo.yml`) runs on every push to main: it calls the Zo
-MCP `bash` tool (auth via the `ZO_TOKEN` repo secret) to `git pull --ff-only` +
-`./redeploy.sh` on Zo, then health-checks the live URL. Watch it with
+MCP `bash` tool (auth via the `ZO_TOKEN` repo secret) to `git fetch` +
+`git reset --hard FETCH_HEAD` + `./redeploy.sh` on Zo, then health-checks the live URL.
+Watch it with
 `gh run watch --repo j-alicia-long/todo-now`, or trigger manually from the Actions tab
 (workflow_dispatch).
 
@@ -21,31 +22,21 @@ MCP `bash` tool (auth via the `ZO_TOKEN` repo secret) to `git pull --ff-only` +
 **From the local Mac** (no Zo chat/terminal needed):
 
 ```bash
-cd ~/Documents/personal-os/02-projects/todo-app/todo
+cd ~/Documents/repos/todo
 ./scripts/deploy-zo.sh          # full redeploy (server.ts changes too)
 ./scripts/deploy-zo.sh --fast   # frontend only, zero downtime
 ```
 
-`file scripts/deploy-zo.sh` deploys **GitHub main**: it runs `git pull` +
-`file redeploy.sh` on Zo via the Zo MCP `bash` tool. This is the default because it
-doesn't depend on the Mutagen file sync being healthy and it keeps Zo's checkout up to
-date. **Commit & push first** — the script warns if the local tree is dirty or ahead of
+`file scripts/deploy-zo.sh` deploys **GitHub main**: it runs `git fetch` +
+`git reset --hard FETCH_HEAD` + `file redeploy.sh` on Zo via the Zo MCP `bash` tool.
+**Commit & push first** — the script warns if the local tree is dirty or ahead of
 `origin/main`. Requires `mcporter` (`npm i -g mcporter`) and a Zo API token at
 `~/.config/ai-cost-tracker/zo_token` (override with `ZO_TOKEN_FILE`).
-
-**Fallback — deploy the local tree without pushing** (`--sync`): the older Mutagen-sync
-path. Waits for the file sync to deliver local edits (including uncommitted ones) to Zo,
-then redeploys. Only works while the Mutagen session is healthy:
-
-```bash
-./scripts/deploy-zo.sh --sync          # full redeploy of the synced local tree
-./scripts/deploy-zo.sh --sync --fast   # frontend only
-```
 
 **Directly on Zo:**
 
 ```bash
-cd /home/workspace/personal-os/02-projects/todo-app/todo
+cd /home/workspace/repos/todo
 ./redeploy.sh
 ```
 
@@ -70,7 +61,7 @@ Skip the restart for a zero-downtime deploy:
 ## Manual equivalents (if you'd rather not use the script)
 
 ```bash
-cd /home/workspace/personal-os/02-projects/todo-app/todo
+cd /home/workspace/repos/todo
 
 # Frontend change → rebuild only (live instantly, no downtime):
 bun run build
@@ -93,14 +84,16 @@ tail -f /dev/shm/todo_err.log
 
 ## Notes
 
-- **Live data lives at** `/home/workspace/todo-data/`, outside the Mutagen-synced
-  `personal-os` tree, so a broken/re-created file sync can never overwrite it
-  (that happened once — see `file src/server/files.ts` for the resolution order:
+- **Live data lives at** `/home/workspace/todo-data/`, outside the repo tree, so a
+  deploy's `git reset --hard` can never touch it
+  (see `file src/server/files.ts` for the resolution order:
   `DATA_DIR` env → `/home/workspace/todo-data` if it exists → `./data`).
   The repo's `data/` folder is only used for local development.
-- The live site runs from **Zo's checkout of this directory**, not from GitHub directly.
+- The live site runs from **Zo's clone at `/home/workspace/repos/todo`** — outside the
+  Mutagen-synced `personal-os` tree, so the Mac↔Zo file sync can never touch it. Git +
+  GitHub is the only channel between the Mac clone (`~/Documents/repos/todo`) and Zo's.
   Pushing to `github.com/j-alicia-long/todo-now` deploys via the `Deploy to Zo` Action,
-  which pulls main onto Zo's checkout and redeploys. `deploy-zo.sh` remains as a manual
+  which resets Zo's clone to main and redeploys. `deploy-zo.sh` remains as a manual
   fallback (e.g., if the Action or its `ZO_TOKEN` secret breaks).
 - If the Zo API token rotates, update both the local file
   (`~/.config/ai-cost-tracker/zo_token`) and the repo secret:

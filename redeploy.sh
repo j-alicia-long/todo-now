@@ -7,7 +7,7 @@
 # Live URL: https://todo-jlong.zocomputer.io/todo
 set -euo pipefail
 
-DIR="/home/workspace/personal-os/02-projects/todo-app/todo"
+DIR="/home/workspace/repos/todo"
 PORT=57863
 cd "$DIR"
 

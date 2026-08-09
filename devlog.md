@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Repo escapes the Mutagen sync: Zo clone moves to /home/workspace/repos/todo
+
+Structural fix for the stale-build/clobber class of bugs: the repo no longer lives inside the Mac↔Zo synced `personal-os` tree on either side. Zo's clone moves to `/home/workspace/repos/todo` (outside the sync root); the Mac clone moves to `~/Documents/repos/todo` with a symlink left at the old path (Mutagen never follows symlinks, and its portable mode won't propagate an absolute one — so git + GitHub is now the _only_ channel between the two clones, and a deploy's `reset --hard` on Zo can never sync back and wipe uncommitted Mac edits). Repointed `redeploy.sh`, `deploy-zo.yml`, and `deploy-zo.sh` at the new Zo path. Removed `deploy-zo.sh --sync` (the Mutagen-nonce deploy path) — physically impossible once the repo is outside the sync, and it was a footgun by design. DEPLOY.md updated.
+
+---
+
 ## 2026-08-09 — Deploy fix: force Zo checkout to match GitHub main
 
 Zo deploys were silently failing ("Deploy to Zo" action red since the Reporter push): the Mac↔Zo folder sync copies in-progress local edits into Zo's working tree as uncommitted changes, so the deploy's `git pull --ff-only` aborted with "local changes would be overwritten." The live site was stuck on a pre-Aug-6 build (no Move pill, no link paperclips, no Reporter). Fix: deploy now runs `git fetch origin main && git reset --hard FETCH_HEAD` (GitHub is the source of truth; untracked/ignored files like `data/` are untouched) in both `.github/workflows/deploy-zo.yml` and `scripts/deploy-zo.sh`.
