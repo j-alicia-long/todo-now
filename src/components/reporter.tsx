@@ -201,7 +201,6 @@ export const Reporter = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
-  const nextIdRef = useRef(1);
   const noteDraftRef = useRef("");
   const location = useLocation();
 
@@ -209,7 +208,6 @@ export const Reporter = ({
     setPhase("off");
     setTargets([]);
     setError(null);
-    nextIdRef.current = 1;
     noteDraftRef.current = "";
   }, []);
 
@@ -256,8 +254,13 @@ export const Reporter = ({
     setTargets((prev) => {
       const existing = prev.find((t) => t.el === el);
       if (existing) return prev.filter((t) => t !== existing);
+      // Reuse the lowest free number so deselecting a Target frees its id
+      // instead of the counter climbing forever.
+      const used = new Set(prev.map((t) => t.id));
+      let n = 1;
+      while (used.has(`t${n}`)) n++;
       const target: CapturedTarget = {
-        id: `t${nextIdRef.current++}`,
+        id: `t${n}`,
         tag: el.tagName.toLowerCase(),
         selector: buildSelector(el),
         snippet: buildSnippet(el),

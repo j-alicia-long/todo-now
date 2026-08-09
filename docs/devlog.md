@@ -6,6 +6,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Reporter target-ids reuse freed numbers (P1 bug)
+
+- Selecting then deselecting Targets used to leave a monotonic counter climbing (`t1`→`t2`→…), so a fresh selection after a deselect got `t10` instead of `t1`
+- `toggleTargetAt` now computes the lowest unused `t{n}` from the current Targets instead of a `nextIdRef` counter; deselecting a Target frees its id for reuse
+- Report: `2026-08-09-0657-reporter-bug-when-i-select-and-deselect.md`
+
+---
+
 ## 2026-08-09 — paths-ignore widened to all non-site files
 
 - Both workflows now also skip deploys for `.gitignore`, `.github/**` (workflows themselves — use workflow_dispatch to test workflow edits), `.husky/**`, lint/format configs (`.lintstagedrc`, `.prettierrc`, `.prettierignore`, `eslint.config.js`, `stylelint.config.js`), and `scripts/**`
