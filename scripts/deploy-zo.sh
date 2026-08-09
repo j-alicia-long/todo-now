@@ -5,7 +5,9 @@
 # (outside the Mutagen-synced personal-os tree), so deploying is "sync Zo's
 # checkout to the pushed main, then run ./redeploy.sh there" — via the Zo MCP
 # bash tool. Uses fetch + reset --hard (not pull): GitHub main is the source
-# of truth. NOTE: it deploys what's on GitHub main — commit & push first.
+# of truth. Unexpected local changes in the deploy clone are logged and
+# auto-stashed (recoverable via `git stash list` on Zo) before the reset.
+# NOTE: it deploys what's on GitHub main — commit & push first.
 #
 #   ./scripts/deploy-zo.sh          full deploy (frontend + server.ts), ~6s blip
 #   ./scripts/deploy-zo.sh --fast   frontend only, zero downtime
@@ -51,6 +53,6 @@ if [ -n "$(git -C "$ROOT" log --oneline origin/main..main 2>/dev/null)" ]; then
 fi
 
 echo "▶ Syncing Zo checkout to origin/main + running redeploy.sh${FAST_FLAG:+ $FAST_FLAG}…"
-zo_bash "cd '$REMOTE_DIR' && git fetch origin main && git reset --hard FETCH_HEAD && ./redeploy.sh $FAST_FLAG"
+zo_bash "cd '$REMOTE_DIR' && git status --short && git stash push --include-untracked -m pre-deploy-autostash && git fetch origin main && git reset --hard FETCH_HEAD && ./redeploy.sh $FAST_FLAG"
 
 echo "✔ Deployed: https://todo-jlong.zocomputer.io/todo"

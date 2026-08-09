@@ -6,6 +6,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Deploys log + auto-stash before the reset
+
+- Both deploy paths (`deploy-zo.yml`, `scripts/deploy-zo.sh`) now run `git status --short` + `git stash push --include-untracked -m pre-deploy-autostash` before `git reset --hard` in the deploy clone
+- Nothing should ever write to `/home/workspace/repos/todo`, so instead of silently bulldozing surprises, the deploy preserves them as evidence (`git stash list` on Zo)
+- Ignored files (`dist/`, `node_modules/`) are untouched; a clean tree makes the stash a no-op
+
+---
+
 ## 2026-08-09 — Reports move into the Mutagen sync so Mac agents can see them
 
 - Reporter output was landing in `/home/workspace/todo-data/reports/` on Zo — invisible to Mac-side dev agents, so the "check open reports" rule only worked on Zo

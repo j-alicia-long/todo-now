@@ -13,6 +13,10 @@ alive — kill it and it restarts itself.
 (`file .github/workflows/deploy-zo.yml`) runs on every push to main: it calls the Zo
 MCP `bash` tool (auth via the `ZO_TOKEN` repo secret) to `git fetch` +
 `git reset --hard FETCH_HEAD` + `./redeploy.sh` on Zo, then health-checks the live URL.
+Before resetting, both deploy paths log `git status --short` and auto-stash any
+unexpected local changes in the deploy clone (`git stash list` on Zo to inspect;
+`pre-deploy-autostash` entries) — nothing should ever be writing there, so a
+non-empty stash is a signal something's off.
 Watch it with
 `gh run watch --repo j-alicia-long/todo-now`, or trigger manually from the Actions tab
 (workflow_dispatch).
