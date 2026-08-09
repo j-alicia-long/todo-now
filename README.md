@@ -8,25 +8,14 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 
 ## Features
 
-- **Three-column board**: This Week → This Month → Done, with drag-and-drop
-- **Matrix view**: Eisenhower 2×2 grid on the Board tab (Do / Schedule / Quick-hit / Reconsider) — importance is set by dragging, urgency is derived from due dates (never stored), and drags across the urgency boundary write the due date
-- **Triage**: switching to the Matrix with unjudged tasks auto-opens a one-at-a-time sorting modal — sort by drag (desktop), corner swipe (mobile), or keys 1–4 (S skips, Escape dismisses); a "Sort N tasks" pill reopens it
-- **Future tab**: Park tasks you're not ready for yet
-- **Shopping list**: Lightweight checklist with archive support (pastel purple theme)
-- **Grocery list**: Lightweight checklist for groceries (pastel green theme)
-- **Sidebar drawer**: Todo Archive, Shopping Archive, and Settings in a slide-out menu
-- **Inline tag editing**: Tap priority, area, effort, or decision load to change it
-- **Due date urgency**: Color-coded countdown (red → orange → yellow → green), shown first on every card
-- **Tappable due date**: Tap to open a calendar modal and change or set the date
-- **Settings**: Toggle which labels appear on cards, and pick the default Board view (Columns or Matrix)
-- **Credit Cards page**: filterable cheat-sheet at `/cards` — a recommendation engine derives the best card per purchase category from structured earn-rate data, filtered by which cards you have on hand (persisted "Wallet" chips) and an ephemeral Abroad toggle that excludes foreign-transaction-fee cards; expandable per-card details — reachable from the settings drawer
-- **Trash**: Soft delete with 30-day auto-purge and restore
-- **Bug Reporter**: shake (mobile) or ⌘⇧P (desktop) opens Report Mode — tap elements to highlight them, then file a bug or idea; reports save as Markdown files (with element selectors and HTML snippets) for an agent to pick up later
+- **Task board**: organize tasks by time horizon — This Week → This Month → Done — with drag-and-drop, a Future tab for parking ideas, and inline editing of due dates and labels right on each card
+- **Recurring tasks**: weekly habits and long-term chores that resurface on the board when due
+- **Shopping & grocery lists**: lightweight checklists, each with its own pastel theme
+- **Desktop & mobile**: responsive PWA — full web app on desktop, installable touch-first app on phones
+- **Theming**: warm cream (light) / deep cocoa (dark) themes
+- **Bug Reporter**: shake (mobile) or ⌘⇧P (desktop) opens Report Mode — tap elements to highlight them, then file a bug or idea, saved as Markdown for an agent to pick up later
 
   ![Reporter compose modal: two highlighted targets with an inline mention chip in the note](docs/screenshot-reporter.png)
-
-- **Dark mode**: Warm cream (light) / deep cocoa (dark) theme
-- **Mobile-first**: Horizontal-scroll board on small screens
 
 ## Architecture
 
