@@ -19,28 +19,7 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 
 ## Architecture
 
-```
-todo-now/
-├── server.ts          # Hono API server (Bun runtime)
-├── index.tsx          # Server entry point
-├── index.html         # SPA shell
-├── vite.config.ts     # Vite build config
-├── src/
-│   ├── main.tsx       # React entry
-│   ├── App.tsx        # Router (react-router-dom)
-│   ├── styles.scss    # Global theme (CSS custom properties)
-│   ├── pages/
-│   │   ├── TodoPage.tsx    # Main board UI + all components
-│   │   └── TodoPage.scss   # Page-specific styles
-│   └── components/
-│       └── theme-provider.tsx  # Light/dark mode context
-├── data/              # Local-dev storage (gitignored; prod uses /home/workspace/todo-data)
-│   ├── tasks.json     # Task storage
-│   ├── shopping.json  # Shopping list
-│   └── groceries.json # Grocery list
-└── public/
-    └── favicon.svg
-```
+Layered React SPA over a thin Hono API: Controller (`src/tabs/todo-base.tsx`) → Tabs → Components → Stores (client data layer with a swappable transport seam) → shared pure Domain rules → generic Server resource modules → JSON files on disk. Full layer-by-layer breakdown, module map, and API table: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### Stack
 
@@ -54,20 +33,7 @@ todo-now/
 
 ### API
 
-| Method | Endpoint             | Description                                       |
-| ------ | -------------------- | ------------------------------------------------- |
-| GET    | `/api/tasks`         | List all tasks                                    |
-| POST   | `/api/tasks`         | Create a task                                     |
-| PUT    | `/api/tasks/:id`     | Update a task                                     |
-| DELETE | `/api/tasks/:id`     | Soft-delete (or `?permanent=true` to hard-delete) |
-| GET    | `/api/shopping`      | List all shopping items                           |
-| POST   | `/api/shopping`      | Create a shopping item                            |
-| PUT    | `/api/shopping/:id`  | Update a shopping item                            |
-| DELETE | `/api/shopping/:id`  | Delete a shopping item                            |
-| GET    | `/api/groceries`     | List all grocery items                            |
-| POST   | `/api/groceries`     | Create a grocery item                             |
-| PUT    | `/api/groceries/:id` | Update a grocery item                             |
-| DELETE | `/api/groceries/:id` | Delete a grocery item                             |
+Generic CRUD routes per list family (`/api/tasks`, `/api/shopping`, `/api/groceries`, `/api/recurring`), plus `/api/settings` (get/update), write-only `/api/reports` (bug Reporter), and `/api/archive` (weekly archive sweep). Full route table in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#api).
 
 ### Task Model
 

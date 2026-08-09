@@ -22,6 +22,27 @@ All source files are kebab-case (ESLint-enforced via the shared preset).
 Board → Recurring → Shopping → Groceries
 Sidebar drawer: Todo Archive, Todo Trash, Shopping Archive, Settings
 
+## API
+
+The four list families (`tasks`, `shopping`, `groceries`, `recurring`) share the same generic CRUD surface, mounted by `src/server/resource.ts`:
+
+| Method | Endpoint            | Description                                                          |
+| ------ | ------------------- | -------------------------------------------------------------------- |
+| GET    | `/api/<family>`     | List all items                                                       |
+| POST   | `/api/<family>`     | Create an item                                                       |
+| PUT    | `/api/<family>/:id` | Update an item (whitelisted fields only)                             |
+| DELETE | `/api/<family>/:id` | Delete an item (Tasks soft-delete; `?permanent=true` to hard-delete) |
+
+Bespoke routes:
+
+| Method | Endpoint                      | Description                                                    |
+| ------ | ----------------------------- | -------------------------------------------------------------- |
+| GET    | `/api/settings`               | Read settings                                                  |
+| PUT    | `/api/settings`               | Merge-update settings                                          |
+| DELETE | `/api/groceries/clear-bought` | Remove all bought grocery items                                |
+| POST   | `/api/reports`                | Save a bug/idea Report as Markdown to `data/reports/open/`     |
+| POST   | `/api/archive`                | Archive done tasks / bought items older than 4 weeks to `data/archive.md` |
+
 ## Architecture vocabulary
 
 Terms used in architecture discussions and reviews. Domain terms live in `../CONTEXT.md`; these describe code structure.
