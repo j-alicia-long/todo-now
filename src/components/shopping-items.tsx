@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { type ShoppingItem, type GroceryItem } from "../stores/hooks";
-import { Icon, LinkPills } from "./ui";
+import { Icon, LinkPills, MoveActionButton } from "./ui";
 
 export type ShoppingItemActions = {
   toggle: (id: string) => void;
@@ -16,9 +16,11 @@ export type ShoppingItemActions = {
 export const ShoppingListItem = ({
   item,
   actions,
+  moveMode,
 }: {
   item: ShoppingItem;
   actions: ShoppingItemActions;
+  moveMode?: boolean;
 }) => {
   const [addedToBoard, setAddedToBoard] = useState(false);
   const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -53,13 +55,14 @@ export const ShoppingListItem = ({
           {item.title}
         </span>
         <div className="list-actions">
-          <button
-            className="list-action-btn"
-            onClick={() => actions.archive(item.id)}
-            title="Archive"
-          >
-            <Icon name="archive" />
-          </button>
+          {moveMode && (
+            <MoveActionButton
+              variant="archive"
+              icon="archive"
+              title="Archive"
+              onClick={() => actions.archive(item.id)}
+            />
+          )}
           <button
             className="list-action-btn delete"
             onClick={() => actions.remove(item.id)}
@@ -82,15 +85,16 @@ export const ShoppingListItem = ({
           >
             <Icon name={addedToBoard ? "check" : "dashboard"} />
           </button>
-          <button
-            className="list-action-btn"
-            onClick={() => actions.move(item.id)}
-            title={item.category === "need" ? "Move to Wants" : "Move to Needs"}
-          >
-            <Icon
-              name={item.category === "need" ? "chevron_right" : "chevron_left"}
+          {moveMode && (
+            <MoveActionButton
+              variant={item.category === "need" ? "move-right" : "move-left"}
+              icon={item.category === "need" ? "chevron_right" : "chevron_left"}
+              title={
+                item.category === "need" ? "Move to Wants" : "Move to Needs"
+              }
+              onClick={() => actions.move(item.id)}
             />
-          </button>
+          )}
         </div>
       </div>
     </div>

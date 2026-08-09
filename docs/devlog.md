@@ -6,6 +6,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Shopping move mode + shared MoveActionButton (PR)
+
+- Shopping tab gains a "Move" toggle (mirrors the Board); the per-item archive and category-move (chevron) buttons now appear only in move mode
+- Extracted a shared `MoveActionButton` (in `ui.tsx`, styled via `.card-action-btn`) and reused it in both `task-card` (Board) and `shopping-items` — no duplicated markup
+- Report: `2026-08-09-0659-show-only-in-move-mode-just-like-on-the.md`
+
+---
+
 ## 2026-08-09 — Keyboard Shortcuts section in Settings
 
 - Settings panel gains a "Keyboard Shortcuts" section listing the app's real shortcuts (Report Mode open/compose/save/exit, Matrix triage sort/skip)

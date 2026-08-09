@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import { type Settings } from "../stores/hooks";
-import { Icon, TagSelect, LinkPills } from "./ui";
+import { Icon, TagSelect, LinkPills, MoveActionButton } from "./ui";
 import { DatePickerModal } from "./date-picker";
 import {
   AREA_COLORS,
@@ -219,50 +219,34 @@ export const TaskCard = ({
         <div className="card-actions">
           {moveMode && task.status === "this-week" && (
             <>
-              <button
-                className="card-action-btn move-right"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  actions.changeStatus(task.id, "this-month");
-                }}
+              <MoveActionButton
+                variant="move-right"
+                icon="chevron_right"
                 title="Move to This Month"
-              >
-                <Icon name="chevron_right" />
-              </button>
-              <button
-                className="card-action-btn archive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  actions.changeStatus(task.id, "future");
-                }}
+                onClick={() => actions.changeStatus(task.id, "this-month")}
+              />
+              <MoveActionButton
+                variant="archive"
+                icon="archive"
                 title="File away to Future"
-              >
-                <Icon name="archive" />
-              </button>
+                onClick={() => actions.changeStatus(task.id, "future")}
+              />
             </>
           )}
           {moveMode && task.status === "this-month" && (
             <>
-              <button
-                className="card-action-btn move-left"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  actions.changeStatus(task.id, "this-week");
-                }}
+              <MoveActionButton
+                variant="move-left"
+                icon="chevron_left"
                 title="Move to This Week"
-              >
-                <Icon name="chevron_left" />
-              </button>
-              <button
-                className="card-action-btn archive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  actions.changeStatus(task.id, "future");
-                }}
+                onClick={() => actions.changeStatus(task.id, "this-week")}
+              />
+              <MoveActionButton
+                variant="archive"
+                icon="archive"
                 title="File away to Future"
-              >
-                <Icon name="archive" />
-              </button>
+                onClick={() => actions.changeStatus(task.id, "future")}
+              />
             </>
           )}
         </div>
