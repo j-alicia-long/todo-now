@@ -166,6 +166,12 @@ const ComposeModal = ({
           ref={editorRef}
           className="reporter-note"
           contentEditable
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.shiftKey && !submitting) {
+              e.preventDefault();
+              submit();
+            }
+          }}
           data-placeholder={
             targets.length > 0
               ? "Describe it — tap a target above to reference it…"
@@ -202,6 +208,8 @@ export const Reporter = ({
   const [error, setError] = useState<string | null>(null);
   const [savedFlash, setSavedFlash] = useState(false);
   const noteDraftRef = useRef("");
+  const phaseRef = useRef<Phase>(phase);
+  phaseRef.current = phase;
   const location = useLocation();
 
   const exit = useCallback(() => {
@@ -230,6 +238,12 @@ export const Reporter = ({
           }
           return "picking";
         });
+        return;
+      }
+      // Enter while picking Targets opens the compose modal.
+      if (e.key === "Enter" && phaseRef.current === "picking") {
+        e.preventDefault();
+        setPhase("composing");
         return;
       }
       if (e.key === "Escape") {

@@ -6,6 +6,15 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Reporter keyboard shortcuts: Enter opens compose, Shift+Enter saves
+
+- While picking Targets, pressing **Enter** now opens the compose modal (previously only the FAB did)
+- Inside the compose modal, **Shift+Enter** saves the report (plain Enter still adds a newline in the note)
+- Added a `phaseRef` to gate the global Enter handler to picking mode only
+- Report: `2026-08-09-0700-reporter-enter-key-should-open-the-repor.md`
+
+---
+
 ## 2026-08-09 — Hide the add-link button on Done tasks (P2 bug)
 
 - Done task cards no longer show the `+ attach_file` pill; existing links stay visible and clickable
