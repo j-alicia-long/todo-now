@@ -11,6 +11,7 @@ Jennifer's personal task/shopping/grocery manager: a React PWA hosted as a Zo Si
 - `data/` is gitignored — never commit personal task data.
 - Binary assets (icons, images) live only in the deployed site, not in the GitHub repo.
 - Update `../todo-architecture.md` (product spec) and `README.md` for new features; log notable shipped work in `devlog.md`.
+- **Check `data/reports/open/` for user-filed bug reports** (from the in-app Reporter). Each is a Markdown file with element selectors and HTML snippets; after fixing one, move it to `data/reports/resolved/`.
 
 ## Deeper docs
 

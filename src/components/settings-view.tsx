@@ -69,6 +69,27 @@ export const SettingsView = ({
           </label>
         ))}
       </div>
+      <h2 className="settings-title">Bug Reports</h2>
+      <p className="settings-desc">
+        Report Mode: shake (mobile) or ⌘⇧P (desktop), tap elements to highlight,
+        then describe the bug or idea.
+      </p>
+      <div className="settings-list">
+        <label className="settings-toggle">
+          <div className="toggle-info">
+            <span className="toggle-label">Shake to report</span>
+            <span className="toggle-desc">
+              Shake your phone to open Report Mode
+            </span>
+          </div>
+          <div
+            className={`toggle-switch ${settings.shakeToReport ? "on" : ""}`}
+            onClick={() => onToggle("shakeToReport")}
+          >
+            <div className="toggle-knob" />
+          </div>
+        </label>
+      </div>
     </div>
   );
 };

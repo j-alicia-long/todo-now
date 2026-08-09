@@ -6,7 +6,7 @@ Planned and deferred work. Shipped work is logged in `../devlog.md`.
 
 - **Weekly momentum view** — encouraging progress tracking
 - **Service worker + offline support** — app currently requires internet
-- **STR feedback loop** — speak text, submit directly to agent or issues to Github
+- **STR feedback loop** — speak text, submit directly to agent or issues to Github. (Partially addressed 2026-08-09: the Reporter ships visual element-highlight reports to `data/reports/open/`; speech input and direct agent/GitHub submission remain.)
 
 Bugs
 

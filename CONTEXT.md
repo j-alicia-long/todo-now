@@ -137,6 +137,43 @@ _Avoid_: Suggestion, best pick
 The catch-all pseudo-category for purchases matching no Spend Category. Its Recommendation always shows two picks: the mobile-wallet choice and the physical-card fallback, since mobile-wallet acceptance isn't known in advance.
 _Avoid_: Default, non-category, other
 
+### Reporting
+
+**Report**:
+A user-submitted observation about the app, written down for an agent to act on later. Every Report has a Kind, a note, Page Context, and zero or more Targets.
+_Avoid_: Feedback (mass noun), issue (collides with GitHub issues), ticket
+
+**Kind**:
+What a Report is: a `bug` (something is wrong) or an `idea` (something could be better). Chosen at submit time.
+_Avoid_: Type, category, severity
+
+**Reporter**:
+The in-app tool for composing and submitting a Report: Report Mode plus the compose form. Opened by keyboard shortcut on desktop and by shaking the device on mobile.
+_Avoid_: Bug tool, feedback widget
+
+**Report Mode**:
+The state the Reporter puts the app in: the page stays visible but input is repurposed — tapping or clicking an element toggles it as a Target instead of operating the app. A floating report button opens the compose form; dismissing Report Mode discards any selection.
+_Avoid_: Picker, inspector, highlighter
+
+**Target**:
+One selected element captured in a Report: a short ID (`t1`, `t2`, …, in selection order), a descriptor (where it is), and a Snippet (what it is). A Report may have many Targets or none.
+_Avoid_: Element (too generic), selection
+
+**Mention**:
+An inline reference to a Target embedded in a Report's note. Stored in plain text as the Target's ID token; shown in the Reporter as a small label chip within the text. Inserted by tapping the Target's button in the compose form.
+_Avoid_: Link, tag, reference (too generic)
+
+**Snippet**:
+The trimmed HTML of a Target, captured so an agent can identify the exact element without running the app. May contain personal data, which is why Reports are never committed.
+
+**Page Context**:
+What the Reporter captures automatically about the moment of the Report: which tab/view was open, viewport size, user agent, and timestamp.
+_Avoid_: Metadata, environment
+
+**Open / Resolved**:
+A Report's lifecycle. Open means awaiting an agent; Resolved means acted on. Status is expressed by which folder the Report file lives in — moving the file is the state change.
+_Avoid_: Done (collides with Task status), closed, fixed
+
 ### Time
 
 **Week**:

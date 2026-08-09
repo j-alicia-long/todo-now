@@ -6,10 +6,12 @@
 // This is the app's only scheduler; there is no background job.
 
 import { existsSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { promoteDueSoon, purgeTrash, type Task } from "../domain/task-rules";
 import { resetWeeklyItems, type RecurringItem } from "../domain/recurrence";
 import type { ShoppingItem, GroceryItem } from "../domain/entities";
 import type { ListStore } from "./resource";
+import type { ReportWriter } from "./reports";
 
 // In production on Zo, data lives OUTSIDE the Mutagen-synced personal-os
 // tree so a broken/re-created file sync can never overwrite the live
@@ -206,6 +208,31 @@ export const writeRecurring = (items: RecurringItem[]) =>
 export const recurringStore: ListStore<RecurringItem> = {
   read: readRecurring,
   write: writeRecurring,
+};
+
+// ── Reports ──
+// File adapter for the ReportWriter seam: new Reports land in
+// data/reports/open/ as Markdown; an agent resolves one by moving it to
+// data/reports/resolved/. Reports live in data/ (never committed) because
+// Snippets can contain personal task text.
+
+const OPEN_REPORTS_DIR = dataDir + "/reports/open";
+
+export const reportsWriter: ReportWriter = {
+  save: async (fileName, markdown) => {
+    await mkdir(OPEN_REPORTS_DIR, { recursive: true });
+    // De-collide: same-minute reports get a numeric suffix.
+    let name = fileName;
+    for (
+      let i = 2;
+      await Bun.file(`${OPEN_REPORTS_DIR}/${name}`).exists();
+      i++
+    ) {
+      name = fileName.replace(/\.md$/, `-${i}.md`);
+    }
+    await Bun.write(`${OPEN_REPORTS_DIR}/${name}`, markdown);
+    return name;
+  },
 };
 
 // ── Settings ──

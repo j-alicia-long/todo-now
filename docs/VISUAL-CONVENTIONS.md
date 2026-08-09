@@ -7,4 +7,5 @@
 - Recurring tasks appear in Board's This Week column with green left accent
 - Task titles editable by double-click (desktop) / double-tap (mobile); Enter to save, Escape to cancel
 - Triage modal: dimmed backdrop over the Matrix; active card drags into Quadrants (desktop) or corner-swipes with tilt + spring-back (mobile); keys 1–4 mirror the grid layout, S skips, Escape closes; floating accent "Sort N tasks" pill bottom-center
+- Report Mode (the Reporter): very slight dim overlay; tapped Targets get an accent border with a soft glowing box shadow and a small `tN` label; floating accent bug button lower-right (badge = target count) with a small ✕ above it; compose modal has a Bug/Idea segmented toggle, monospace target chips, and Mention chips rendered inline in the note editor; green "Report saved" flash pill bottom-center on submit
 - Mobile: icon-only tabs below 768px, swipe support within board columns

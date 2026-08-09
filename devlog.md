@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — In-app bug Reporter (shake / ⌘⇧P → highlight → Markdown file)
+
+New Reporter feature: shake the phone (or ⌘⇧P on desktop) to enter Report Mode — a slight dim overlay where taps select elements as Targets (glowing highlight, `tN` label) instead of operating the app; a floating bug button opens a compose modal with a Bug/Idea toggle and target chips that insert Mention chips inline in the note. Submitting POSTs to the new write-only `/api/reports`, which renders Markdown (frontmatter Page Context + note with `[tN]` tokens + per-Target selector/snippet sections) into `data/reports/open/` — gitignored, since snippets can contain personal task text; agents resolve a report by moving it to `data/reports/resolved/`. New modules: `src/domain/report.ts` (shared types), `src/lib/report-capture.ts` (selector/snippet capture, note serialization), `src/lib/use-shake.ts` (devicemotion shake detection + iOS permission), `src/components/reporter.tsx`, `src/server/reports.ts` (validation/rendering/route behind a `ReportWriter` seam). "Shake to report" toggle in Settings requests iOS motion permission. Domain terms (Report, Kind, Target, Mention, Report Mode, Open/Resolved) added to CONTEXT.md. Tested: unit (rendering, filenames, route, capture, serialization) + Playwright E2E.
+
+---
+
 ## 2026-08-07 — Auto-deploy to Zo on push (GitHub Action)
 
 Push to main now deploys the live site — no manual script run needed. New `Deploy to Zo` workflow (`.github/workflows/deploy-zo.yml`) does exactly what `deploy-zo.sh` git mode did: calls the Zo MCP `bash` tool via `npx mcporter` to `git pull --ff-only` + `./redeploy.sh` on Zo, then curl-checks the live URL for HTTP 200. Zo API token lives in the `ZO_TOKEN` repo secret; `concurrency: deploy-zo` serializes overlapping pushes. `deploy-zo.sh` stays as the manual fallback. DEPLOY.md updated.

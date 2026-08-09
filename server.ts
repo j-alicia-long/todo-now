@@ -4,6 +4,7 @@ import { createServer as createViteServer } from "vite";
 import config from "./zosite.json";
 import { Hono } from "hono";
 import { createResourceRoutes } from "./src/server/resource";
+import { createReportRoutes } from "./src/server/reports";
 import {
   tasksFamily,
   shoppingFamily,
@@ -24,6 +25,7 @@ import {
   writeGroceries,
   readSettings,
   writeSettings,
+  reportsWriter,
 } from "./src/server/files";
 
 // AI agents: read README.md for navigation and contribution guidance.
@@ -64,6 +66,10 @@ app.delete("/api/groceries/clear-bought", async (c) => {
 
 createResourceRoutes(app, "/api/groceries", groceriesFamily, groceriesStore);
 createResourceRoutes(app, "/api/recurring", recurringFamily, recurringStore);
+
+// Reporter submissions: write-only, saved as Markdown for a later agent
+// (src/server/reports.ts; files land in data/reports/open/).
+createReportRoutes(app, "/api/reports", reportsWriter);
 
 // ── Weekly Archive ──
 

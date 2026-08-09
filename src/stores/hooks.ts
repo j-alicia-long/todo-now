@@ -181,6 +181,8 @@ export type BoardView = "columns" | "matrix";
 export type Settings = {
   showArea: boolean;
   defaultBoardView: BoardView;
+  /** Shake the phone to open the Reporter (Report Mode). */
+  shakeToReport: boolean;
   /** The Wallet: cards on hand, filtering /cards recommendations. */
   walletCards: CardKey[];
 };
@@ -188,6 +190,7 @@ export type Settings = {
 export const DEFAULT_SETTINGS: Settings = {
   showArea: true,
   defaultBoardView: "columns",
+  shakeToReport: true,
   walletCards: [...CARD_KEYS],
 };
 

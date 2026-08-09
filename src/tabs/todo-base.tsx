@@ -8,9 +8,11 @@ import {
   type ShoppingItemActions,
 } from "../components/shopping-items";
 import { type TaskActions } from "../components/task-card";
+import { Reporter } from "../components/reporter";
 import { Icon } from "../components/ui";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import { formatDueDate, formatHeadingDate } from "../lib/presentation";
+import { requestMotionPermission } from "../lib/use-shake";
 import {
   useGroceries,
   useRecurring,
@@ -227,6 +229,11 @@ const TodoBase = () => {
       : theme;
 
   const toggleSetting = (key: BooleanSettingKey) => {
+    // iOS gates motion events behind a permission prompt that must come
+    // from a user gesture — this toggle tap is that gesture.
+    if (key === "shakeToReport" && !settings.shakeToReport) {
+      void requestMotionPermission();
+    }
     toggleSettingKey(key, resolvedTheme as "light" | "dark");
   };
 
@@ -569,6 +576,11 @@ const TodoBase = () => {
           actions={sidebarActions}
         />
       )}
+
+      <Reporter
+        currentTab={sidebarPanel ?? viewTab}
+        shakeEnabled={settings.shakeToReport}
+      />
     </div>
   );
 };
