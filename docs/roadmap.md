@@ -1,6 +1,6 @@
 # Roadmap
 
-Planned and deferred work. Shipped work is logged in `../devlog.md`.
+Planned and deferred work. Shipped work is logged in `devlog.md`.
 
 ## Planned
 
