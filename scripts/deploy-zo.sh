@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # deploy-zo.sh — deploy the todo site to Zo from this (local) machine.
 #
-# Default mode: git pull on Zo. Zo's copy is a clone of the GitHub repo, so
-# deploying is "pull the pushed main, then run ./redeploy.sh there" — via the
-# Zo MCP bash tool. This is the foolproof path: it doesn't depend on the
+# Default mode: git deploy on Zo. Zo's copy is a clone of the GitHub repo, so
+# deploying is "sync Zo's checkout to the pushed main, then run ./redeploy.sh
+# there" — via the Zo MCP bash tool. Uses fetch + reset --hard (not pull):
+# the Mac↔Zo folder sync routinely leaves uncommitted copies of local edits
+# in Zo's working tree, which make pull abort. GitHub main is the source of
+# truth. This is the foolproof path: it doesn't depend on the
 # Mutagen file sync being healthy, and it keeps Zo's checkout up to date.
 # NOTE: it deploys what's on GitHub main — commit & push first.
 #
@@ -59,8 +62,8 @@ if [ "$MODE" = "git" ]; then
     echo "⚠ Local main has unpushed commits — push first or they will NOT deploy."
   fi
 
-  echo "▶ Pulling main + running redeploy.sh${FAST_FLAG:+ $FAST_FLAG} on Zo…"
-  zo_bash "cd '$REMOTE_DIR' && git pull --ff-only origin main && ./redeploy.sh $FAST_FLAG"
+  echo "▶ Syncing Zo checkout to origin/main + running redeploy.sh${FAST_FLAG:+ $FAST_FLAG}…"
+  zo_bash "cd '$REMOTE_DIR' && git fetch origin main && git reset --hard FETCH_HEAD && ./redeploy.sh $FAST_FLAG"
 else
   echo "▶ Waiting for file sync to catch up…"
   NONCE="deploy-$(date +%s)-$$"

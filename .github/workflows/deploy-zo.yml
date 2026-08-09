@@ -1,6 +1,9 @@
 # Deploys the live Zo site on every push to main.
-# Same as `scripts/deploy-zo.sh` (git mode): runs `git pull` + `./redeploy.sh`
-# on Zo via the Zo MCP bash tool. Needs the ZO_TOKEN repo secret (Zo API token).
+# Same as `scripts/deploy-zo.sh` (git mode): syncs Zo's clone to origin/main
+# + runs `./redeploy.sh` on Zo via the Zo MCP bash tool. Uses fetch + reset
+# (not pull): the Mac↔Zo folder sync routinely leaves uncommitted copies of
+# local edits in Zo's working tree, which make pull abort. GitHub is the
+# source of truth. Needs the ZO_TOKEN repo secret (Zo API token).
 name: Deploy to Zo
 
 on:
@@ -26,7 +29,7 @@ jobs:
           # mcporter pinned: 0.13.0 moved --header off the call command
           out="$(npx -y mcporter@0.12.3 call "https://api.zo.computer/mcp.bash" \
             --header "Authorization=Bearer $ZO_TOKEN" \
-            --args '{"cmd":"cd /home/workspace/personal-os/02-projects/todo-app/todo && git pull --ff-only origin main && ./redeploy.sh","description":"todo deploy (GitHub Actions)"}')"
+            --args '{"cmd":"cd /home/workspace/personal-os/02-projects/todo-app/todo && git fetch origin main && git reset --hard FETCH_HEAD && ./redeploy.sh","description":"todo deploy (GitHub Actions)"}')"
           echo "$out"
           # redeploy.sh prints "✅ Live:" once the site returns HTTP 200.
           echo "$out" | grep -q "✅ Live" || { echo "::error::Redeploy did not report success"; exit 1; }

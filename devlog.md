@@ -6,7 +6,11 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
-## 2026-08-09 — In-app bug Reporter (shake / ⌘⇧P → highlight → Markdown file)
+## 2026-08-09 — Deploy fix: force Zo checkout to match GitHub main
+
+Zo deploys were silently failing ("Deploy to Zo" action red since the Reporter push): the Mac↔Zo folder sync copies in-progress local edits into Zo's working tree as uncommitted changes, so the deploy's `git pull --ff-only` aborted with "local changes would be overwritten." The live site was stuck on a pre-Aug-6 build (no Move pill, no link paperclips, no Reporter). Fix: deploy now runs `git fetch origin main && git reset --hard FETCH_HEAD` (GitHub is the source of truth; untracked/ignored files like `data/` are untouched) in both `.github/workflows/deploy-zo.yml` and `scripts/deploy-zo.sh`.
+
+---
 
 New Reporter feature: shake the phone (or ⌘⇧P on desktop) to enter Report Mode — a slight dim overlay where taps select elements as Targets (glowing highlight, `tN` label) instead of operating the app; a floating bug button opens a compose modal with a Bug/Idea toggle and target chips that insert Mention chips inline in the note. Submitting POSTs to the new write-only `/api/reports`, which renders Markdown (frontmatter Page Context + note with `[tN]` tokens + per-Target selector/snippet sections) into `data/reports/open/` — gitignored, since snippets can contain personal task text; agents resolve a report by moving it to `data/reports/resolved/`. New modules: `src/domain/report.ts` (shared types), `src/lib/report-capture.ts` (selector/snippet capture, note serialization), `src/lib/use-shake.ts` (devicemotion shake detection + iOS permission), `src/components/reporter.tsx`, `src/server/reports.ts` (validation/rendering/route behind a `ReportWriter` seam). "Shake to report" toggle in Settings requests iOS motion permission. Domain terms (Report, Kind, Target, Mention, Report Mode, Open/Resolved) added to CONTEXT.md. Tested: unit (rendering, filenames, route, capture, serialization) + Playwright E2E.
 
