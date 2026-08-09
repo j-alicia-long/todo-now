@@ -94,6 +94,11 @@ tail -f /dev/shm/todo_err.log
   (see `file src/server/files.ts` for the resolution order:
   `DATA_DIR` env → `/home/workspace/todo-data` if it exists → `./data`).
   The repo's `data/` folder is only used for local development.
+- **Bug reports are the one exception to "nothing lives in the sync":** the Reporter
+  writes to `/home/workspace/personal-os/02-projects/todo-app/reports/open/` (inside
+  the Mutagen-synced tree, on purpose — reports are created on Zo but worked on the
+  Mac). Resolution order in `file src/server/files.ts`: `REPORTS_DIR` env → that path if
+  it exists → `<dataDir>/reports`.
 - The live site runs from **Zo's clone at `/home/workspace/repos/todo`** — outside the
   Mutagen-synced `personal-os` tree, so the Mac↔Zo file sync can never touch it. Git +
   GitHub is the only channel between the Mac clone (`~/Documents/repos/todo`) and Zo's.

@@ -68,7 +68,8 @@ createResourceRoutes(app, "/api/groceries", groceriesFamily, groceriesStore);
 createResourceRoutes(app, "/api/recurring", recurringFamily, recurringStore);
 
 // Reporter submissions: write-only, saved as Markdown for a later agent
-// (src/server/reports.ts; files land in data/reports/open/).
+// (src/server/reports.ts; files land in the open-reports folder — see
+// the Reports section of src/server/files.ts for path resolution).
 createReportRoutes(app, "/api/reports", reportsWriter);
 
 // ── Weekly Archive ──

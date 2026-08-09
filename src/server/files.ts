@@ -212,11 +212,21 @@ export const recurringStore: ListStore<RecurringItem> = {
 
 // ── Reports ──
 // File adapter for the ReportWriter seam: new Reports land in
-// data/reports/open/ as Markdown; an agent resolves one by moving it to
-// data/reports/resolved/. Reports live in data/ (never committed) because
-// Snippets can contain personal task text.
+// <reports>/open/ as Markdown; an agent resolves one by moving it to
+// <reports>/resolved/. Unlike the live database, Reports live INSIDE the
+// Mutagen-synced personal-os tree on Zo so they sync to the Mac, where
+// dev agents pick them up (see reports/AGENTS.md there). They stay out
+// of git because Snippets can contain personal task text. Resolution:
+//   1. REPORTS_DIR env var (explicit override)
+//   2. the Zo synced-tree location, used whenever it exists
+//   3. <dataDir>/reports — local development and tests
+const ZO_REPORTS_DIR =
+  "/home/workspace/personal-os/02-projects/todo-app/reports";
+const reportsDir =
+  process.env.REPORTS_DIR ??
+  (existsSync(ZO_REPORTS_DIR) ? ZO_REPORTS_DIR : dataDir + "/reports");
 
-const OPEN_REPORTS_DIR = dataDir + "/reports/open";
+const OPEN_REPORTS_DIR = reportsDir + "/open";
 
 export const reportsWriter: ReportWriter = {
   save: async (fileName, markdown) => {

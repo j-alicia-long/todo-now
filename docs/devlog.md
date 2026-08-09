@@ -6,7 +6,15 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
-## 2026-08-09 — Docs-only pushes skip deploys; devlog moved to docs/
+## 2026-08-09 — Reports move into the Mutagen sync so Mac agents can see them
+
+- Reporter output was landing in `/home/workspace/todo-data/reports/` on Zo — invisible to Mac-side dev agents, so the "check open reports" rule only worked on Zo
+- Considered committing reports to the repo or filing GitHub issues; both rejected — the repo is public and snippets contain personal task text
+- New home: `personal-os/02-projects/todo-app/reports/{open,resolved}/`, inside the Mac↔Zo Mutagen sync — safe here (unlike the repo clobbering) because each report has one writer per phase: Zo creates, file is immutable, Mac moves to `resolved/`
+- Server resolution order: `REPORTS_DIR` env → the Zo synced-tree path if it exists → `<dataDir>/reports` (local dev/tests)
+- `reports/AGENTS.md` documents the workflow and sync edge cases (union-merge duplicates: `resolved/` wins)
+
+---
 
 - Both GitHub Actions workflows (`Deploy to Zo`, GitHub Pages demo) gain `paths-ignore` for `**.md` and `docs/**` — a push touching only docs no longer redeploys anything; mixed pushes still deploy, and workflow_dispatch remains for forcing one
 - `devlog.md` moved to `docs/devlog.md`; dense paragraph entries reformatted as bullets; references updated (AGENTS.md, roadmap, handoff, DEPLOY.md)
