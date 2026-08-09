@@ -188,6 +188,7 @@ export const TaskCard = ({
               <LinkPills
                 links={task.links ?? []}
                 onChange={(links) => actions.update(task.id, { links })}
+                canAdd={!task.done}
               />
             </div>
           )}

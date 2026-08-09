@@ -16,9 +16,11 @@ export const Icon = ({
 export const LinkPills = ({
   links,
   onChange,
+  canAdd = true,
 }: {
   links: string[];
   onChange: (links: string[]) => void;
+  canAdd?: boolean;
 }) => {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
@@ -54,35 +56,36 @@ export const LinkPills = ({
           </button>
         </span>
       ))}
-      {adding ? (
-        <input
-          ref={inputRef}
-          className="link-pill-input"
-          value={draft}
-          placeholder="Paste a link…"
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              commit();
-            }
-            if (e.key === "Escape") {
-              setDraft("");
-              setAdding(false);
-            }
-          }}
-        />
-      ) : (
-        <button
-          className="link-pill add"
-          onClick={() => setAdding(true)}
-          title="Add link"
-          aria-label="Add link"
-        >
-          <Icon name="attach_file" />
-        </button>
-      )}
+      {canAdd &&
+        (adding ? (
+          <input
+            ref={inputRef}
+            className="link-pill-input"
+            value={draft}
+            placeholder="Paste a link…"
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commit();
+              }
+              if (e.key === "Escape") {
+                setDraft("");
+                setAdding(false);
+              }
+            }}
+          />
+        ) : (
+          <button
+            className="link-pill add"
+            onClick={() => setAdding(true)}
+            title="Add link"
+            aria-label="Add link"
+          >
+            <Icon name="attach_file" />
+          </button>
+        ))}
     </div>
   );
 };

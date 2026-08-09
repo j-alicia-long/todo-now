@@ -6,6 +6,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Hide the add-link button on Done tasks (P2 bug)
+
+- Done task cards no longer show the `+ attach_file` pill; existing links stay visible and clickable
+- `LinkPills` gains an optional `canAdd` prop (default `true`); `TaskCard` passes `canAdd={!task.done}`
+- Report: `2026-08-09-0653-don-t-show-these-on-tasks-in-done-col-ex.md`
+
+---
+
 ## 2026-08-09 — Reporter target-ids reuse freed numbers (P1 bug)
 
 - Selecting then deselecting Targets used to leave a monotonic counter climbing (`t1`→`t2`→…), so a fresh selection after a deselect got `t10` instead of `t1`
