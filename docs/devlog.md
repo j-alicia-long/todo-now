@@ -6,6 +6,15 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Floating bug button (Reporter launcher)
+
+- Persistent accent FAB (bug icon) in the bottom-right opens Report Mode on tap — a reliable mobile entry point that doesn't depend on device-motion permissions
+- Positioned to match the in-mode report FAB, so tapping transitions seamlessly into the same spot
+- MVP shipped in place of the unreliable shake-to-report on mobile; shake wiring left intact
+- Report: `2026-08-09-0827-shake-to-report-does-not-work-on-mobile-b.md`
+
+---
+
 ## 2026-08-09 — Keyboard Shortcuts section in Settings
 
 - Settings panel gains a "Keyboard Shortcuts" section listing the app's real shortcuts (Report Mode open/compose/save/exit, Matrix triage sort/skip)
