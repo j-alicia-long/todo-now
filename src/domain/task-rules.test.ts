@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
   applyStatusChange,
+  isRecentlyDone,
   promoteDueSoon,
   purgeTrash,
+  DONE_VISIBLE_MS,
   DUE_SOON_MS,
   TRASH_TTL_MS,
   type Task,
@@ -192,5 +194,34 @@ describe("purgeTrash", () => {
       makeTask({ status: "done", completedAt: deletedAgo(TRASH_TTL_MS * 2) }),
     ];
     expect(purgeTrash(tasks, NOW)).toBe(tasks);
+  });
+});
+
+describe("isRecentlyDone — Done column visibility", () => {
+  const completedAgo = (ms: number) =>
+    new Date(NOW.getTime() - ms).toISOString();
+
+  test("task completed just now is visible", () => {
+    expect(
+      isRecentlyDone(makeTask({ completedAt: completedAgo(0) }), NOW)
+    ).toBe(true);
+  });
+
+  test("task completed just under 7 days ago is visible", () => {
+    const task = makeTask({
+      completedAt: completedAgo(DONE_VISIBLE_MS - 1000),
+    });
+    expect(isRecentlyDone(task, NOW)).toBe(true);
+  });
+
+  test("task completed just over 7 days ago is hidden", () => {
+    const task = makeTask({
+      completedAt: completedAgo(DONE_VISIBLE_MS + 1000),
+    });
+    expect(isRecentlyDone(task, NOW)).toBe(false);
+  });
+
+  test("done task without a completedAt stamp is kept", () => {
+    expect(isRecentlyDone(makeTask({ completedAt: null }), NOW)).toBe(true);
   });
 });
