@@ -11,11 +11,21 @@ name: Deploy to Zo
 on:
   push:
     branches: [main]
-    # Docs-only pushes don't affect the built site — skip the redeploy.
-    # A push mixing code + docs still deploys (any non-ignored file triggers).
+    # Pushes that can't affect the built site skip the redeploy: docs, plus
+    # git/lint/format/hook configs, workflow files, and Mac-side tooling in
+    # scripts/. A push mixing code + ignored files still deploys.
     paths-ignore:
       - "**.md"
       - "docs/**"
+      - ".gitignore"
+      - ".github/**"
+      - ".husky/**"
+      - ".lintstagedrc"
+      - ".prettierrc"
+      - ".prettierignore"
+      - "eslint.config.js"
+      - "stylelint.config.js"
+      - "scripts/**"
   workflow_dispatch:
 
 concurrency:

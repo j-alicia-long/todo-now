@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — paths-ignore widened to all non-site files
+
+- Both workflows now also skip deploys for `.gitignore`, `.github/**` (workflows themselves — use workflow_dispatch to test workflow edits), `.husky/**`, lint/format configs (`.lintstagedrc`, `.prettierrc`, `.prettierignore`, `eslint.config.js`, `stylelint.config.js`), and `scripts/**`
+- Deliberately still deploying on: `tsconfig.json` (path aliases affect the build), `bunfig.toml`, `package.json`, `components.json`, `zosite.json`, `redeploy.sh` (runs on Zo)
+
+---
+
 ## 2026-08-09 — Deploys log + auto-stash before the reset
 
 - Both deploy paths (`deploy-zo.yml`, `scripts/deploy-zo.sh`) now run `git status --short` + `git stash push --include-untracked -m pre-deploy-autostash` before `git reset --hard` in the deploy clone

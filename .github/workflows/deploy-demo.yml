@@ -6,10 +6,20 @@ name: Deploy demo to GitHub Pages
 on:
   push:
     branches: [main]
-    # Docs-only pushes don't affect the demo build — skip it.
+    # Pushes that can't affect the demo build skip it: docs, plus git/lint/
+    # format/hook configs, workflow files, and Mac-side tooling in scripts/.
     paths-ignore:
       - "**.md"
       - "docs/**"
+      - ".gitignore"
+      - ".github/**"
+      - ".husky/**"
+      - ".lintstagedrc"
+      - ".prettierrc"
+      - ".prettierignore"
+      - "eslint.config.js"
+      - "stylelint.config.js"
+      - "scripts/**"
   workflow_dispatch:
 
 permissions:

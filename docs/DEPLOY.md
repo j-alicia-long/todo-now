@@ -21,10 +21,14 @@ Watch it with
 `gh run watch --repo j-alicia-long/todo-now`, or trigger manually from the Actions tab
 (workflow_dispatch).
 
-**Docs-only pushes skip deploys.** Both workflows (`Deploy to Zo` and the
-GitHub Pages demo) use `paths-ignore` for `**.md` and `docs/**` — a push
-touching only those files won't redeploy anything. A mixed push (code + docs)
-still deploys. Use workflow_dispatch if you ever need to force a deploy.
+**Non-site pushes skip deploys.** Both workflows (`Deploy to Zo` and the
+GitHub Pages demo) use `paths-ignore` for anything that can't affect the built
+site: `**.md`, `docs/**`, `.gitignore`, `.github/**`, lint/format/hook configs
+(`.husky/**`, `.lintstagedrc`, `.prettierrc`, `.prettierignore`,
+`eslint.config.js`, `stylelint.config.js`), and `scripts/**` (Mac-side
+tooling). A mixed push (code + ignored files) still deploys. Note `.github/**`
+includes the workflows themselves — after editing a workflow, use
+workflow_dispatch to test it.
 
 ## Manual fallback — one command
 
