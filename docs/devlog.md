@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Docs-only pushes skip deploys; devlog moved to docs/
+
+- Both GitHub Actions workflows (`Deploy to Zo`, GitHub Pages demo) gain `paths-ignore` for `**.md` and `docs/**` — a push touching only docs no longer redeploys anything; mixed pushes still deploy, and workflow_dispatch remains for forcing one
+- `devlog.md` moved to `docs/devlog.md`; dense paragraph entries reformatted as bullets; references updated (AGENTS.md, roadmap, handoff, DEPLOY.md)
+
+---
+
 ## 2026-08-09 — Repo escapes the Mutagen sync: Zo clone moves to /home/workspace/repos/todo
 
 Structural fix for the stale-build/clobber class of bugs: the repo no longer lives inside the Mac↔Zo synced `personal-os` tree on either side.

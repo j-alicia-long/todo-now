@@ -8,6 +8,11 @@ name: Deploy to Zo
 on:
   push:
     branches: [main]
+    # Docs-only pushes don't affect the built site — skip the redeploy.
+    # A push mixing code + docs still deploys (any non-ignored file triggers).
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   workflow_dispatch:
 
 concurrency:

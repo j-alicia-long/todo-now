@@ -6,6 +6,10 @@ name: Deploy demo to GitHub Pages
 on:
   push:
     branches: [main]
+    # Docs-only pushes don't affect the demo build — skip it.
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   workflow_dispatch:
 
 permissions:

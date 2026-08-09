@@ -17,6 +17,11 @@ Watch it with
 `gh run watch --repo j-alicia-long/todo-now`, or trigger manually from the Actions tab
 (workflow_dispatch).
 
+**Docs-only pushes skip deploys.** Both workflows (`Deploy to Zo` and the
+GitHub Pages demo) use `paths-ignore` for `**.md` and `docs/**` — a push
+touching only those files won't redeploy anything. A mixed push (code + docs)
+still deploys. Use workflow_dispatch if you ever need to force a deploy.
+
 ## Manual fallback — one command
 
 **From the local Mac** (no Zo chat/terminal needed):
