@@ -937,6 +937,10 @@
   display: flex;
   gap: 8px;
   margin-left: 28px;
+  // Reserve the move-action button height (18px icon + 2×4px padding) so the
+  // row keeps the same height whether or not Move mode is on — otherwise the
+  // card jitters vertically as the buttons appear/disappear.
+  min-height: 26px;
 }
 
 // ── Card Links (link pills + clip, inline in the tag row beside the due date) ──
@@ -1981,6 +1985,10 @@
   display: flex;
   gap: 8px;
   justify-content: space-between;
+  // Match the move-action button height so the sub-row keeps a constant height
+  // whether it holds link pills, the move buttons, or both — no jitter when
+  // Move mode toggles.
+  min-height: 26px;
   padding-left: 30px; // aligns under the title (checkbox 20px + 10px gap)
 
   .list-actions {

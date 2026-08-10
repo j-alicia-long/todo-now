@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-10 — Fix Move-mode row height jitter
+
+- Toggling Move mode no longer shifts card/row height: reserved the move-action button height (26px) on `.card-row` (Board) and `.list-item-sub` (Shopping) via `min-height`, so the row stays the same height whether or not the buttons are shown
+- Report: `2026-08-10-0156-the-task-item-vertical-height-jitters-wh.md`
+
+---
+
 ## 2026-08-10 — Offline mode (spec #4, tickets #5–#10)
 
 - The app now works with no network: the shell loads (Workbox service worker via vite-plugin-pwa, self-hosted Inter + Material Symbols), lists render from an IndexedDB read cache, and checking off / creating / editing / deleting all work offline
