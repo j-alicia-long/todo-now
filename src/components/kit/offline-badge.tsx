@@ -1,10 +1,16 @@
-// Connectivity + pending-changes indicator: shows when the app is
-// offline and how many edits are waiting to sync, and disappears once
-// the queue drains after reconnect. Driven by the offline transport's
-// observable state; renders nothing in demo builds (null source).
+// Connectivity + sync indicator, driven by the offline transport's
+// observable state. Stays visible whenever queued changes exist (even
+// back online), switches to "Syncing…" while the queue replays, and
+// flashes a short success badge once everything reaches the server.
+// Renders nothing in demo builds (null source).
 
-import type { CSSProperties } from "react";
-import { useOfflineState } from "@/stores/use-offline-state";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { Icon } from "@/components/ui";
+import { offlineTransport } from "@/stores/default-transport";
+import {
+  useOfflineState,
+  type OfflineStateSource,
+} from "@/stores/use-offline-state";
 
 const badgeStyle: CSSProperties = {
   position: "fixed",
@@ -21,17 +27,61 @@ const badgeStyle: CSSProperties = {
   whiteSpace: "nowrap",
 };
 
-const label = (offline: boolean, pending: number) => {
-  if (offline) {
-    return pending > 0
-      ? `Offline — ${pending} unsynced ${pending === 1 ? "change" : "changes"}`
-      : "Offline — changes will sync when you're back";
-  }
-  return `Syncing ${pending} ${pending === 1 ? "change" : "changes"}…`;
+const successStyle: CSSProperties = {
+  ...badgeStyle,
+  background: "var(--success)",
+  color: "var(--accent-text)",
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
 };
 
-export const OfflineBadge = () => {
-  const { offline, pending } = useOfflineState();
-  if (!offline && pending === 0) return null;
-  return <div style={badgeStyle}>{label(offline, pending)}</div>;
+const changes = (n: number) => `${n} ${n === 1 ? "change" : "changes"}`;
+const unsynced = (n: number) =>
+  `${n} unsynced ${n === 1 ? "change" : "changes"}`;
+
+const label = ({
+  offline,
+  pending,
+  syncing,
+}: ReturnType<typeof useOfflineState>) => {
+  if (syncing) return `Syncing ${changes(pending)}…`;
+  if (offline) {
+    return pending > 0
+      ? `Offline — ${unsynced(pending)}`
+      : "Offline — changes will sync when you're back";
+  }
+  return unsynced(pending);
+};
+
+export const OfflineBadge = ({
+  source = offlineTransport,
+  flashMs = 2000,
+}: {
+  source?: OfflineStateSource | null;
+  flashMs?: number;
+} = {}) => {
+  const state = useOfflineState(source);
+  const [flash, setFlash] = useState(false);
+  const prevPending = useRef(state.pending);
+
+  useEffect(() => {
+    const drained =
+      prevPending.current > 0 && state.pending === 0 && !state.syncing;
+    prevPending.current = state.pending;
+    if (!drained) return;
+    setFlash(true);
+    const t = setTimeout(() => setFlash(false), flashMs);
+    return () => clearTimeout(t);
+  }, [state.pending, state.syncing, flashMs]);
+
+  if (flash && state.pending === 0 && !state.offline && !state.syncing) {
+    return (
+      <div style={successStyle}>
+        <Icon name="check_circle" /> All changes synced
+      </div>
+    );
+  }
+  if (!state.offline && !state.syncing && state.pending === 0) return null;
+  return <div style={badgeStyle}>{label(state)}</div>;
 };

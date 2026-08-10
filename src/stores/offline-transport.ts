@@ -43,7 +43,12 @@ export type OfflineTransport = Transport & {
   subscribe: (fn: (s: OfflineState) => void) => () => void;
 };
 
-export type OfflineState = { offline: boolean; pending: number };
+export type OfflineState = {
+  offline: boolean;
+  pending: number;
+  /** True while replay is sending the queue. */
+  syncing: boolean;
+};
 
 // A fetch-level network failure (no HTTP response) surfaces as a
 // TypeError; a server rejection reaches ensureOk and throws a plain
@@ -81,11 +86,15 @@ export const makeOfflineTransport = (
 ): OfflineTransport => {
   const shouldFallBack = (e: unknown) => !isOnline() || isNetworkFailure(e);
 
-  let state: OfflineState = { offline: false, pending: 0 };
+  let state: OfflineState = { offline: false, pending: 0, syncing: false };
   const listeners = new Set<(s: OfflineState) => void>();
   const setState = (next: Partial<OfflineState>) => {
     const merged = { ...state, ...next };
-    if (merged.offline === state.offline && merged.pending === state.pending)
+    if (
+      merged.offline === state.offline &&
+      merged.pending === state.pending &&
+      merged.syncing === state.syncing
+    )
       return;
     state = merged;
     for (const fn of listeners) fn(state);
@@ -159,18 +168,22 @@ export const makeOfflineTransport = (
     replay: async () => {
       let queue = await storage.readQueue();
       if (queue.length === 0) return;
+      setState({ syncing: true });
       while (queue.length > 0) {
         try {
           await send(queue[0]);
         } catch (e) {
-          if (isNetworkFailure(e)) return; // still offline; try later
+          if (isNetworkFailure(e)) {
+            setState({ syncing: false }); // still offline; try later
+            return;
+          }
           console.error("Dropping queued op the server rejected:", queue[0], e);
         }
         queue = queue.slice(1);
         await storage.writeQueue(queue);
         setState({ pending: queue.length });
       }
-      setState({ offline: false });
+      setState({ offline: false, syncing: false });
       opts.onSynced?.();
     },
     getState: () => state,

@@ -6,6 +6,7 @@ import { describe, expect, test } from "bun:test";
 import type { Transport } from "./transport";
 import {
   makeOfflineTransport,
+  type OfflineState,
   type OfflineStorage,
   type QueuedOp,
 } from "./offline-transport";
@@ -397,6 +398,46 @@ describe("offline transport — observable state", () => {
 
     await transport.replay();
 
-    expect(transport.getState()).toEqual({ offline: false, pending: 0 });
+    expect(transport.getState()).toEqual({
+      offline: false,
+      pending: 0,
+      syncing: false,
+    });
+  });
+
+  test("replay reports syncing while it runs, then clears it on success", async () => {
+    const fx = makeInner();
+    const { storage } = makeMemoryStorage();
+    const transport = makeOfflineTransport(fx.inner, storage, () => false);
+    fx.failWith(networkError());
+    await transport.put("/api/tasks/t1", { done: true });
+    fx.failWith(null);
+    const seen: OfflineState[] = [];
+    transport.subscribe((s) => seen.push({ ...s }));
+
+    await transport.replay();
+
+    expect(seen.some((s) => s.syncing)).toBe(true);
+    expect(transport.getState()).toEqual({
+      offline: false,
+      pending: 0,
+      syncing: false,
+    });
+  });
+
+  test("replay stopped by a network failure clears syncing and keeps the queue", async () => {
+    const fx = makeInner();
+    const { storage } = makeMemoryStorage();
+    const transport = makeOfflineTransport(fx.inner, storage, () => false);
+    fx.failWith(networkError());
+    await transport.put("/api/tasks/t1", { done: true });
+
+    await transport.replay(); // still offline: first send fails
+
+    expect(transport.getState()).toEqual({
+      offline: true,
+      pending: 1,
+      syncing: false,
+    });
   });
 });

@@ -12,7 +12,11 @@ export type OfflineStateSource = Pick<
   "getState" | "subscribe"
 >;
 
-const ONLINE_IDLE: OfflineState = { offline: false, pending: 0 };
+const ONLINE_IDLE: OfflineState = {
+  offline: false,
+  pending: 0,
+  syncing: false,
+};
 
 export const useOfflineState = (
   source: OfflineStateSource | null = offlineTransport

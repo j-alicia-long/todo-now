@@ -24,20 +24,36 @@ const makeSource = (initial: OfflineState) => {
 
 describe("useOfflineState", () => {
   test("returns the source's current state and follows updates", () => {
-    const fx = makeSource({ offline: false, pending: 0 });
+    const fx = makeSource({ offline: false, pending: 0, syncing: false });
     const { result } = renderHook(() => useOfflineState(fx.source));
 
-    expect(result.current).toEqual({ offline: false, pending: 0 });
+    expect(result.current).toEqual({
+      offline: false,
+      pending: 0,
+      syncing: false,
+    });
 
-    act(() => fx.set({ offline: true, pending: 3 }));
-    expect(result.current).toEqual({ offline: true, pending: 3 });
+    act(() => fx.set({ offline: true, pending: 3, syncing: false }));
+    expect(result.current).toEqual({
+      offline: true,
+      pending: 3,
+      syncing: false,
+    });
 
-    act(() => fx.set({ offline: false, pending: 0 }));
-    expect(result.current).toEqual({ offline: false, pending: 0 });
+    act(() => fx.set({ offline: false, pending: 2, syncing: true }));
+    expect(result.current).toEqual({
+      offline: false,
+      pending: 2,
+      syncing: true,
+    });
   });
 
   test("a null source (demo build) reads as online with nothing pending", () => {
     const { result } = renderHook(() => useOfflineState(null));
-    expect(result.current).toEqual({ offline: false, pending: 0 });
+    expect(result.current).toEqual({
+      offline: false,
+      pending: 0,
+      syncing: false,
+    });
   });
 });
