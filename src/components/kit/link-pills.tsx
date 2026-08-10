@@ -1,17 +1,9 @@
-// Small shared UI primitives: Material icon, link pills, tag dropdown.
+// Editable list of link "pills": each link opens in a new tab; an inline
+// input appends new ones.
 
-import { useState, useEffect, useRef } from "react";
-import { linkLabel } from "../lib/presentation";
-
-export const Icon = ({
-  name,
-  className,
-}: {
-  name: string;
-  className?: string;
-}) => (
-  <span className={`material-symbols-outlined ${className ?? ""}`}>{name}</span>
-);
+import { linkLabel } from "@/lib/presentation";
+import { useEffect, useRef, useState } from "react";
+import { Icon } from "./icon";
 
 export const LinkPills = ({
   links,
@@ -86,63 +78,6 @@ export const LinkPills = ({
             <Icon name="attach_file" />
           </button>
         ))}
-    </div>
-  );
-};
-
-export const TagSelect = <T extends string>({
-  value,
-  options,
-  labels,
-  onChange,
-  onClose,
-  className,
-}: {
-  value: T;
-  options: readonly T[];
-  labels?: Record<string, string>;
-  onChange: (v: T) => void;
-  onClose: () => void;
-  className?: string;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [above, setAbove] = useState(false);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [onClose]);
-
-  useEffect(() => {
-    if (ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      if (rect.bottom > window.innerHeight) {
-        setAbove(true);
-      }
-    }
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className={`tag-select ${above ? "tag-select-above" : ""} ${className ?? ""}`}
-    >
-      {options.map((opt) => (
-        <button
-          key={opt}
-          className={`tag-option ${opt === value ? "selected" : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onChange(opt);
-            onClose();
-          }}
-        >
-          {labels ? labels[opt] || opt : opt}
-        </button>
-      ))}
     </div>
   );
 };

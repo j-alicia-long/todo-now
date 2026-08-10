@@ -1,8 +1,10 @@
 // Shopping and grocery list rows.
 
-import { useState, useEffect, useRef } from "react";
-import { type ShoppingItem, type GroceryItem } from "../stores/hooks";
-import { Icon, LinkPills } from "./ui";
+import { useEffect, useRef, useState } from "react";
+import { type GroceryItem, type ShoppingItem } from "../stores/hooks";
+import { Icon } from "./kit/icon";
+import { LinkPills } from "./kit/link-pills";
+import { MoveActionButton } from "./kit/move-action-button";
 
 export type ShoppingItemActions = {
   toggle: (id: string) => void;
@@ -16,9 +18,11 @@ export type ShoppingItemActions = {
 export const ShoppingListItem = ({
   item,
   actions,
+  moveMode,
 }: {
   item: ShoppingItem;
   actions: ShoppingItemActions;
+  moveMode?: boolean;
 }) => {
   const [addedToBoard, setAddedToBoard] = useState(false);
   const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -35,6 +39,9 @@ export const ShoppingListItem = ({
     if (addedTimer.current) clearTimeout(addedTimer.current);
     addedTimer.current = setTimeout(() => setAddedToBoard(false), 3000);
   };
+
+  const links = item.links || [];
+  const hasLinks = links.length > 0;
 
   return (
     <div
@@ -53,12 +60,18 @@ export const ShoppingListItem = ({
           {item.title}
         </span>
         <div className="list-actions">
+          {!hasLinks && (
+            <LinkPills
+              links={links}
+              onChange={(next) => actions.updateLinks(item.id, next)}
+            />
+          )}
           <button
-            className="list-action-btn"
-            onClick={() => actions.archive(item.id)}
-            title="Archive"
+            className={`list-action-btn ${addedToBoard ? "added" : ""}`}
+            onClick={handleAddToBoard}
+            title={addedToBoard ? "Added to Board" : "Add to Board"}
           >
-            <Icon name="archive" />
+            <Icon name={addedToBoard ? "check" : "dashboard"} />
           </button>
           <button
             className="list-action-btn delete"
@@ -69,30 +82,36 @@ export const ShoppingListItem = ({
           </button>
         </div>
       </div>
-      <div className="list-item-sub">
-        <LinkPills
-          links={item.links || []}
-          onChange={(links) => actions.updateLinks(item.id, links)}
-        />
-        <div className="list-actions">
-          <button
-            className={`list-action-btn ${addedToBoard ? "added" : ""}`}
-            onClick={handleAddToBoard}
-            title={addedToBoard ? "Added to Board" : "Add to Board"}
-          >
-            <Icon name={addedToBoard ? "check" : "dashboard"} />
-          </button>
-          <button
-            className="list-action-btn"
-            onClick={() => actions.move(item.id)}
-            title={item.category === "need" ? "Move to Wants" : "Move to Needs"}
-          >
-            <Icon
-              name={item.category === "need" ? "chevron_right" : "chevron_left"}
+      {(hasLinks || moveMode) && (
+        <div className="list-item-sub">
+          {hasLinks && (
+            <LinkPills
+              links={links}
+              onChange={(next) => actions.updateLinks(item.id, next)}
             />
-          </button>
+          )}
+          {moveMode && (
+            <div className="list-actions">
+              <MoveActionButton
+                variant={item.category === "need" ? "move-right" : "move-left"}
+                icon={
+                  item.category === "need" ? "chevron_right" : "chevron_left"
+                }
+                title={
+                  item.category === "need" ? "Move to Wants" : "Move to Needs"
+                }
+                onClick={() => actions.move(item.id)}
+              />
+              <MoveActionButton
+                variant="archive"
+                icon="archive"
+                title="Archive"
+                onClick={() => actions.archive(item.id)}
+              />
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

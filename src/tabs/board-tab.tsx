@@ -27,7 +27,7 @@ import { type BoardView, type Settings } from "../stores/hooks";
 import { TaskCard, type TaskActions } from "../components/task-card";
 import { MatrixView, MatrixCard } from "../components/matrix-view";
 import { TriageModal } from "../components/triage-modal";
-import { Icon } from "../components/ui";
+import { Icon } from "../components/kit/icon";
 import {
   BoardColumn,
   type RecurringCardActions,

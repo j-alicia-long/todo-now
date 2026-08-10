@@ -1,7 +1,7 @@
 // Card variant for the Trash drawer: restore or permanently delete.
 
 import { type Task } from "../domain/task-rules";
-import { Icon } from "./ui";
+import { Icon } from "./kit/icon";
 import { daysAgo } from "../lib/presentation";
 
 export const TrashCard = ({

@@ -1,7 +1,7 @@
 // Recurring tab: weekly tasks, long-term chores, and events/classes.
 
 import { isWeeklyRecurring, type RecurringItem } from "../domain/recurrence";
-import { Icon } from "../components/ui";
+import { Icon } from "../components/kit/icon";
 import {
   RecurringListItem,
   type RecurringItemActions,

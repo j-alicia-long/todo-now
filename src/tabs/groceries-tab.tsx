@@ -1,7 +1,7 @@
 // Groceries tab: single checklist column with a clear-bought action.
 
 import { type GroceryItem } from "../stores/hooks";
-import { Icon } from "../components/ui";
+import { Icon } from "../components/kit/icon";
 import {
   GroceryListItem,
   type GroceryItemActions,

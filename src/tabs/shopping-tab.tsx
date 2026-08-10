@@ -1,7 +1,8 @@
 // Shopping tab: needs / wants / done columns.
 
+import { useState } from "react";
 import { type ShoppingItem } from "../stores/hooks";
-import { Icon } from "../components/ui";
+import { Icon } from "../components/kit/icon";
 import {
   ShoppingListItem,
   ShoppingDoneItem,
@@ -15,6 +16,9 @@ export const ShoppingTab = ({
   items: ShoppingItem[];
   actions: ShoppingItemActions;
 }) => {
+  // Move mode reveals the archive/category-move buttons on items, mirroring
+  // the Board. Plain state (not persisted) so it resets on remount.
+  const [moveMode, setMoveMode] = useState(false);
   const active = items.filter((i) => !i.archived && !i.done);
   const done = items.filter((i) => !i.archived && i.done);
   const needs = active.filter((i) => i.category === "need");
@@ -22,6 +26,16 @@ export const ShoppingTab = ({
 
   return (
     <div className="shopping-board">
+      <div className="board-toolbar shopping-toolbar">
+        <button
+          className={`move-mode-btn ${moveMode ? "active" : ""}`}
+          aria-pressed={moveMode}
+          onClick={() => setMoveMode((m) => !m)}
+          title="Show move and archive buttons on items"
+        >
+          <Icon name="swap_horiz" /> Move
+        </button>
+      </div>
       <div className="shopping-columns">
         <div className="shopping-column">
           <div className="shopping-column-header needs-header">
@@ -33,7 +47,12 @@ export const ShoppingTab = ({
             <div className="column-empty">No items needed right now</div>
           ) : (
             needs.map((item) => (
-              <ShoppingListItem key={item.id} item={item} actions={actions} />
+              <ShoppingListItem
+                key={item.id}
+                item={item}
+                actions={actions}
+                moveMode={moveMode}
+              />
             ))
           )}
         </div>
@@ -47,7 +66,12 @@ export const ShoppingTab = ({
             <div className="column-empty">No wishlist items</div>
           ) : (
             wants.map((item) => (
-              <ShoppingListItem key={item.id} item={item} actions={actions} />
+              <ShoppingListItem
+                key={item.id}
+                item={item}
+                actions={actions}
+                moveMode={moveMode}
+              />
             ))
           )}
         </div>
