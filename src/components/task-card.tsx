@@ -5,8 +5,11 @@ import { useState, useEffect, useRef } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import { type Settings } from "../stores/hooks";
-import { Icon, TagSelect, LinkPills, MoveActionButton } from "./ui";
-import { DatePickerModal } from "./date-picker";
+import { Icon } from "./kit/icon";
+import { TagSelect } from "./kit/tag-select";
+import { LinkPills } from "./kit/link-pills";
+import { MoveActionButton } from "./kit/move-action-button";
+import { DatePickerModal } from "./kit/date-picker";
 import {
   AREA_COLORS,
   AREA_LABELS,

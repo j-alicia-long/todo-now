@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { type ShoppingItem } from "../stores/hooks";
-import { Icon } from "../components/ui";
+import { Icon } from "../components/kit/icon";
 import {
   ShoppingListItem,
   ShoppingDoneItem,

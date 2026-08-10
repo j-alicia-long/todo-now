@@ -3,8 +3,8 @@
 
 import { useState } from "react";
 import { deriveFirstDueDate, type RecurringItem } from "../domain/recurrence";
-import { Icon } from "../components/ui";
-import { DatePickerDropdown } from "../components/date-picker";
+import { Icon } from "../components/kit/icon";
+import { DatePickerDropdown } from "../components/kit/date-picker";
 import {
   AREA_OPTIONS,
   DAY_LETTERS,

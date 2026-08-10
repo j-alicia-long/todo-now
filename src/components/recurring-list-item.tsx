@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { type RecurringItem } from "../domain/recurrence";
-import { Icon } from "./ui";
+import { Icon } from "./kit/icon";
 import {
   AREA_COLORS,
   AREA_LABELS,

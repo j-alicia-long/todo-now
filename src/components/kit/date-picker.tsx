@@ -18,12 +18,14 @@ type DatePickerProps = {
   value: string | null;
   onChange: (date: string | null) => void;
   onClose: () => void;
+  ariaLabel?: string;
 };
 
 export const DatePickerModal = ({
   value,
   onChange,
   onClose,
+  ariaLabel = "Due date",
 }: DatePickerProps) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const tz = getLocalTimeZone();
@@ -57,7 +59,7 @@ export const DatePickerModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         <Calendar
-          aria-label="Due date"
+          aria-label={ariaLabel}
           value={calendarValue}
           onChange={(d) => {
             onChange(d.toString());
@@ -103,6 +105,7 @@ export const DatePickerDropdown = ({
   value,
   onChange,
   onClose,
+  ariaLabel = "Due date",
 }: DatePickerProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const tz = getLocalTimeZone();
@@ -129,7 +132,7 @@ export const DatePickerDropdown = ({
       onClick={(e) => e.stopPropagation()}
     >
       <Calendar
-        aria-label="Due date"
+        aria-label={ariaLabel}
         value={calendarValue}
         onChange={(d) => {
           onChange(d.toString());

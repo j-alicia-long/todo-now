@@ -1,8 +1,10 @@
 // Shopping and grocery list rows.
 
-import { useState, useEffect, useRef } from "react";
-import { type ShoppingItem, type GroceryItem } from "../stores/hooks";
-import { Icon, LinkPills, MoveActionButton } from "./ui";
+import { useEffect, useRef, useState } from "react";
+import { type GroceryItem, type ShoppingItem } from "../stores/hooks";
+import { Icon } from "./kit/icon";
+import { LinkPills } from "./kit/link-pills";
+import { MoveActionButton } from "./kit/move-action-button";
 
 export type ShoppingItemActions = {
   toggle: (id: string) => void;

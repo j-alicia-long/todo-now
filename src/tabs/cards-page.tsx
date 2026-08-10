@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Icon } from "../components/ui";
+import { Icon } from "../components/kit/icon";
 import { everythingElse, recommendAll } from "../domain/card-recommendations";
 import type { CardKey, EarnRate, SpendCategory } from "../domain/card-rewards";
 import { CARDS, CARD_KEYS } from "../domain/card-rewards";

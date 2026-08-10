@@ -6,6 +6,15 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-10 — Reorganize shared UI primitives into kit/
+
+- Split `components/ui.tsx` into one file per primitive under `src/components/kit/`: `icon.tsx`, `link-pills.tsx`, `tag-select.tsx`, `move-action-button.tsx` (joins the pre-existing `key-hint.tsx`)
+- Moved `date-picker.tsx` into `kit/` and gave it an optional `ariaLabel` prop (defaults to "Due date") so it's no longer hardcoded to the task-due use case
+- Moved `settings-view.tsx` from `components/` into `tabs/` (it's a routed view, not a primitive)
+- Preceded by a dead-code cleanup commit removing the unrouted design-kit showcase and shadcn `ui/` scaffolding; remaining follow-ups filed as tech-debt reports
+
+---
+
 ## 2026-08-09 — Shopping move mode + shared MoveActionButton (PR)
 
 - Shopping tab gains a "Move" toggle (mirrors the Board); the per-item archive and category-move (chevron) buttons now appear only in move mode
