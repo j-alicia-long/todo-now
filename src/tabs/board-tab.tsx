@@ -10,7 +10,11 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { type Task, type TaskStatus } from "../domain/task-rules";
+import {
+  isRecentlyDone,
+  type Task,
+  type TaskStatus,
+} from "../domain/task-rules";
 import { applyMatrixDrop, type Quadrant } from "../domain/matrix-rules";
 import { triageStack, applySkip } from "../domain/triage-rules";
 import {
@@ -112,6 +116,13 @@ export const BoardTab = ({
   const tasksByStatus = (status: TaskStatus) =>
     tasks.filter((t) => t.status === status);
 
+  // The Done column only keeps the last week of completions tidy; older done
+  // tasks are hidden (not deleted). Other columns show everything.
+  const columnTasks = (status: TaskStatus) =>
+    status === "done"
+      ? tasksByStatus("done").filter((t) => isRecentlyDone(t, new Date()))
+      : tasksByStatus(status);
+
   // Triage stack derives fresh each render, so Tasks sorted, completed,
   // or created elsewhere flow in and out automatically.
   const stack = triageStack(tasks, skippedIds, new Date());
@@ -209,7 +220,7 @@ export const BoardTab = ({
               title={col.title}
               icon={col.icon}
               colorClass={col.colorClass}
-              tasks={tasksByStatus(col.id)}
+              tasks={columnTasks(col.id)}
               taskActions={taskActions}
               settings={settings}
               moveMode={moveMode}

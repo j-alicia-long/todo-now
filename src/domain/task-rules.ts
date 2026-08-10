@@ -103,6 +103,23 @@ export const promoteDueSoon = (tasks: Task[], now: Date): Task[] => {
   return changed ? result : tasks;
 };
 
+/** How long a completed Task stays visible in the Done column. */
+export const DONE_VISIBLE_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Whether a done Task should still show in the Done column: those completed
+ * within the last week stay, older ones are hidden to keep the column tidy.
+ * A done Task with no completedAt stamp (legacy data) is always kept, since
+ * its age can't be determined. Hiding is display-only — the Task is not
+ * trashed or deleted.
+ */
+export const isRecentlyDone = (task: Task, now: Date): boolean => {
+  if (!task.completedAt) return true;
+  return (
+    now.getTime() - new Date(task.completedAt).getTime() <= DONE_VISIBLE_MS
+  );
+};
+
 /**
  * Trashed Tasks older than 30 days are dropped.
  * Returns the same array instance when nothing changed.

@@ -6,6 +6,15 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Hide done tasks completed >7 days ago (PR)
+
+- The Board's Done column now shows only tasks completed within the last 7 days; older ones are hidden (display-only — not trashed or deleted)
+- New pure helper `isRecentlyDone(task, now)` + `DONE_VISIBLE_MS` in `task-rules.ts` (tasks with no `completedAt` stamp are always kept); `board-tab` filters the Done column through it
+- 4 unit tests added
+- Report: `2026-08-09-0829-hide-done-tasks-completed-more-than-7-da.md`
+
+---
+
 ## 2026-08-09 — Floating bug button (Reporter launcher)
 
 - Persistent accent FAB (bug icon) in the bottom-right opens Report Mode on tap — a reliable mobile entry point that doesn't depend on device-motion permissions
