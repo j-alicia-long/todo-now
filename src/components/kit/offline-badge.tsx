@@ -5,7 +5,7 @@
 // Renders nothing in demo builds (null source).
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Icon } from "@/components/ui";
+import { Icon } from "./icon";
 import { offlineTransport } from "@/stores/default-transport";
 import {
   useOfflineState,
