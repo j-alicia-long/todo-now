@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-10 — Header icon uses theme purple
+
+- The board header's leaf (`eco`) icon was hard-coded green (`--success`); recolored it to the theme's purple accent (`--accent`) to match the app theme
+- Report: `2026-08-09-1528-make-this-purple-like-the-theme.md`
+
+---
+
 ## 2026-08-10 — Fix Move-mode row height jitter
 
 - Toggling Move mode no longer shifts card/row height: reserved the move-action button height (26px) on `.card-row` (Board) and `.list-item-sub` (Shopping) via `min-height`, so the row stays the same height whether or not the buttons are shown
