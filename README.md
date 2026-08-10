@@ -13,7 +13,7 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 - **Shopping & grocery lists**: lightweight checklists, each with its own pastel theme
 - **Desktop & mobile**: responsive PWA — full web app on desktop, installable touch-first app on phones; works fully offline (cached lists, queued edits that sync on reconnect)
 - **Theming**: warm cream (light) / deep cocoa (dark) themes
-- **Bug Reporter**: shake (mobile) or ⌘⇧P (desktop) opens Report Mode — tap elements to highlight them, then file a bug or idea, saved as Markdown for an agent to pick up later
+- **Bug Reporter**: shake (mobile) or ⌘⇧P (desktop) opens Report Mode — tap elements to highlight them, then file a bug or idea, saved as Markdown for an agent to pick up later. The floating bug button can be hidden from Settings (Report Mode stays reachable via ⌘⇧P or a shake)
 
   ![Reporter compose modal: two highlighted targets with an inline mention chip in the note](docs/screenshot-reporter.png)
 

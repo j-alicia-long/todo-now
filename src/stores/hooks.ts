@@ -197,6 +197,9 @@ export type Settings = {
   defaultBoardView: BoardView;
   /** Shake the phone to open the Reporter (Report Mode). */
   shakeToReport: boolean;
+  /** Show the floating bug-report button. Report Mode is still reachable via
+   *  ⌘⇧P (desktop) or shake (mobile) when this is off. */
+  showReportButton: boolean;
   /** The Wallet: cards on hand, filtering /cards recommendations. */
   walletCards: CardKey[];
 };
@@ -205,6 +208,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showArea: true,
   defaultBoardView: "columns",
   shakeToReport: true,
+  showReportButton: true,
   walletCards: [...CARD_KEYS],
 };
 

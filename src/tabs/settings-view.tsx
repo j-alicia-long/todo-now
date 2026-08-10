@@ -104,6 +104,21 @@ export const SettingsView = ({
             <div className="toggle-knob" />
           </div>
         </label>
+        <label className="settings-toggle">
+          <div className="toggle-info">
+            <span className="toggle-label">Report button</span>
+            <span className="toggle-desc">
+              Show the floating bug button. Report Mode still opens with ⌘⇧P or
+              a shake.
+            </span>
+          </div>
+          <div
+            className={`toggle-switch ${settings.showReportButton ? "on" : ""}`}
+            onClick={() => onToggle("showReportButton")}
+          >
+            <div className="toggle-knob" />
+          </div>
+        </label>
       </div>
       <h2 className="settings-title">Keyboard Shortcuts</h2>
       <p className="settings-desc">Speed things up from the keyboard.</p>

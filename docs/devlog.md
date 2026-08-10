@@ -6,6 +6,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-10 — Settings toggle to hide the report button (PR)
+
+- New "Report button" toggle in Settings → Bug Reports hides the floating bug button; Report Mode stays reachable via ⌘⇧P (desktop) or shake (mobile)
+- Added `showReportButton` (default true) to Settings; `Reporter` gains a `showLauncher` prop gating the launcher
+- Report: `2026-08-09-1719-add-settings-page-toggle-to-show-hide-bu.md`
+
+---
+
 ## 2026-08-10 — Remove orphaned deps (lucide-react, class-variance-authority)
 
 - Both deps had zero importers after the dead design-kit/shadcn cleanup; removed from `package.json` (lockfile updated via `bun install`). typecheck, build, lint, and tests all pass

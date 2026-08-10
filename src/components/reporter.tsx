@@ -195,10 +195,14 @@ const ComposeModal = ({
 export const Reporter = ({
   currentTab,
   shakeEnabled,
+  showLauncher = true,
   transport = defaultTransport,
 }: {
   currentTab: string;
   shakeEnabled: boolean;
+  /** Show the floating bug button. Report Mode stays reachable via ⌘⇧P or a
+   *  shake even when this is off. */
+  showLauncher?: boolean;
   transport?: Transport;
 }) => {
   const [phase, setPhase] = useState<Phase>("off");
@@ -401,15 +405,17 @@ export const Reporter = ({
             <Icon name="check_circle" /> Report saved
           </div>
         )}
-        <button
-          className="reporter-launcher"
-          data-reporter
-          onClick={open}
-          aria-label="Report a bug or idea"
-          title="Report a bug or idea"
-        >
-          <Icon name="bug_report" />
-        </button>
+        {showLauncher && (
+          <button
+            className="reporter-launcher"
+            data-reporter
+            onClick={open}
+            aria-label="Report a bug or idea"
+            title="Report a bug or idea"
+          >
+            <Icon name="bug_report" />
+          </button>
+        )}
       </>
     );
   }
