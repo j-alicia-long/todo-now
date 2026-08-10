@@ -11,6 +11,9 @@ DIR="/home/workspace/repos/todo"
 PORT=57863
 cd "$DIR"
 
+echo "▶ Installing dependencies…"
+bun install
+
 echo "▶ Building production bundle…"
 bun run build
 

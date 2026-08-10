@@ -53,8 +53,8 @@ cd /home/workspace/repos/todo
 ./redeploy.sh
 ```
 
-That rebuilds the bundle, restarts the service, and waits until the site returns
-HTTP 200. (First run only: `chmod +x redeploy.sh`.)
+That installs dependencies, rebuilds the bundle, restarts the service, and waits
+until the site returns HTTP 200. (First run only: `chmod +x redeploy.sh`.)
 
 **Frontend-only change** (anything in `src/`, `file index.tsx`, styles — not `file server.ts`)?
 Skip the restart for a zero-downtime deploy:
