@@ -9,10 +9,10 @@ import {
   type Settings,
   type ShoppingItem,
 } from "../stores/hooks";
-import { Icon } from "../components/ui";
+import { Icon } from "../components/kit/icon";
 import { FutureTaskCard } from "../components/future-task-card";
 import { TrashCard } from "../components/trash-card";
-import { SettingsView } from "../components/settings-view";
+import { SettingsView } from "./settings-view";
 import { type TaskActions } from "../components/task-card";
 import { sortTasks } from "../lib/presentation";
 

@@ -18,7 +18,7 @@ import {
 import { useShake } from "../lib/use-shake";
 import { defaultTransport } from "../stores/default-transport";
 import type { Transport } from "../stores/transport";
-import { Icon } from "./ui";
+import { Icon } from "./kit/icon";
 import "./reporter.scss";
 
 type Phase = "off" | "picking" | "composing";

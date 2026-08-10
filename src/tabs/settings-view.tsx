@@ -6,8 +6,8 @@ import {
   type BooleanSettingKey,
   type Settings,
 } from "../stores/hooks";
-import { KeyHint } from "./kit/key-hint";
-import { Icon } from "./ui";
+import { KeyHint } from "../components/kit/key-hint";
+import { Icon } from "../components/kit/icon";
 
 const VIEW_OPTIONS: { value: BoardView; label: string; icon: string }[] = [
   { value: "columns", label: "Columns", icon: "view_week" },

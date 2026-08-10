@@ -7,7 +7,7 @@
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { type Task } from "../domain/task-rules";
 import { partitionMatrix, type Quadrant } from "../domain/matrix-rules";
-import { Icon } from "./ui";
+import { Icon } from "./kit/icon";
 import { type TaskActions } from "./task-card";
 import { dueUrgencyClass, formatDueDate, sortTasks } from "../lib/presentation";
 
