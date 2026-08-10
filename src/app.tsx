@@ -4,6 +4,7 @@ import TodoBase from "./tabs/todo-base";
 import { CardsPage } from "./tabs/cards-page";
 import { ThemeProvider } from "@/components/theme-provider";
 import { isDemo } from "@/stores/default-transport";
+import { OfflineBadge } from "@/components/kit/offline-badge";
 
 const demoBadgeStyle: CSSProperties = {
   position: "fixed",
@@ -36,6 +37,7 @@ const App = () => {
           Demo — sample data, changes reset on reload
         </div>
       )}
+      {!isDemo && <OfflineBadge />}
     </ThemeProvider>
   );
 };

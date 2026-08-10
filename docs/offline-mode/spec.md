@@ -1,6 +1,6 @@
 # Offline mode — investigation & plan
 
-**Status:** Investigation complete, not started
+**Status:** Shipped — spec [#4](https://github.com/j-alicia-long/todo-now/issues/4), tickets #5–#10, branch `feature/offline-mode`
 **Goal:** Make the todo app usable with no network — load the app, view lists, and check things off on the subway; sync automatically when back online.
 
 ## Where we stand today
@@ -8,7 +8,7 @@
 The app is _installable_ (there's a `public/manifest.json`, icons, and apple-touch meta in `index.html`) but it is **not offline-capable at all**. There is **no service worker** anywhere in the project. Consequences:
 
 - With no network, the page **won't even load** — the browser can't fetch the HTML/JS/CSS.
-- Every data read/write is a live `fetch` to `/api/*`. Offline, all of them fail; the UI shows empty lists and mutations silently revert.
+- Every data read/write is a live `fetch` to `/api/*`. Offline, all of them fail: the UI shows empty lists, **creates never appear** (`create` waits for the server's response before adding the item), and edits/deletes appear to stick in memory (the reconciling refetch also fails) but are **lost on reload or reverted on reconnect** — nothing is persisted or queued.
 
 So "PWA" today means "installable," not "works offline." Both halves — **app shell** and **data** — need work.
 
@@ -18,7 +18,7 @@ The codebase is already shaped for offline. Two things make it easy:
 
 1. **A single data seam already exists.** Every client read/write goes through the `Transport` interface (`src/stores/transport.ts`): `get / post / put / del`. Stores never call `fetch` directly. There's already a second implementation of this seam — `demoTransport` (`src/stores/demo-transport.ts`), an in-memory adapter used for the static GitHub Pages demo, which reuses the **same domain rules** the server runs. Offline support slots into this exact seam as a third adapter that wraps HTTP with a local cache + queue. No component or page code changes.
 
-2. **Optimistic updates and shared domain logic already exist.** `useEntityList.mutate` (`src/stores/entity-store.ts`) applies an optimistic state change, runs the request, and only reconciles on failure. The client already runs the same lifecycle rules as the server (`applyStatusChange`, `applyRecurringCompletion`, `advanceDueDate`), so the optimistic state produced offline is already correct — we just need to _keep_ it instead of reverting when the failure is "offline" rather than "server rejected."
+2. **Optimistic updates and shared domain logic already exist.** `useEntityList.mutate` (`src/stores/entity-store.ts`) applies an optimistic state change, runs the request, and only reconciles on failure. The client already runs the same lifecycle rules as the server (`applyStatusChange`, `applyRecurringCompletion`, `advanceDueDate`), so the optimistic state produced offline is already correct — we just need to _keep_ it instead of reverting when the failure is "offline" rather than "server rejected." One gap: `create` is **not** optimistic today — it waits for the server's constructed item before adding it to state. See "Decided: optimistic creates" below.
 
 Precedent for local persistence already exists too: `useSettings` mirrors settings to `localStorage` and treats the server as best-effort.
 
@@ -34,6 +34,14 @@ id: (body.id as string) || newId(),
 ```
 
 IDs are already random 8-char strings, so this is backward-compatible and collision risk is negligible for a single-user app. This is the linchpin that makes an offline create + offline edit replay cleanly in order.
+
+## Decided: optimistic creates in the store (Option B)
+
+`create` in `useEntityList` becomes optimistic like `update`/`remove`: the client builds the full item (client-generated ID + construction defaults) and adds it to state immediately; the `POST` runs in the background and reconciles on response. To avoid duplicating the server's defaults, each family's `construct` logic moves from `src/server/families.ts` into shared `src/domain/` code that client and server both import (the same pattern `demoTransport` already uses for lifecycle rules).
+
+Alternative considered: have the offline transport synthesize the server's response, leaving the store untouched. Rejected because optimistic creates are the standard web-app pattern, improve perceived speed online too, and the client must know construction defaults either way.
+
+**Document this decision in `docs/ARCHITECTURE.md` once the spec is executed.**
 
 ## Two layers, phased by value
 
@@ -59,7 +67,7 @@ After Phase 1 the app opens offline and shows whatever the last render cached. C
 - When a mutation (`post/put/del`) fails due to being offline, **enqueue** it in IndexedDB (ordered) and resolve _successfully_ so the optimistic state sticks. Distinguish "offline" (queue + keep) from a real HTTP 4xx/5xx (throw → store reverts, current behavior) using `navigator.onLine` + the fetch error.
 - On reconnect (`online` event), **replay the queue in order**, then refetch to reconcile. Depends on Phase 0's client-generated IDs so a queued create and its later edits share one ID.
 - Handle the two collection-level ops specially: `DELETE /api/groceries/clear-bought` (queue it), and `POST /api/archive` (no-op offline — it's triggered by a weekly server-side automation, not the user).
-- Conflict model: **single user, last-write-wins per field with timestamps.** Real conflicts are rare (occasionally editing on two devices while one was offline). No merge engine needed.
+- Conflict model: **single user, replay-in-order, last write wins.** Queued mutations replay in the order they were made; whichever device syncs last wins. Note: entities carry only `createdAt` — there is no `updatedAt` field, so no timestamp comparison happens and none is needed. Real conflicts are rare (occasionally editing on two devices while one was offline). No merge engine.
 - Add a small **online/offline + "pending changes" indicator** so it's visible when edits haven't synced yet.
 
 ## Edge cases & notes

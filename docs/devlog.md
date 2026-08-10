@@ -6,6 +6,17 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-10 — Offline mode (spec #4, tickets #5–#10)
+
+- The app now works with no network: the shell loads (Workbox service worker via vite-plugin-pwa, self-hosted Inter + Material Symbols), lists render from an IndexedDB read cache, and checking off / creating / editing / deleting all work offline
+- Offline mutations queue in order (persisted in IndexedDB, survive reload) and replay automatically on reconnect, then every list refetches (`todo:synced`); server 4xx/5xx still throws and reverts. Conflict model: single user, replay-in-order, last write wins
+- Creates are now optimistic everywhere (instant even online): built client-side from shared construction defaults (`src/domain/construct.ts`, honors client `id`/`createdAt`), POSTed whole, reconciled in the background — ADR 0002
+- New offline/pending badge shows "Offline — N unsynced changes" and clears when the queue drains
+- All at the existing `Transport` seam — a third adapter (`offline-transport.ts`) wrapping HTTP, storage + connectivity injected; 206 tests (32 new), each ticket Playwright-verified offline
+- Commits `ba50256` (#5), `625a55b` (#6), `68b9926` (#7), `4f49ba2` (#8), `c23249c` (#9), + indicator (#10)
+
+---
+
 ## 2026-08-09 — Shopping move mode + shared MoveActionButton (PR)
 
 - Shopping tab gains a "Move" toggle (mirrors the Board); the per-item archive and category-move (chevron) buttons now appear only in move mode

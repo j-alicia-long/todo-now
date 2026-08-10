@@ -18,6 +18,12 @@ import {
 import { useEntityList } from "./entity-store";
 import { defaultTransport } from "./default-transport";
 import type { Transport } from "./transport";
+import {
+  constructGroceryItem,
+  constructRecurringItem,
+  constructShoppingItem,
+  constructTask,
+} from "../domain/construct";
 import { CARD_KEYS, type CardKey } from "../domain/card-rewards";
 import type { ShoppingItem, GroceryItem } from "../domain/entities";
 
@@ -28,7 +34,12 @@ export type { ShoppingItem, GroceryItem };
 // ── Tasks ──
 
 export const useTasks = (transport: Transport = defaultTransport) => {
-  const store = useEntityList<Task>("/api/tasks", "tasks", transport);
+  const store = useEntityList<Task>(
+    "/api/tasks",
+    "tasks",
+    transport,
+    constructTask
+  );
 
   const changeStatus = useCallback(
     (id: string, status: TaskStatus) =>
@@ -75,7 +86,8 @@ export const useShopping = (transport: Transport = defaultTransport) => {
   const store = useEntityList<ShoppingItem>(
     "/api/shopping",
     "shopping",
-    transport
+    transport,
+    constructShoppingItem
   );
 
   const toggle = (id: string) => {
@@ -111,7 +123,8 @@ export const useGroceries = (transport: Transport = defaultTransport) => {
   const store = useEntityList<GroceryItem>(
     "/api/groceries",
     "groceries",
-    transport
+    transport,
+    constructGroceryItem
   );
 
   const toggle = (id: string) => {
@@ -140,7 +153,8 @@ export const useRecurring = (transport: Transport = defaultTransport) => {
   const store = useEntityList<RecurringItem>(
     "/api/recurring",
     "recurring",
-    transport
+    transport,
+    constructRecurringItem
   );
 
   // Weekly items toggle completedThisWeek; long-term items are "done" for

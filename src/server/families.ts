@@ -2,6 +2,8 @@
 // hooks plus the writable-field whitelist each family's PUT accepts.
 // No I/O here — stores are injected where the routes are mounted
 // (server.ts), so every hook is testable as a plain function.
+// Construction defaults live in the shared domain layer (construct.ts)
+// so the client can build identical items for optimistic/offline creates.
 
 import {
   applyStatusChange,
@@ -13,10 +15,14 @@ import {
   applyRecurringCompletion,
   type RecurringItem,
 } from "../domain/recurrence";
+import {
+  constructGroceryItem,
+  constructRecurringItem,
+  constructShoppingItem,
+  constructTask,
+} from "../domain/construct";
 import type { ShoppingItem, GroceryItem } from "../domain/entities";
 import type { FamilyConfig } from "./resource";
-
-const newId = () => crypto.randomUUID().slice(0, 8);
 
 // ── Tasks ──
 // Lifecycle fields (done, completedAt, deletedAt) are owned by
@@ -35,23 +41,7 @@ export const tasksFamily: FamilyConfig<Task> = {
     "importance",
     "links",
   ],
-  construct: (body, now) => ({
-    id: newId(),
-    title: (body.title as string) || "Untitled",
-    done: false,
-    status: (body.status as TaskStatus) || "this-week",
-    effort: (body.effort as Task["effort"]) || "medium",
-    decisionLoad: (body.decisionLoad as Task["decisionLoad"]) || "medium",
-    area: (body.area as string) || "life-admin",
-    dueDate: (body.dueDate as string) || null,
-    importance: (body.importance as Task["importance"]) ?? null,
-    createdAt: now.toISOString(),
-    completedAt: null,
-    deletedAt: null,
-    source: (body.source as Task["source"]) || "board",
-    sourceItemId: (body.sourceItemId as string) || null,
-    links: Array.isArray(body.links) ? (body.links as string[]) : [],
-  }),
+  construct: constructTask,
   applyUpdate: (prev, merged, body, now) => {
     if (body.status === undefined && body.done === undefined) return merged;
     const lifecycle = applyStatusChange(
@@ -77,16 +67,7 @@ export const tasksFamily: FamilyConfig<Task> = {
 
 export const shoppingFamily: FamilyConfig<ShoppingItem> = {
   writable: ["title", "done", "archived", "category", "links"],
-  construct: (body, now) => ({
-    id: newId(),
-    title: (body.title as string) || "Untitled",
-    done: false,
-    archived: false,
-    category: body.category === "want" ? "want" : "need",
-    links: Array.isArray(body.links) ? (body.links as string[]) : [],
-    createdAt: now.toISOString(),
-    doneAt: null,
-  }),
+  construct: constructShoppingItem,
   applyUpdate: (prev, merged, body, now) => {
     if (body.done === true && !prev.done) {
       return { ...merged, doneAt: now.toISOString() };
@@ -103,13 +84,7 @@ export const shoppingFamily: FamilyConfig<ShoppingItem> = {
 
 export const groceriesFamily: FamilyConfig<GroceryItem> = {
   writable: ["title", "done", "category"],
-  construct: (body, now) => ({
-    id: newId(),
-    title: (body.title as string) || "Untitled",
-    done: false,
-    createdAt: now.toISOString(),
-    category: body.category === "reference" ? "reference" : "task",
-  }),
+  construct: constructGroceryItem,
 };
 
 // ── Recurring Items ──
@@ -137,41 +112,7 @@ export const recurringFamily: FamilyConfig<RecurringItem> = {
     "area",
     "category",
   ],
-  construct: (body, now) => {
-    const isEvent = body.category === "reference";
-    return {
-      id: newId(),
-      title: (body.title as string) || "Untitled",
-      frequency: isEvent
-        ? "weekly"
-        : body.frequency === "long-term"
-          ? "long-term"
-          : "weekly",
-      dayOfWeek: (body.dayOfWeek as number) ?? null,
-      repeatEvery: isEvent ? 1 : ((body.repeatEvery as number) ?? 1),
-      repeatUnit: isEvent
-        ? "week"
-        : ((body.repeatUnit as RecurringItem["repeatUnit"]) ?? "week"),
-      repeatDays: isEvent
-        ? []
-        : ((body.repeatDays as number[]) ??
-          (body.dayOfWeek != null ? [body.dayOfWeek as number] : [])),
-      endsType: isEvent
-        ? "never"
-        : ((body.endsType as RecurringItem["endsType"]) ?? "never"),
-      endsOn: isEvent ? null : ((body.endsOn as string) ?? null),
-      endsAfter: isEvent ? null : ((body.endsAfter as number) ?? null),
-      note: (body.note as string) || "",
-      link: (body.link as string) || "",
-      completedThisWeek: false,
-      lastCompletedAt: null,
-      createdAt: now.toISOString(),
-      dueDate: (body.dueDate as string) ?? null,
-      showEarlyDays: (body.showEarlyDays as number) ?? null,
-      area: (body.area as string) || "",
-      category: isEvent ? "reference" : "task",
-    };
-  },
+  construct: constructRecurringItem,
   applyUpdate: (prev, merged, body, now) => {
     const stamped = applyRecurringCompletion(
       prev,
