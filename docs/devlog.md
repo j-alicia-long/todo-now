@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-10 — KeyHint shows "+" between keys
+
+- Multi-key shortcuts in Settings (e.g. Shift Enter) rendered as adjacent chips with no separator; `KeyHint` now inserts a muted "+" between chips ("Shift + Enter")
+- Report: `2026-08-09-1705-add-between-key-commands.md`
+
+---
+
 ## 2026-08-10 — Header icon uses theme purple
 
 - The board header's leaf (`eco`) icon was hard-coded green (`--success`); recolored it to the theme's purple accent (`--accent`) to match the app theme

@@ -46,18 +46,28 @@ export const KeyHint = ({ display, className, size = "sm" }: KeyHintProps) => {
   return (
     <span className={cn("inline-flex items-center gap-1", className)}>
       {tokens.map((token, index) => (
-        <kbd
-          // eslint-disable-next-line @eslint-react/no-array-index-key -- tokens are bare strings (duplicates possible) derived statically from `display`; never reordered
-          key={`${token}-${index}`}
-          className={cn(
-            "inline-flex select-none items-center justify-center rounded-md border border-border/60 bg-muted/70 font-sans font-medium leading-none text-muted-foreground",
-            size === "xs"
-              ? "h-5 min-w-[1.25rem] px-1.5 text-[11px]"
-              : "h-6 min-w-[1.5rem] px-2 text-xs"
+        // eslint-disable-next-line @eslint-react/no-array-index-key -- tokens are bare strings (duplicates possible) derived statically from `display`; never reordered
+        <React.Fragment key={`${token}-${index}`}>
+          {index > 0 && (
+            <span
+              className="key-hint-plus"
+              aria-hidden="true"
+              style={{ margin: "0 3px", color: "var(--text-tertiary)" }}
+            >
+              +
+            </span>
           )}
-        >
-          {KEY_TOKEN_LABELS[token] ?? token}
-        </kbd>
+          <kbd
+            className={cn(
+              "inline-flex select-none items-center justify-center rounded-md border border-border/60 bg-muted/70 font-sans font-medium leading-none text-muted-foreground",
+              size === "xs"
+                ? "h-5 min-w-[1.25rem] px-1.5 text-[11px]"
+                : "h-6 min-w-[1.5rem] px-2 text-xs"
+            )}
+          >
+            {KEY_TOKEN_LABELS[token] ?? token}
+          </kbd>
+        </React.Fragment>
       ))}
     </span>
   );
