@@ -95,6 +95,23 @@ tail -f /dev/shm/todo.log
 tail -f /dev/shm/todo_err.log
 ```
 
+**If the site 502s and won't come back on its own:** the supervisor gives up
+after enough consecutive crashes (e.g. the 2026-08-10 incident: new npm deps
+broke `bun run build` on Zo until `bun install` ran, and by then the service
+was marked crashed). A push alone won't revive it — re-enable the service:
+
+```bash
+# Diagnose (from the Mac, or ask Zo chat to run service_doctor / update_user_service):
+npx mcporter call https://api.zo.computer/mcp.service_doctor \
+  --header "Authorization=Bearer $(cat ~/.config/ai-cost-tracker/zo_token)" \
+  --args '{"service":"todo"}'
+
+# Revive — find the service_id via mcp.list_user_services, then:
+npx mcporter call https://api.zo.computer/mcp.update_user_service \
+  --header "Authorization=Bearer $(cat ~/.config/ai-cost-tracker/zo_token)" \
+  --args '{"service_id":"svc_ROUxD_vpt9Q","enabled":"true"}'
+```
+
 ## Notes
 
 - **Live data lives at** `/home/workspace/todo-data/`, outside the repo tree, so a
