@@ -5,7 +5,10 @@
 
 import { demoTransport } from "./demo-transport";
 import { httpTransport, type Transport } from "./transport";
-import { makeOfflineTransport } from "./offline-transport";
+import {
+  makeOfflineTransport,
+  type OfflineTransport,
+} from "./offline-transport";
 import { indexedDbStorage } from "./offline-storage";
 
 export const isDemo = Boolean(import.meta.env.VITE_DEMO);
@@ -26,3 +29,8 @@ const makeDefault = (): Transport => {
 };
 
 export const defaultTransport: Transport = makeDefault();
+
+/** The wired offline transport's observable side, for the indicator. */
+export const offlineTransport: OfflineTransport | null = isDemo
+  ? null
+  : (defaultTransport as OfflineTransport);

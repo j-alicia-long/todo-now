@@ -340,3 +340,63 @@ describe("offline transport — replay", () => {
     expect(synced).toBe(0);
   });
 });
+
+describe("offline transport — observable state", () => {
+  test("starts with the persisted queue's pending count", async () => {
+    const fx = makeInner();
+    const { storage } = makeMemoryStorage();
+    await storage.writeQueue([
+      { method: "PUT", path: "/api/tasks/t1", body: { done: true } },
+    ]);
+
+    const transport = makeOfflineTransport(fx.inner, storage, () => true);
+    await new Promise((r) => setTimeout(r, 0)); // let the startup queue read settle
+
+    expect(transport.getState().pending).toBe(1);
+  });
+
+  test("queued mutation marks offline and bumps pending; subscribers hear it", async () => {
+    const fx = makeInner();
+    const { storage } = makeMemoryStorage();
+    const transport = makeOfflineTransport(fx.inner, storage, () => false);
+    const seen: number[] = [];
+    transport.subscribe((s) => seen.push(s.pending));
+    fx.failWith(networkError());
+
+    await transport.put("/api/tasks/t1", { done: true });
+    await transport.del("/api/tasks/t1");
+
+    expect(transport.getState()).toMatchObject({ offline: true, pending: 2 });
+    expect(seen).toContain(1);
+    expect(seen).toContain(2);
+  });
+
+  test("a successful request marks online again", async () => {
+    const fx = makeInner();
+    const { storage } = makeMemoryStorage();
+    const transport = makeOfflineTransport(fx.inner, storage, () => false);
+    fx.failWith(networkError());
+    await storage.writeList("/api/tasks", []);
+    await transport.get("/api/tasks");
+    expect(transport.getState().offline).toBe(true);
+
+    fx.failWith(null);
+    await transport.get("/api/tasks");
+
+    expect(transport.getState().offline).toBe(false);
+  });
+
+  test("replay drains pending back to zero and clears offline", async () => {
+    const fx = makeInner();
+    const { storage } = makeMemoryStorage();
+    const transport = makeOfflineTransport(fx.inner, storage, () => false);
+    fx.failWith(networkError());
+    await transport.put("/api/tasks/t1", { done: true });
+    await transport.put("/api/tasks/t2", { done: true });
+    fx.failWith(null);
+
+    await transport.replay();
+
+    expect(transport.getState()).toEqual({ offline: false, pending: 0 });
+  });
+});

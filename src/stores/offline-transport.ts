@@ -37,7 +37,13 @@ export type OfflineStorage = {
 export type OfflineTransport = Transport & {
   /** Send the queued mutations in order, then refetch via onSynced. */
   replay: () => Promise<void>;
+  /** Current connectivity + pending-queue snapshot (for the indicator). */
+  getState: () => OfflineState;
+  /** Listen for state changes; returns an unsubscribe function. */
+  subscribe: (fn: (s: OfflineState) => void) => () => void;
 };
+
+export type OfflineState = { offline: boolean; pending: number };
 
 // A fetch-level network failure (no HTTP response) surfaces as a
 // TypeError; a server rejection reaches ensureOk and throws a plain
@@ -75,9 +81,23 @@ export const makeOfflineTransport = (
 ): OfflineTransport => {
   const shouldFallBack = (e: unknown) => !isOnline() || isNetworkFailure(e);
 
+  let state: OfflineState = { offline: false, pending: 0 };
+  const listeners = new Set<(s: OfflineState) => void>();
+  const setState = (next: Partial<OfflineState>) => {
+    const merged = { ...state, ...next };
+    if (merged.offline === state.offline && merged.pending === state.pending)
+      return;
+    state = merged;
+    for (const fn of listeners) fn(state);
+  };
+
+  // Pick up a queue persisted by a previous page load.
+  storage.readQueue().then((q) => setState({ pending: q.length }));
+
   const enqueue = async (op: QueuedOp) => {
     const queue = await storage.readQueue();
     await storage.writeQueue([...queue, op]);
+    setState({ offline: true, pending: queue.length + 1 });
   };
 
   const send = <T>(op: QueuedOp): Promise<T> =>
@@ -93,10 +113,13 @@ export const makeOfflineTransport = (
     const queue = await storage.readQueue();
     if (queue.length > 0) {
       await storage.writeQueue([...queue, op]);
+      setState({ pending: queue.length + 1 });
       return op.body as T;
     }
     try {
-      return await send<T>(op);
+      const result = await send<T>(op);
+      setState({ offline: false });
+      return result;
     } catch (e) {
       if (!shouldFallBack(e)) throw e;
       await enqueue(op);
@@ -109,9 +132,11 @@ export const makeOfflineTransport = (
       try {
         const data = await inner.get<T>(path);
         await storage.writeList(path, data);
+        setState({ offline: false });
         return data;
       } catch (e) {
         if (shouldFallBack(e)) {
+          setState({ offline: true });
           const cached = await storage.readList(path);
           if (cached !== undefined) {
             const queue = await storage.readQueue();
@@ -143,8 +168,15 @@ export const makeOfflineTransport = (
         }
         queue = queue.slice(1);
         await storage.writeQueue(queue);
+        setState({ pending: queue.length });
       }
+      setState({ offline: false });
       opts.onSynced?.();
+    },
+    getState: () => state,
+    subscribe: (fn) => {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
     },
   };
 };
