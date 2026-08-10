@@ -1982,6 +1982,10 @@
   gap: 8px;
   justify-content: space-between;
   padding-left: 30px; // aligns under the title (checkbox 20px + 10px gap)
+
+  .list-actions {
+    margin-left: auto; // keep move/archive right-aligned when links pills are absent
+  }
 }
 
 .link-pills {

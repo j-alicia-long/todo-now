@@ -40,6 +40,9 @@ export const ShoppingListItem = ({
     addedTimer.current = setTimeout(() => setAddedToBoard(false), 3000);
   };
 
+  const links = item.links || [];
+  const hasLinks = links.length > 0;
+
   return (
     <div
       className={`list-item shopping-item two-row ${item.done ? "checked" : ""}`}
@@ -57,14 +60,19 @@ export const ShoppingListItem = ({
           {item.title}
         </span>
         <div className="list-actions">
-          {moveMode && (
-            <MoveActionButton
-              variant="archive"
-              icon="archive"
-              title="Archive"
-              onClick={() => actions.archive(item.id)}
+          {!hasLinks && (
+            <LinkPills
+              links={links}
+              onChange={(next) => actions.updateLinks(item.id, next)}
             />
           )}
+          <button
+            className={`list-action-btn ${addedToBoard ? "added" : ""}`}
+            onClick={handleAddToBoard}
+            title={addedToBoard ? "Added to Board" : "Add to Board"}
+          >
+            <Icon name={addedToBoard ? "check" : "dashboard"} />
+          </button>
           <button
             className="list-action-btn delete"
             onClick={() => actions.remove(item.id)}
@@ -74,31 +82,36 @@ export const ShoppingListItem = ({
           </button>
         </div>
       </div>
-      <div className="list-item-sub">
-        <LinkPills
-          links={item.links || []}
-          onChange={(links) => actions.updateLinks(item.id, links)}
-        />
-        <div className="list-actions">
-          <button
-            className={`list-action-btn ${addedToBoard ? "added" : ""}`}
-            onClick={handleAddToBoard}
-            title={addedToBoard ? "Added to Board" : "Add to Board"}
-          >
-            <Icon name={addedToBoard ? "check" : "dashboard"} />
-          </button>
-          {moveMode && (
-            <MoveActionButton
-              variant={item.category === "need" ? "move-right" : "move-left"}
-              icon={item.category === "need" ? "chevron_right" : "chevron_left"}
-              title={
-                item.category === "need" ? "Move to Wants" : "Move to Needs"
-              }
-              onClick={() => actions.move(item.id)}
+      {(hasLinks || moveMode) && (
+        <div className="list-item-sub">
+          {hasLinks && (
+            <LinkPills
+              links={links}
+              onChange={(next) => actions.updateLinks(item.id, next)}
             />
           )}
+          {moveMode && (
+            <div className="list-actions">
+              <MoveActionButton
+                variant={item.category === "need" ? "move-right" : "move-left"}
+                icon={
+                  item.category === "need" ? "chevron_right" : "chevron_left"
+                }
+                title={
+                  item.category === "need" ? "Move to Wants" : "Move to Needs"
+                }
+                onClick={() => actions.move(item.id)}
+              />
+              <MoveActionButton
+                variant="archive"
+                icon="archive"
+                title="Archive"
+                onClick={() => actions.archive(item.id)}
+              />
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 };
