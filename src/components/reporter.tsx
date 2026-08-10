@@ -1,8 +1,9 @@
 // The Reporter: files a Report (bug or idea) as a Markdown file for an
 // agent to work on later. Report Mode repurposes input — taps select
 // elements as Targets instead of operating the app — and the compose
-// modal turns Targets into Mention chips inside the note. Opened by
-// Cmd/Ctrl+Shift+P on desktop or a shake on mobile (see use-shake.ts).
+// modal turns Targets into Mention chips inside the note. Opened by the
+// floating bug button (bottom-right), Cmd/Ctrl+Shift+P on desktop, or a
+// shake on mobile (see use-shake.ts).
 // Domain terms live in CONTEXT.md; the saved file format in
 // src/server/reports.ts.
 
@@ -393,11 +394,24 @@ export const Reporter = ({
   };
 
   if (phase === "off") {
-    return savedFlash ? (
-      <div className="reporter-saved-flash" data-reporter>
-        <Icon name="check_circle" /> Report saved
-      </div>
-    ) : null;
+    return (
+      <>
+        {savedFlash && (
+          <div className="reporter-saved-flash" data-reporter>
+            <Icon name="check_circle" /> Report saved
+          </div>
+        )}
+        <button
+          className="reporter-launcher"
+          data-reporter
+          onClick={open}
+          aria-label="Report a bug or idea"
+          title="Report a bug or idea"
+        >
+          <Icon name="bug_report" />
+        </button>
+      </>
+    );
   }
 
   return (

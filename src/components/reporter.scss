@@ -45,6 +45,35 @@
   top: -18px;
 }
 
+// ── Launcher (persistent bottom-right button that opens Report Mode) ──
+
+.reporter-launcher {
+  align-items: center;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  box-shadow: var(--shadow-lg);
+  color: var(--accent-text);
+  cursor: pointer;
+  display: flex;
+  height: 52px;
+  justify-content: center;
+  position: fixed;
+  right: 20px;
+  transition: all var(--transition);
+  width: 52px;
+  z-index: 502;
+
+  .material-symbols-outlined {
+    font-size: 26px;
+  }
+
+  &:hover {
+    background: var(--accent-hover);
+  }
+}
+
 // ── Floating buttons ──
 
 .reporter-fabs {
