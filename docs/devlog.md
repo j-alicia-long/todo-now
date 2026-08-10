@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-10 — Remove orphaned deps (lucide-react, class-variance-authority)
+
+- Both deps had zero importers after the dead design-kit/shadcn cleanup; removed from `package.json` (lockfile updated via `bun install`). typecheck, build, lint, and tests all pass
+- Report: `2026-08-10-0041-tech-debt-remove-orphaned-deps-lucide-cva.md`
+
+---
+
 ## 2026-08-10 — KeyHint shows "+" between keys
 
 - Multi-key shortcuts in Settings (e.g. Shift Enter) rendered as adjacent chips with no separator; `KeyHint` now inserts a muted "+" between chips ("Shift + Enter")
