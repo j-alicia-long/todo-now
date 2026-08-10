@@ -1643,6 +1643,41 @@
   font-weight: 600;
 }
 
+// ── Key hint (keyboard shortcut chips) ──
+.key-hint {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.key-hint-key {
+  align-items: center;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 500;
+  height: 24px;
+  justify-content: center;
+  line-height: 1;
+  min-width: 24px;
+  padding: 0 8px;
+
+  &.key-hint-key-xs {
+    font-size: 11px;
+    height: 20px;
+    min-width: 20px;
+    padding: 0 6px;
+  }
+}
+
+.key-hint-plus {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+}
+
 .toggle-switch {
   background: var(--bg-sunken);
   border: 1px solid var(--border);

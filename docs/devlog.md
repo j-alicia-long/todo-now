@@ -6,6 +6,16 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-10 — Remove unwired Tailwind + shadcn scaffolding (PR)
+
+- The app is SCSS-only and Tailwind was never wired into the build (no `@tailwindcss/vite` plugin, `components.json` pointed at a non-existent `src/styles.css`), so its toolchain was dead weight
+- Removed deps: `@tailwindcss/vite`, `@tailwindcss/typography`, `tailwindcss`, `tw-animate-css`, `shadcn`, `tailwind-merge`, `clsx`; deleted `components.json` and `src/lib/utils.ts` (`cn`)
+- Rebuilt `KeyHint` (the last kit component using Tailwind classes) with plain SCSS classes (`.key-hint*` in `todo-base.scss`) — chips now render as proper bordered keycaps (previously the Tailwind classes were inert)
+- typecheck, lint, build, and tests all pass; verified visually in the demo build
+- Report: `2026-08-10-0041-tech-debt-unwired-tailwind-shadcn-scaffolding.md`
+
+---
+
 ## 2026-08-10 — Remove orphaned deps (lucide-react, class-variance-authority)
 
 - Both deps had zero importers after the dead design-kit/shadcn cleanup; removed from `package.json` (lockfile updated via `bun install`). typecheck, build, lint, and tests all pass
