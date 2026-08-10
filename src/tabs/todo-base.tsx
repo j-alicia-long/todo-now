@@ -1,7 +1,7 @@
 import { useTheme } from "@/components/theme-provider";
 import { useState } from "react";
 import { type RecurringCardActions } from "../components/board-column";
-import { DatePickerDropdown } from "../components/date-picker";
+import { DatePickerDropdown } from "../components/kit/date-picker";
 import { type RecurringItemActions } from "../components/recurring-list-item";
 import {
   type GroceryItemActions,
@@ -9,7 +9,7 @@ import {
 } from "../components/shopping-items";
 import { type TaskActions } from "../components/task-card";
 import { Reporter } from "../components/reporter";
-import { Icon } from "../components/ui";
+import { Icon } from "../components/kit/icon";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import { formatDueDate, formatHeadingDate } from "../lib/presentation";
 import { requestMotionPermission } from "../lib/use-shake";

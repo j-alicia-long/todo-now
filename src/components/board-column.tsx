@@ -6,8 +6,8 @@ import { useDroppable } from "@dnd-kit/core";
 import { type Task, type TaskStatus } from "../domain/task-rules";
 import { type RecurringItem } from "../domain/recurrence";
 import { type Settings } from "../stores/hooks";
-import { Icon } from "./ui";
-import { DatePickerModal } from "./date-picker";
+import { Icon } from "./kit/icon";
+import { DatePickerModal } from "./kit/date-picker";
 import { TaskCard, type TaskActions } from "./task-card";
 import {
   dueUrgencyClass,

@@ -11,7 +11,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { type Task } from "../domain/task-rules";
 import { type Quadrant } from "../domain/matrix-rules";
 import { QUADRANTS } from "./matrix-view";
-import { Icon } from "./ui";
+import { Icon } from "./kit/icon";
 import {
   AREA_COLORS,
   AREA_LABELS,
