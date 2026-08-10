@@ -65,7 +65,7 @@ bun install
 bun run dev
 ```
 
-If `bun run dev` fails with "port in use", a stale dev server is still holding the port (`local_port` in `zosite.json`). Find and kill it:
+Stale dev servers holding the port (`local_port` in `zosite.json`) are killed automatically before startup by `scripts/free-port.ts`. If a port conflict somehow persists, free it manually:
 
 ```bash
 lsof -i :57460 -P -n   # find the PID holding the port
