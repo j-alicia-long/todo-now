@@ -1,6 +1,9 @@
 // Generic entity-list store: owns the fetch/optimistic-update/reconcile
 // cycle that every list family (tasks, shopping, groceries, recurring)
 // shares. Per-family hooks in hooks.ts wrap this with domain operations.
+// Creates are optimistic: the item is built client-side via the family's
+// shared construct (client-generated id) and shown immediately; the POST
+// reconciles in the background and a rejection removes the item.
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { Transport } from "./transport";
@@ -19,8 +22,11 @@ export type EntityList<T extends { id: string }> = {
     optimistic: (prev: T[]) => T[],
     request: () => Promise<unknown>
   ) => Promise<boolean>;
-  /** POST to the collection endpoint and append the server's response. */
-  create: (body: unknown) => Promise<T | null>;
+  /**
+   * Show the constructed item immediately, POST it (id included), and
+   * reconcile with the server's response. A rejection removes the item.
+   */
+  create: (body: Record<string, unknown>) => Promise<T | null>;
   /** Optimistically merge fields into one item, then PUT them. */
   update: (id: string, fields: Record<string, unknown>) => Promise<boolean>;
   /** Optimistically drop one item, then DELETE it. */
@@ -30,7 +36,8 @@ export type EntityList<T extends { id: string }> = {
 export const useEntityList = <T extends { id: string }>(
   endpoint: string,
   label: string,
-  transport: Transport
+  transport: Transport,
+  construct: (body: Record<string, unknown>, now: Date) => T
 ): EntityList<T> => {
   const [items, setItems] = useState<T[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -80,17 +87,25 @@ export const useEntityList = <T extends { id: string }>(
   );
 
   const create = useCallback(
-    async (body: unknown): Promise<T | null> => {
+    async (body: Record<string, unknown>): Promise<T | null> => {
+      const optimistic = construct(body, new Date());
+      setItems((prev) => [...prev, optimistic]);
       try {
-        const item = await transport.post<T>(endpoint, body);
-        setItems((prev) => [...prev, item]);
+        const item = await transport.post<T>(endpoint, {
+          ...body,
+          id: optimistic.id,
+        });
+        setItems((prev) =>
+          prev.map((i) => (i.id === optimistic.id ? item : i))
+        );
         return item;
       } catch (e) {
         console.error(`Failed to add ${label}:`, e);
+        setItems((prev) => prev.filter((i) => i.id !== optimistic.id));
         return null;
       }
     },
-    [endpoint, label, transport]
+    [construct, endpoint, label, transport]
   );
 
   const update = useCallback(

@@ -151,6 +151,62 @@ describe("useTasks", () => {
     });
   });
 
+  test("add shows the item immediately with a client-generated id", async () => {
+    const fx = makeMemoryTransport<Task>("/api/tasks", []);
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const gated: Transport = {
+      ...fx.transport,
+      post: async <R>(path: string, body: unknown): Promise<R> => {
+        await gate;
+        return fx.transport.post<R>(path, body);
+      },
+    };
+    const { result } = renderHook(() => useTasks(gated));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    let pending!: Promise<Task | null>;
+    act(() => {
+      pending = result.current.add({ title: "Instant" });
+    });
+
+    // Visible before the server has responded.
+    expect(result.current.tasks).toHaveLength(1);
+    expect(result.current.tasks[0].title).toBe("Instant");
+    const optimisticId = result.current.tasks[0].id;
+    expect(optimisticId).toMatch(/^[0-9a-f-]{8}$/);
+
+    await act(async () => {
+      release();
+      await pending;
+    });
+
+    // Reconciled: still one item, same id, and the id was POSTed.
+    expect(result.current.tasks).toHaveLength(1);
+    expect(result.current.tasks[0].id).toBe(optimisticId);
+    expect(fx.calls.at(-1)).toMatchObject({
+      method: "POST",
+      body: { title: "Instant", id: optimisticId },
+    });
+  });
+
+  test("failed add removes the optimistic item", async () => {
+    const fx = makeMemoryTransport<Task>("/api/tasks", []);
+    const { result } = renderHook(() => useTasks(fx.transport));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    fx.failNextMutation();
+    let created: Task | null = null;
+    await act(async () => {
+      created = await result.current.add({ title: "Doomed" });
+    });
+
+    expect(created).toBeNull();
+    expect(result.current.tasks).toHaveLength(0);
+  });
+
   test("changeStatus applies lifecycle rules optimistically and PUTs only the status", async () => {
     const fx = makeMemoryTransport("/api/tasks", [makeTask()]);
     const { result } = renderHook(() => useTasks(fx.transport));
