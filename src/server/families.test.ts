@@ -46,6 +46,19 @@ describe("tasksFamily", () => {
     expect(task.importance).toBeNull();
   });
 
+  test("construct honors a client-supplied id", () => {
+    const task = tasksFamily.construct(
+      { id: "abc12345", title: "Buy stamps" },
+      NOW
+    );
+    expect(task.id).toBe("abc12345");
+  });
+
+  test("construct generates an id when none is supplied", () => {
+    const task = tasksFamily.construct({ title: "Buy stamps" }, NOW);
+    expect(task.id).toMatch(/^[0-9a-f-]{8}$/);
+  });
+
   test("importance is writable via PUT and round-trips", () => {
     expect(tasksFamily.writable).toContain("importance");
     const prev = makeTask();
@@ -113,6 +126,11 @@ describe("shoppingFamily", () => {
     expect(item.doneAt).toBeNull();
   });
 
+  test("construct honors a client-supplied id", () => {
+    const item = shoppingFamily.construct({ id: "shop1234" }, NOW);
+    expect(item.id).toBe("shop1234");
+  });
+
   test("applyUpdate stamps doneAt when an item becomes bought", () => {
     const prev = shoppingFamily.construct({ title: "Socks" }, NOW);
     const merged = { ...prev, done: true };
@@ -143,6 +161,11 @@ describe("shoppingFamily", () => {
 });
 
 describe("groceriesFamily", () => {
+  test("construct honors a client-supplied id", () => {
+    const item = groceriesFamily.construct({ id: "groc1234" }, NOW);
+    expect(item.id).toBe("groc1234");
+  });
+
   test("construct defaults to an unbought task item", () => {
     const item = groceriesFamily.construct({ title: "Milk" }, NOW);
     expect(item.done).toBe(false);
@@ -159,6 +182,11 @@ describe("groceriesFamily", () => {
 });
 
 describe("recurringFamily", () => {
+  test("construct honors a client-supplied id", () => {
+    const item = recurringFamily.construct({ id: "recu1234" }, NOW);
+    expect(item.id).toBe("recu1234");
+  });
+
   test("construct forces reference items to weekly defaults", () => {
     const item = recurringFamily.construct(
       { title: "Gym link", category: "reference", frequency: "long-term" },
