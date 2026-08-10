@@ -6,6 +6,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-09 — Shopping move mode + shared MoveActionButton (PR)
+
+- Shopping tab gains a "Move" toggle (mirrors the Board); the per-item archive and category-move (chevron) buttons now appear only in move mode
+- Extracted a shared `MoveActionButton` (in `ui.tsx`, styled via `.card-action-btn`) and reused it in both `task-card` (Board) and `shopping-items` — no duplicated markup
+- Report: `2026-08-09-0659-show-only-in-move-mode-just-like-on-the.md`
+
+---
+
 ## 2026-08-09 — Hide done tasks completed >7 days ago (PR)
 
 - The Board's Done column now shows only tasks completed within the last 7 days; older ones are hidden (display-only — not trashed or deleted)

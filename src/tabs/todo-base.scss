@@ -316,6 +316,11 @@
   padding: 3px;
 }
 
+// Shopping has only the Move toggle, so push it to the right like the board's.
+.shopping-toolbar {
+  justify-content: flex-end;
+}
+
 .move-mode-btn {
   align-items: center;
   background: var(--bg-sunken);
