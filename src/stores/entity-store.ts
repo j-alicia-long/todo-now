@@ -65,6 +65,14 @@ export const useEntityList = <T extends { id: string }>(
       document.removeEventListener("visibilitychange", handleVisibility);
   }, [refetch]);
 
+  // Fired by the offline transport after replaying its write queue, so
+  // every list reconciles with what the server accepted.
+  useEffect(() => {
+    const handleSynced = () => refetch();
+    window.addEventListener("todo:synced", handleSynced);
+    return () => window.removeEventListener("todo:synced", handleSynced);
+  }, [refetch]);
+
   const refetchRef = useRef(refetch);
   refetchRef.current = refetch;
 
@@ -91,10 +99,9 @@ export const useEntityList = <T extends { id: string }>(
       const optimistic = construct(body, new Date());
       setItems((prev) => [...prev, optimistic]);
       try {
-        const item = await transport.post<T>(endpoint, {
-          ...body,
-          id: optimistic.id,
-        });
+        // POST the full constructed item (not just the sparse body) so
+        // an offline replay of this request recreates it exactly.
+        const item = await transport.post<T>(endpoint, optimistic);
         setItems((prev) =>
           prev.map((i) => (i.id === optimistic.id ? item : i))
         );

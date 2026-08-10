@@ -15,6 +15,13 @@ type Body = Record<string, unknown>;
 const idFrom = (body: Body) =>
   typeof body.id === "string" && body.id ? body.id : newId();
 
+// Offline replay POSTs the full item it built earlier; honoring its
+// original createdAt keeps synced data indistinguishable from online.
+const createdAtFrom = (body: Body, now: Date) =>
+  typeof body.createdAt === "string" && body.createdAt
+    ? body.createdAt
+    : now.toISOString();
+
 export const constructTask = (body: Body, now: Date): Task => ({
   id: idFrom(body),
   title: (body.title as string) || "Untitled",
@@ -25,7 +32,7 @@ export const constructTask = (body: Body, now: Date): Task => ({
   area: (body.area as string) || "life-admin",
   dueDate: (body.dueDate as string) || null,
   importance: (body.importance as Task["importance"]) ?? null,
-  createdAt: now.toISOString(),
+  createdAt: createdAtFrom(body, now),
   completedAt: null,
   deletedAt: null,
   source: (body.source as Task["source"]) || "board",
@@ -40,7 +47,7 @@ export const constructShoppingItem = (body: Body, now: Date): ShoppingItem => ({
   archived: false,
   category: body.category === "want" ? "want" : "need",
   links: Array.isArray(body.links) ? (body.links as string[]) : [],
-  createdAt: now.toISOString(),
+  createdAt: createdAtFrom(body, now),
   doneAt: null,
 });
 
@@ -48,7 +55,7 @@ export const constructGroceryItem = (body: Body, now: Date): GroceryItem => ({
   id: idFrom(body),
   title: (body.title as string) || "Untitled",
   done: false,
-  createdAt: now.toISOString(),
+  createdAt: createdAtFrom(body, now),
   category: body.category === "reference" ? "reference" : "task",
 });
 
@@ -83,7 +90,7 @@ export const constructRecurringItem = (
     link: (body.link as string) || "",
     completedThisWeek: false,
     lastCompletedAt: null,
-    createdAt: now.toISOString(),
+    createdAt: createdAtFrom(body, now),
     dueDate: (body.dueDate as string) ?? null,
     showEarlyDays: (body.showEarlyDays as number) ?? null,
     area: (body.area as string) || "",

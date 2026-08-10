@@ -54,6 +54,14 @@ describe("tasksFamily", () => {
     expect(task.id).toBe("abc12345");
   });
 
+  test("construct honors a client-supplied createdAt (offline replay)", () => {
+    const task = tasksFamily.construct(
+      { title: "Buy stamps", createdAt: "2026-01-15T08:00:00.000Z" },
+      NOW
+    );
+    expect(task.createdAt).toBe("2026-01-15T08:00:00.000Z");
+  });
+
   test("construct generates an id when none is supplied", () => {
     const task = tasksFamily.construct({ title: "Buy stamps" }, NOW);
     expect(task.id).toMatch(/^[0-9a-f-]{8}$/);

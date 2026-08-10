@@ -10,10 +10,19 @@ import { indexedDbStorage } from "./offline-storage";
 
 export const isDemo = Boolean(import.meta.env.VITE_DEMO);
 
-export const defaultTransport: Transport = isDemo
-  ? demoTransport
-  : makeOfflineTransport(
-      httpTransport,
-      indexedDbStorage,
-      () => navigator.onLine
-    );
+const makeDefault = (): Transport => {
+  if (isDemo) return demoTransport;
+  const transport = makeOfflineTransport(
+    httpTransport,
+    indexedDbStorage,
+    () => navigator.onLine,
+    { onSynced: () => window.dispatchEvent(new Event("todo:synced")) }
+  );
+  // Replay queued offline mutations on reconnect, and once at startup
+  // in case the app reloaded while offline and came back online since.
+  window.addEventListener("online", () => transport.replay());
+  transport.replay();
+  return transport;
+};
+
+export const defaultTransport: Transport = makeDefault();

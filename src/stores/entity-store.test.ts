@@ -192,6 +192,40 @@ describe("useTasks", () => {
     });
   });
 
+  test("add POSTs the full constructed item so an offline replay recreates it", async () => {
+    const fx = makeMemoryTransport<Task>("/api/tasks", []);
+    const { result } = renderHook(() => useTasks(fx.transport));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    await act(async () => {
+      await result.current.add({ title: "Full body" });
+    });
+
+    const body = fx.calls.at(-1)?.body as Record<string, unknown>;
+    expect(body).toMatchObject({
+      title: "Full body",
+      status: "this-week",
+      effort: "medium",
+      done: false,
+    });
+    expect(typeof body.createdAt).toBe("string");
+  });
+
+  test("a 'todo:synced' window event triggers a refetch", async () => {
+    const fx = makeMemoryTransport<Task>("/api/tasks", []);
+    const { result } = renderHook(() => useTasks(fx.transport));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+    expect(result.current.tasks).toHaveLength(0);
+
+    fx.setItems([makeTask({ id: "s1", title: "Synced in" })]);
+    await act(async () => {
+      window.dispatchEvent(new Event("todo:synced"));
+    });
+
+    await waitFor(() => expect(result.current.tasks).toHaveLength(1));
+    expect(result.current.tasks[0].id).toBe("s1");
+  });
+
   test("failed add removes the optimistic item", async () => {
     const fx = makeMemoryTransport<Task>("/api/tasks", []);
     const { result } = renderHook(() => useTasks(fx.transport));
