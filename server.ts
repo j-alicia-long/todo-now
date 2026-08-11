@@ -5,6 +5,7 @@ import config from "./zosite.json";
 import { Hono } from "hono";
 import { createResourceRoutes } from "./src/server/resource";
 import { createReportRoutes } from "./src/server/reports";
+import { createGhIssueCreator } from "./src/server/github";
 import {
   tasksFamily,
   shoppingFamily,
@@ -67,10 +68,20 @@ app.delete("/api/groceries/clear-bought", async (c) => {
 createResourceRoutes(app, "/api/groceries", groceriesFamily, groceriesStore);
 createResourceRoutes(app, "/api/recurring", recurringFamily, recurringStore);
 
-// Reporter submissions: write-only, saved as Markdown for a later agent
-// (src/server/reports.ts; files land in the open-reports folder — see
-// the Reports section of src/server/files.ts for path resolution).
-createReportRoutes(app, "/api/reports", reportsWriter);
+// Reporter submissions: write-only. Each Report is saved as full
+// Markdown in the reports folder AND filed as a sanitized GitHub issue
+// (the tracker; see src/server/reports.ts). Issue filing needs a repo:
+// REPORTS_REPO env overrides; production defaults to the app repo; dev
+// defaults to disabled so local testing doesn't create real issues.
+const reportsRepo =
+  process.env.REPORTS_REPO ??
+  (mode === "production" ? "j-alicia-long/todo-now" : null);
+createReportRoutes(
+  app,
+  "/api/reports",
+  reportsWriter,
+  createGhIssueCreator(reportsRepo)
+);
 
 // ── Weekly Archive ──
 
