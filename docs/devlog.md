@@ -16,6 +16,52 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-11 — Shrink Move-mode buttons to match tag height
+
+- Board task cards reserved a full 26px row height for the move-action buttons (18px icon + 2×4px padding), leaving too much empty space around the label pills when Move mode was off. Reduced the move buttons to tag height instead — scoped `.card-row .card-action-btn` to `padding: 1px 8px` + 16px icon, and dropped `.card-row` `min-height` from 26px to 20px. Scoped to `.card-row` so trash/future-card action buttons are unaffected
+- Report: `2026-08-10-2146-now-there-s-too-much-space-on-the-labels.md`
+
+---
+
+## 2026-08-10 — Remove orphaned deps (lucide-react, class-variance-authority)
+
+- Both deps had zero importers after the dead design-kit/shadcn cleanup; removed from `package.json` (lockfile updated via `bun install`). typecheck, build, lint, and tests all pass
+- Report: `2026-08-10-0041-tech-debt-remove-orphaned-deps-lucide-cva.md`
+
+---
+
+## 2026-08-10 — KeyHint shows "+" between keys
+
+- Multi-key shortcuts in Settings (e.g. Shift Enter) rendered as adjacent chips with no separator; `KeyHint` now inserts a muted "+" between chips ("Shift + Enter")
+- Report: `2026-08-09-1705-add-between-key-commands.md`
+
+---
+
+## 2026-08-10 — Header icon uses theme purple
+
+- The board header's leaf (`eco`) icon was hard-coded green (`--success`); recolored it to the theme's purple accent (`--accent`) to match the app theme
+- Report: `2026-08-09-1528-make-this-purple-like-the-theme.md`
+
+---
+
+## 2026-08-10 — Fix Move-mode row height jitter
+
+- Toggling Move mode no longer shifts card/row height: reserved the move-action button height (26px) on `.card-row` (Board) and `.list-item-sub` (Shopping) via `min-height`, so the row stays the same height whether or not the buttons are shown
+- Report: `2026-08-10-0156-the-task-item-vertical-height-jitters-wh.md`
+
+---
+
+## 2026-08-10 — Offline mode (spec #4, tickets #5–#10)
+
+- The app now works with no network: the shell loads (Workbox service worker via vite-plugin-pwa, self-hosted Inter + Material Symbols), lists render from an IndexedDB read cache, and checking off / creating / editing / deleting all work offline
+- Offline mutations queue in order (persisted in IndexedDB, survive reload) and replay automatically on reconnect, then every list refetches (`todo:synced`); server 4xx/5xx still throws and reverts. Conflict model: single user, replay-in-order, last write wins
+- Creates are now optimistic everywhere (instant even online): built client-side from shared construction defaults (`src/domain/construct.ts`, honors client `id`/`createdAt`), POSTed whole, reconciled in the background — ADR 0002
+- New sync badge: "Offline — N unsynced changes" whenever queued changes exist (even back online), "Syncing N changes…" during replay, then a 2s "All changes synced" flash once the queue drains; sync failure keeps the unsynced badge
+- All at the existing `Transport` seam — a third adapter (`offline-transport.ts`) wrapping HTTP, storage + connectivity injected; 206 tests (32 new), each ticket Playwright-verified offline
+- Commits `ba50256` (#5), `625a55b` (#6), `68b9926` (#7), `4f49ba2` (#8), `c23249c` (#9), + indicator (#10)
+
+---
+
 ## 2026-08-09 — Shopping move mode + shared MoveActionButton (PR)
 
 - Shopping tab gains a "Move" toggle (mirrors the Board); the per-item archive and category-move (chevron) buttons now appear only in move mode

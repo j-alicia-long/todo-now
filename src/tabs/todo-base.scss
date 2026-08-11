@@ -56,7 +56,7 @@
     letter-spacing: -0.02em;
 
     .material-symbols-outlined {
-      color: var(--success);
+      color: var(--accent);
       font-size: 1.4rem;
     }
   }
@@ -937,6 +937,11 @@
   display: flex;
   gap: 8px;
   margin-left: 28px;
+  // Reserve the tag-pill height so the row keeps the same height whether or
+  // not Move mode is on — the move-action buttons are sized to match the
+  // tags (see `.card-row .card-action-btn` below), so no vertical jitter and
+  // no extra empty space around the labels when Move mode is off.
+  min-height: 20px;
 }
 
 // ── Card Links (link pills + clip, inline in the tag row beside the due date) ──
@@ -1503,6 +1508,17 @@
   }
 }
 
+// Board Move-mode buttons: sit inline beside the tag pills, so size them to
+// match the tag height instead of towering over the labels (they used to be
+// 18px icon + 2×4px padding = 26px, which forced the whole row taller).
+.card-row .card-action-btn {
+  padding: 1px 8px;
+
+  .material-symbols-outlined {
+    font-size: 16px;
+  }
+}
+
 // ── Trash ──
 .trash-list {
   display: flex;
@@ -1981,6 +1997,10 @@
   display: flex;
   gap: 8px;
   justify-content: space-between;
+  // Match the move-action button height so the sub-row keeps a constant height
+  // whether it holds link pills, the move buttons, or both — no jitter when
+  // Move mode toggles.
+  min-height: 26px;
   padding-left: 30px; // aligns under the title (checkbox 20px + 10px gap)
 
   .list-actions {
