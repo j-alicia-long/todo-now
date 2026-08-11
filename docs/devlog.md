@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-11 — Shrink Move-mode buttons to match tag height
+
+- Board task cards reserved a full 26px row height for the move-action buttons (18px icon + 2×4px padding), leaving too much empty space around the label pills when Move mode was off. Reduced the move buttons to tag height instead — scoped `.card-row .card-action-btn` to `padding: 1px 8px` + 16px icon, and dropped `.card-row` `min-height` from 26px to 20px. Scoped to `.card-row` so trash/future-card action buttons are unaffected
+- Report: `2026-08-10-2146-now-there-s-too-much-space-on-the-labels.md`
+
+---
+
 ## 2026-08-10 — Remove orphaned deps (lucide-react, class-variance-authority)
 
 - Both deps had zero importers after the dead design-kit/shadcn cleanup; removed from `package.json` (lockfile updated via `bun install`). typecheck, build, lint, and tests all pass
