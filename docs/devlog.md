@@ -11,7 +11,7 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 - Each Report now files as a **GitHub issue** (label `bug`/`idea`) alongside its local Markdown file — issues are the tracker (close = resolved), the file is the full-fidelity companion; they link to each other via `issue:` frontmatter and a body backlink
 - New pure sanitizer (`src/server/sanitize.ts`): issue snippets get text nodes and text-bearing attributes masked with **same-length** `x` placeholders (layout bugs stay diagnosable); tags/ids/classes/selectors/SVG geometry pass through — the repo is public, raw snippets never leave the machine
 - New `IssueCreator` seam + `gh`-CLI adapter (`github.ts`); file always saves first (`issue: pending` if filing fails/disabled), so no report is ever lost. Dev default: filing off; `REPORTS_REPO` env or production enables
-- Reports folder flattened (no more `open/`/`resolved/` — status lives on the issue); triage keys became repo labels (P0–P2, Large/Medium/Small); daily triage automation prompt updated to work from issues
+- Reports folder flattened (no more `open/`/`resolved/` — status lives on the issue); triage keys became repo labels (P0–P2, Large/Medium/Small), documented in `docs/TRIAGE.md`; daily triage automation prompt updated to work from issues
 - Verified end-to-end against the real repo (issue #14, closed)
 
 ---

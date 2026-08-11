@@ -17,6 +17,7 @@ Jennifer's personal task/shopping/grocery manager: a React PWA hosted as a Zo Si
 
 - Code structure, module layers, and architecture vocabulary: `docs/ARCHITECTURE.md`
 - Colors, themes, and interaction details: `docs/VISUAL-CONVENTIONS.md`
+- Report triage keys (issue labels, work order): `docs/TRIAGE.md`
 - Domain glossary (what a "family" is, etc.): `CONTEXT.md`
 - Shared code conventions: ESLint preset from [j-alicia-long/web-config](https://github.com/j-alicia-long/web-config) (bun git dependency); judgment calls in the `.github/skills/web-conventions/` skill (re-sync with `bun run sync-skills`)
 - Roadmap: `docs/roadmap.md` · Product spec & project map: `../todo-architecture.md`, `../AGENTS.md` · Narrative history: `../history.md`
