@@ -1,5 +1,4 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
 
 // Map the hard-to-recognize Mac modifier/key glyphs to plain words. `⌘` is
 // intentionally kept as a glyph — it's widely recognized and compact. Word
@@ -34,36 +33,27 @@ export interface KeyHintProps {
 }
 
 /**
- * Renders a keyboard shortcut as a row of individual key chips. Uses the
- * regular UI font (not mono — the symbol glyphs are hard to read in mono) and
- * spells out the modifier names that aren't broadly recognized.
- * Demo: `/_design`.
+ * Renders a keyboard shortcut as a row of individual key chips joined by "+".
+ * Uses the regular UI font (not mono — the symbol glyphs are hard to read in
+ * mono) and spells out the modifier names that aren't broadly recognized.
+ * Styled via `.key-hint*` classes in `todo-base.scss`.
  */
 export const KeyHint = ({ display, className, size = "sm" }: KeyHintProps) => {
   const tokens = tokenize(display);
   if (tokens.length === 0) return null;
 
   return (
-    <span className={cn("inline-flex items-center gap-1", className)}>
+    <span className={`key-hint${className ? ` ${className}` : ""}`}>
       {tokens.map((token, index) => (
         // eslint-disable-next-line @eslint-react/no-array-index-key -- tokens are bare strings (duplicates possible) derived statically from `display`; never reordered
         <React.Fragment key={`${token}-${index}`}>
           {index > 0 && (
-            <span
-              className="key-hint-plus"
-              aria-hidden="true"
-              style={{ margin: "0 3px", color: "var(--text-tertiary)" }}
-            >
+            <span className="key-hint-plus" aria-hidden="true">
               +
             </span>
           )}
           <kbd
-            className={cn(
-              "inline-flex select-none items-center justify-center rounded-md border border-border/60 bg-muted/70 font-sans font-medium leading-none text-muted-foreground",
-              size === "xs"
-                ? "h-5 min-w-[1.25rem] px-1.5 text-[11px]"
-                : "h-6 min-w-[1.5rem] px-2 text-xs"
-            )}
+            className={`key-hint-key${size === "xs" ? " key-hint-key-xs" : ""}`}
           >
             {KEY_TOKEN_LABELS[token] ?? token}
           </kbd>

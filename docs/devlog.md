@@ -6,6 +6,16 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-10 — Remove unwired Tailwind + shadcn scaffolding (PR)
+
+- The app is SCSS-only and Tailwind was never wired into the build (no `@tailwindcss/vite` plugin, `components.json` pointed at a non-existent `src/styles.css`), so its toolchain was dead weight
+- Removed deps: `@tailwindcss/vite`, `@tailwindcss/typography`, `tailwindcss`, `tw-animate-css`, `shadcn`, `tailwind-merge`, `clsx`; deleted `components.json` and `src/lib/utils.ts` (`cn`)
+- Rebuilt `KeyHint` (the last kit component using Tailwind classes) with plain SCSS classes (`.key-hint*` in `todo-base.scss`) — chips now render as proper bordered keycaps (previously the Tailwind classes were inert)
+- typecheck, lint, build, and tests all pass; verified visually in the demo build
+- Report: `2026-08-10-0041-tech-debt-unwired-tailwind-shadcn-scaffolding.md`
+
+---
+
 ## 2026-08-11 — Reports file as GitHub issues (hybrid)
 
 - Each Report now files as a **GitHub issue** (label `bug`/`idea`) alongside its local Markdown file — issues are the tracker (close = resolved), the file is the full-fidelity companion; they link to each other via `issue:` frontmatter and a body backlink
