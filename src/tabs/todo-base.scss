@@ -933,15 +933,17 @@
 
 // ── Card Row (tags + actions inline) ──
 .card-row {
-  align-items: center;
+  // Bottom-align so a shorter pill (or a wrapped tag cluster) sits flush with
+  // the row's baseline instead of floating centered with slack underneath it.
+  align-items: flex-end;
   display: flex;
   gap: 8px;
   margin-left: 28px;
-  // Reserve the tag-pill height so the row keeps the same height whether or
-  // not Move mode is on — the move-action buttons are sized to match the
-  // tags (see `.card-row .card-action-btn` below), so no vertical jitter and
-  // no extra empty space around the labels when Move mode is off.
-  min-height: 20px;
+  // Every child pill is sized to --card-pill-height (see `.card-tag`,
+  // `.card-due-subtext`, and `.card-row .card-action-btn`), so the row keeps
+  // one constant height in every combination — due tag, area tag, links, done
+  // subtext, Move mode on or off — with no extra space around the labels.
+  min-height: var(--card-pill-height);
 }
 
 // ── Card Links (link pills + clip, inline in the tag row beside the due date) ──
@@ -954,6 +956,9 @@
 
 // ── Card Tags ──
 .card-tags {
+  // Bottom-align to match .card-row: pills of differing natural height share a
+  // baseline, and a wrapped cluster's last line stays flush with the row.
+  align-items: flex-end;
   display: flex;
   flex: 1;
   flex-wrap: wrap;
@@ -988,10 +993,19 @@
 }
 
 .card-tag {
+  // One fixed height for every pill variant. Their font sizes differ (0.65 —
+  // 0.7rem) and some add a 1px border, so left to the inherited line-height
+  // they'd each come out a different height and force the row taller than the
+  // labels need. Centring the text inside a fixed box keeps them uniform.
+  align-items: center;
   border-radius: 999px;
+  display: inline-flex;
+  flex-shrink: 0;
   font-size: 0.68rem;
   font-weight: 500;
-  padding: 1px 7px;
+  height: var(--card-pill-height);
+  line-height: 1;
+  padding: 0 7px;
   text-transform: capitalize;
 
   &.tappable {
@@ -1091,7 +1105,7 @@
     font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.04em;
-    padding: 2px 8px;
+    padding: 0 8px;
     text-transform: uppercase;
   }
 
@@ -1154,8 +1168,13 @@
 }
 
 .card-due-subtext {
+  // Sized like a pill (without the pill chrome) so Done cards measure the same
+  // row height as active ones.
+  align-items: center;
   color: var(--text-tertiary);
+  display: inline-flex;
   font-size: 0.7rem;
+  height: var(--card-pill-height);
   margin-right: auto;
   pointer-events: none;
 }
@@ -1508,11 +1527,12 @@
   }
 }
 
-// Board Move-mode buttons: sit inline beside the tag pills, so size them to
-// match the tag height instead of towering over the labels (they used to be
+// Board Move-mode buttons: sit inline beside the tag pills, so pin them to the
+// same --card-pill-height instead of towering over the labels (they used to be
 // 18px icon + 2×4px padding = 26px, which forced the whole row taller).
 .card-row .card-action-btn {
-  padding: 1px 8px;
+  height: var(--card-pill-height);
+  padding: 0 8px;
 
   .material-symbols-outlined {
     font-size: 16px;
@@ -2057,11 +2077,14 @@
   border-radius: 999px;
   color: var(--shopping-needs);
   display: inline-flex;
+  flex-shrink: 0;
   font-size: 0.68rem;
   font-weight: 500;
   gap: 2px;
+  // Match the tag pills it sits beside in the card row.
+  height: var(--card-pill-height);
   max-width: 160px;
-  padding: 1px 4px 1px 7px;
+  padding: 0 4px 0 7px;
 
   a {
     color: inherit;
@@ -2104,6 +2127,7 @@
     justify-content: center;
     padding: 0 2px;
     transition: color var(--transition);
+    width: var(--card-pill-height);
 
     .material-symbols-outlined {
       font-size: 17px;
@@ -2121,8 +2145,9 @@
   border-radius: 999px;
   color: var(--text-primary);
   font-size: 0.7rem;
+  height: var(--card-pill-height);
   outline: none;
-  padding: 1px 8px;
+  padding: 0 8px;
   width: 150px;
 
   &:focus {

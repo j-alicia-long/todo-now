@@ -61,6 +61,11 @@
   --radius: 10px;
   --radius-lg: 14px;
 
+  // Shared height for every inline card pill (due tag, area tag, link pill,
+  // Move-mode button) so a card row is one constant height regardless of which
+  // pills it holds.
+  --card-pill-height: 20px;
+
   --shadow-sm: 0 1px 3px rgb(61, 46, 31, 0.06);
   --shadow: 0 2px 8px rgb(61, 46, 31, 0.08);
   --shadow-lg: 0 4px 16px rgb(61, 46, 31, 0.1);

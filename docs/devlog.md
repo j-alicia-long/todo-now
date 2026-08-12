@@ -6,6 +6,16 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-12 — Pin card pills to one height (constant, bottom-aligned rows)
+
+- Follow-up to `2befb56`: shrinking the Move-mode buttons removed the *reserved* extra space, but the label pills still read as bottom-padded. Root cause was two things the earlier fix didn't touch — (1) `.card-tag` variants had no fixed height, so each font size / border combination measured differently (area 20.8px vs. due 22.8px vs. Done subtext 18.3px), and (2) `.card-row` was `align-items: center`, so a shorter pill floated mid-row with visible slack beneath it
+- Introduced a `--card-pill-height: 20px` token in `styles.scss` and pinned every pill that shares the card row to it — `.card-tag` (now `inline-flex` + `line-height: 1`, vertical padding dropped), `.card-due-subtext`, `.link-pill` / `.link-pill.add` / `.link-pill-input`, and `.card-row .card-action-btn`
+- Switched `.card-row` and `.card-tags` to `align-items: flex-end` so pills bottom-align within the row, per the report
+- Result: every single-line card row is exactly 20px (was 20 / 20.8 / 22.8 depending on which pills a card had) and wrapped rows are exact multiples (44px, 68px). Row height is now identical with Move mode on and off — verified in-browser across 34 sample cards
+- Reports: `2026-08-10-2146-now-there-s-too-much-space-on-the-labels.md`, `2026-08-11-1849-the-labels-still-have-extra-bottom-paddi.md`
+
+---
+
 ## 2026-08-11 — Reports file as GitHub issues (hybrid)
 
 - Each Report now files as a **GitHub issue** (label `bug`/`idea`) alongside its local Markdown file — issues are the tracker (close = resolved), the file is the full-fidelity companion; they link to each other via `issue:` frontmatter and a body backlink
