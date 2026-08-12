@@ -6,16 +6,6 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
-## 2026-08-10 — Remove unwired Tailwind + shadcn scaffolding (PR)
-
-- The app is SCSS-only and Tailwind was never wired into the build (no `@tailwindcss/vite` plugin, `components.json` pointed at a non-existent `src/styles.css`), so its toolchain was dead weight
-- Removed deps: `@tailwindcss/vite`, `@tailwindcss/typography`, `tailwindcss`, `tw-animate-css`, `shadcn`, `tailwind-merge`, `clsx`; deleted `components.json` and `src/lib/utils.ts` (`cn`)
-- Rebuilt `KeyHint` (the last kit component using Tailwind classes) with plain SCSS classes (`.key-hint*` in `todo-base.scss`) — chips now render as proper bordered keycaps (previously the Tailwind classes were inert)
-- typecheck, lint, build, and tests all pass; verified visually in the demo build
-- Report: `2026-08-10-0041-tech-debt-unwired-tailwind-shadcn-scaffolding.md`
-
----
-
 ## 2026-08-11 — Reports file as GitHub issues (hybrid)
 
 - Each Report now files as a **GitHub issue** (label `bug`/`idea`) alongside its local Markdown file — issues are the tracker (close = resolved), the file is the full-fidelity companion; they link to each other via `issue:` frontmatter and a body backlink
@@ -30,6 +20,24 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 - Board task cards reserved a full 26px row height for the move-action buttons (18px icon + 2×4px padding), leaving too much empty space around the label pills when Move mode was off. Reduced the move buttons to tag height instead — scoped `.card-row .card-action-btn` to `padding: 1px 8px` + 16px icon, and dropped `.card-row` `min-height` from 26px to 20px. Scoped to `.card-row` so trash/future-card action buttons are unaffected
 - Report: `2026-08-10-2146-now-there-s-too-much-space-on-the-labels.md`
+
+---
+
+## 2026-08-10 — Settings toggle to hide the report button (PR)
+
+- New "Report button" toggle in Settings → Bug Reports hides the floating bug button; Report Mode stays reachable via ⌘⇧P (desktop) or shake (mobile)
+- Added `showReportButton` (default true) to Settings; `Reporter` gains a `showLauncher` prop gating the launcher
+- Report: `2026-08-09-1719-add-settings-page-toggle-to-show-hide-bu.md`
+
+---
+
+## 2026-08-10 — Remove unwired Tailwind + shadcn scaffolding (PR)
+
+- The app is SCSS-only and Tailwind was never wired into the build (no `@tailwindcss/vite` plugin, `components.json` pointed at a non-existent `src/styles.css`), so its toolchain was dead weight
+- Removed deps: `@tailwindcss/vite`, `@tailwindcss/typography`, `tailwindcss`, `tw-animate-css`, `shadcn`, `tailwind-merge`, `clsx`; deleted `components.json` and `src/lib/utils.ts` (`cn`)
+- Rebuilt `KeyHint` (the last kit component using Tailwind classes) with plain SCSS classes (`.key-hint*` in `todo-base.scss`) — chips now render as proper bordered keycaps (previously the Tailwind classes were inert)
+- typecheck, lint, build, and tests all pass; verified visually in the demo build
+- Report: `2026-08-10-0041-tech-debt-unwired-tailwind-shadcn-scaffolding.md`
 
 ---
 

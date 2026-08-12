@@ -580,6 +580,7 @@ const TodoBase = () => {
       <Reporter
         currentTab={sidebarPanel ?? viewTab}
         shakeEnabled={settings.shakeToReport}
+        showLauncher={settings.showReportButton}
       />
     </div>
   );
