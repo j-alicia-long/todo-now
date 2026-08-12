@@ -16,6 +16,23 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-11 — Reports file as GitHub issues (hybrid)
+
+- Each Report now files as a **GitHub issue** (label `bug`/`idea`) alongside its local Markdown file — issues are the tracker (close = resolved), the file is the full-fidelity companion; they link to each other via `issue:` frontmatter and a body backlink
+- New pure sanitizer (`src/server/sanitize.ts`): issue snippets get text nodes and text-bearing attributes masked with **same-length** `x` placeholders (layout bugs stay diagnosable); tags/ids/classes/selectors/SVG geometry pass through — the repo is public, raw snippets never leave the machine
+- New `IssueCreator` seam + `gh`-CLI adapter (`github.ts`); file always saves first (`issue: pending` if filing fails/disabled), so no report is ever lost. Dev default: filing off; `REPORTS_REPO` env or production enables
+- Reports folder flattened (no more `open/`/`resolved/` — status lives on the issue); triage keys became repo labels (P0–P2, Large/Medium/Small), documented in `docs/TRIAGE.md`; daily triage automation prompt updated to work from issues
+- Verified end-to-end against the real repo (issue #14, closed)
+
+---
+
+## 2026-08-11 — Shrink Move-mode buttons to match tag height
+
+- Board task cards reserved a full 26px row height for the move-action buttons (18px icon + 2×4px padding), leaving too much empty space around the label pills when Move mode was off. Reduced the move buttons to tag height instead — scoped `.card-row .card-action-btn` to `padding: 1px 8px` + 16px icon, and dropped `.card-row` `min-height` from 26px to 20px. Scoped to `.card-row` so trash/future-card action buttons are unaffected
+- Report: `2026-08-10-2146-now-there-s-too-much-space-on-the-labels.md`
+
+---
+
 ## 2026-08-10 — Remove orphaned deps (lucide-react, class-variance-authority)
 
 - Both deps had zero importers after the dead design-kit/shadcn cleanup; removed from `package.json` (lockfile updated via `bun install`). typecheck, build, lint, and tests all pass

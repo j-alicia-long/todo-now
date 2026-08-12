@@ -164,15 +164,19 @@ An inline reference to a Target embedded in a Report's note. Stored in plain tex
 _Avoid_: Link, tag, reference (too generic)
 
 **Snippet**:
-The trimmed HTML of a Target, captured so an agent can identify the exact element without running the app. May contain personal data, which is why Reports are never committed.
+The trimmed HTML of a Target, captured so an agent can identify the exact element without running the app. May contain personal data, which is why report files are never committed and issue bodies carry only Sanitized Snippets.
 
 **Page Context**:
 What the Reporter captures automatically about the moment of the Report: which tab/view was open, viewport size, user agent, and timestamp.
 _Avoid_: Metadata, environment
 
+**Sanitized Snippet**:
+A Snippet prepared for the public issue tracker: every text node and text-bearing attribute value masked with same-length `x` placeholders; tags, ids, classes, state attributes, and SVG geometry kept. Same shape, no content.
+_Avoid_: Redacted (implies removal — length is preserved), anonymized
+
 **Open / Resolved**:
-A Report's lifecycle. Open means awaiting an agent; Resolved means acted on. Status is expressed by which folder the Report file lives in — moving the file is the state change.
-_Avoid_: Done (collides with Task status), closed, fixed
+A Report's lifecycle, tracked on its GitHub issue: Open (issue open) means awaiting an agent; Resolved (issue closed) means acted on. Closing the issue is the state change; the report file never moves.
+_Avoid_: Done (collides with Task status), fixed
 
 ### Time
 
