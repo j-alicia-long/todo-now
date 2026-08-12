@@ -211,12 +211,14 @@ export const recurringStore: ListStore<RecurringItem> = {
 };
 
 // ── Reports ──
-// File adapter for the ReportWriter seam: new Reports land in
-// <reports>/open/ as Markdown; an agent resolves one by moving it to
-// <reports>/resolved/. Unlike the live database, Reports live INSIDE the
-// Mutagen-synced personal-os tree on Zo so they sync to the Mac, where
-// dev agents pick them up (see reports/AGENTS.md there). They stay out
-// of git because Snippets can contain personal task text. Resolution:
+// File adapter for the ReportWriter seam: Reports land in <reports>/ as
+// Markdown, one flat folder — status lives on each Report's GitHub
+// issue, not in folder structure. Unlike the live database, Reports
+// live INSIDE the Mutagen-synced personal-os tree on Zo so they sync to
+// the Mac, where dev agents can read the full-fidelity copies (see
+// reports/AGENTS.md there). They stay out of git because Snippets can
+// contain personal task text; only sanitized issue bodies go public.
+// Resolution:
 //   1. REPORTS_DIR env var (explicit override)
 //   2. the Zo synced-tree location, used whenever it exists
 //   3. <dataDir>/reports — local development and tests
@@ -226,22 +228,19 @@ const reportsDir =
   process.env.REPORTS_DIR ??
   (existsSync(ZO_REPORTS_DIR) ? ZO_REPORTS_DIR : dataDir + "/reports");
 
-const OPEN_REPORTS_DIR = reportsDir + "/open";
-
 export const reportsWriter: ReportWriter = {
   save: async (fileName, markdown) => {
-    await mkdir(OPEN_REPORTS_DIR, { recursive: true });
+    await mkdir(reportsDir, { recursive: true });
     // De-collide: same-minute reports get a numeric suffix.
     let name = fileName;
-    for (
-      let i = 2;
-      await Bun.file(`${OPEN_REPORTS_DIR}/${name}`).exists();
-      i++
-    ) {
+    for (let i = 2; await Bun.file(`${reportsDir}/${name}`).exists(); i++) {
       name = fileName.replace(/\.md$/, `-${i}.md`);
     }
-    await Bun.write(`${OPEN_REPORTS_DIR}/${name}`, markdown);
+    await Bun.write(`${reportsDir}/${name}`, markdown);
     return name;
+  },
+  update: async (fileName, markdown) => {
+    await Bun.write(`${reportsDir}/${fileName}`, markdown);
   },
 };
 

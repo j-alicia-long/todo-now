@@ -1,6 +1,7 @@
 // Tests for the reports module: payload validation, Markdown rendering,
-// filename slugs, and the POST route exercised through a bare Hono app
-// with an in-memory ReportWriter.
+// filename slugs, issue title/body rendering, and the POST route
+// exercised through a bare Hono app with in-memory ReportWriter and
+// IssueCreator fakes.
 
 import { describe, test, expect } from "bun:test";
 import { Hono } from "hono";
@@ -9,7 +10,10 @@ import {
   createReportRoutes,
   parseReportPayload,
   renderReportMarkdown,
+  renderIssueMarkdown,
   reportFileName,
+  issueTitle,
+  type IssueCreator,
   type ReportWriter,
 } from "./reports";
 
@@ -72,12 +76,22 @@ describe("renderReportMarkdown", () => {
     const md = renderReportMarkdown(report(), NOW);
     expect(md).toStartWith("---\nkind: bug\n");
     expect(md).toContain("created: 2026-08-09T14:35:22.000Z");
+    expect(md).toContain("issue: pending");
     expect(md).toContain("tab: board");
     expect(md).toContain("viewport: 390x844");
     expect(md).toContain("The [t1] overlaps the drawer");
     expect(md).toContain("### [t1] button");
     expect(md).toContain("Selector: `div.board-column > button.add-task-btn`");
     expect(md).toContain('<button class="add-task-btn">Add</button>');
+  });
+
+  test("stamps the issue URL when provided", () => {
+    const md = renderReportMarkdown(
+      report(),
+      NOW,
+      "https://github.com/o/r/issues/7"
+    );
+    expect(md).toContain("issue: https://github.com/o/r/issues/7");
   });
 
   test("renders ideas without targets", () => {
@@ -87,6 +101,53 @@ describe("renderReportMarkdown", () => {
     );
     expect(md).toContain("# Idea");
     expect(md).not.toContain("## Targets");
+  });
+});
+
+describe("issueTitle", () => {
+  test("uses the note's first line verbatim", () => {
+    expect(issueTitle(report({ note: "The [t1] overlaps\nmore detail" }))).toBe(
+      "The [t1] overlaps"
+    );
+  });
+
+  test("caps long titles with an ellipsis", () => {
+    const title = issueTitle(report({ note: "z".repeat(120) }));
+    expect(title.length).toBeLessThanOrEqual(80);
+    expect(title).toEndWith("…");
+  });
+
+  test("falls back to a kind label for note-less reports", () => {
+    expect(issueTitle(report({ note: "" }))).toBe("Bug report");
+    expect(issueTitle(report({ kind: "idea", note: "" }))).toBe("Idea");
+  });
+});
+
+describe("renderIssueMarkdown", () => {
+  const personal = report({
+    targets: [
+      {
+        id: "t1",
+        tag: "span",
+        selector: "li.task-item > span.task-label",
+        snippet: '<span class="task-label">Renew my passport</span>',
+      },
+    ],
+  });
+
+  test("keeps note and selector verbatim but sanitizes snippets", () => {
+    const md = renderIssueMarkdown(personal, NOW, "r.md");
+    expect(md).toContain("The [t1] overlaps the drawer");
+    expect(md).toContain("Selector: `li.task-item > span.task-label`");
+    expect(md).toContain('<span class="task-label">xxxxx xx xxxxxxxx</span>');
+    expect(md).not.toContain("Renew my passport");
+  });
+
+  test("includes page context and a backlink to the local file", () => {
+    const md = renderIssueMarkdown(personal, NOW, "2026-08-09-1435-r.md");
+    expect(md).toContain("- Tab: board");
+    expect(md).toContain("- Viewport: 390x844");
+    expect(md).toContain("`reports/2026-08-09-1435-r.md`");
   });
 });
 
@@ -107,17 +168,35 @@ describe("reportFileName", () => {
 });
 
 describe("POST route", () => {
-  const mount = () => {
+  const mount = (
+    createIssue?: IssueCreator["create"]
+  ): {
+    app: Hono;
+    saved: Map<string, string>;
+    filed: { title: string; body: string; labels: string[] }[];
+  } => {
     const app = new Hono();
-    const saved: { name: string; markdown: string }[] = [];
+    const saved = new Map<string, string>();
+    const filed: { title: string; body: string; labels: string[] }[] = [];
     const writer: ReportWriter = {
       save: async (name, markdown) => {
-        saved.push({ name, markdown });
+        saved.set(name, markdown);
         return name;
       },
+      update: async (name, markdown) => {
+        saved.set(name, markdown);
+      },
     };
-    createReportRoutes(app, "/api/reports", writer);
-    return { app, saved };
+    const issues: IssueCreator = {
+      create: async (issue) => {
+        filed.push(issue);
+        return createIssue
+          ? createIssue(issue)
+          : { number: 12, url: "https://github.com/o/r/issues/12" };
+      },
+    };
+    createReportRoutes(app, "/api/reports", writer, issues);
+    return { app, saved, filed };
   };
 
   const post = (app: Hono, body: unknown) =>
@@ -127,20 +206,51 @@ describe("POST route", () => {
       body: JSON.stringify(body),
     });
 
-  test("saves a valid report and returns the file name", async () => {
-    const { app, saved } = mount();
+  test("saves the full report, files a sanitized issue, and links them", async () => {
+    const { app, saved, filed } = mount();
     const res = await post(app, report());
     expect(res.status).toBe(201);
-    const body = (await res.json()) as { file: string };
-    expect(saved).toHaveLength(1);
-    expect(body.file).toBe(saved[0].name);
-    expect(saved[0].markdown).toContain("### [t1] button");
+    const body = (await res.json()) as { file: string; issue: string | null };
+    expect(saved.size).toBe(1);
+    expect(body.issue).toBe("https://github.com/o/r/issues/12");
+    // Local file keeps the raw snippet and gains the issue backlink.
+    const markdown = saved.get(body.file)!;
+    expect(markdown).toContain("issue: https://github.com/o/r/issues/12");
+    expect(markdown).toContain('<button class="add-task-btn">Add</button>');
+    // Issue carries the sanitized snippet and a kind label.
+    expect(filed).toHaveLength(1);
+    expect(filed[0].labels).toEqual(["bug"]);
+    expect(filed[0].body).toContain(
+      '<button class="add-task-btn">xxx</button>'
+    );
+    expect(filed[0].body).not.toContain(">Add<");
   });
 
-  test("rejects invalid payloads without saving", async () => {
-    const { app, saved } = mount();
+  test("keeps the file with issue pending when filing is disabled", async () => {
+    const { app, saved } = mount(async () => null);
+    const res = await post(app, report());
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { file: string; issue: string | null };
+    expect(body.issue).toBeNull();
+    expect(saved.get(body.file)!).toContain("issue: pending");
+  });
+
+  test("keeps the file when issue filing throws", async () => {
+    const { app, saved } = mount(async () => {
+      throw new Error("network down");
+    });
+    const res = await post(app, report());
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { file: string; issue: string | null };
+    expect(body.issue).toBeNull();
+    expect(saved.get(body.file)!).toContain("issue: pending");
+  });
+
+  test("rejects invalid payloads without saving or filing", async () => {
+    const { app, saved, filed } = mount();
     const res = await post(app, { kind: "nope" });
     expect(res.status).toBe(400);
-    expect(saved).toHaveLength(0);
+    expect(saved.size).toBe(0);
+    expect(filed).toHaveLength(0);
   });
 });
