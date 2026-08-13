@@ -1,0 +1,91 @@
+// Board visibility of recurring cards is gated by the hideRecurringOnBoard
+// setting. Recurring generation and the Recurring tab are out of scope here.
+
+import { describe, expect, test } from "bun:test";
+import { render } from "@testing-library/react";
+import { DEFAULT_SETTINGS, type Settings } from "@/stores/hooks";
+import type { RecurringItem } from "@/domain/recurrence";
+import { BoardTab } from "./board-tab";
+
+const makeRecurring = (
+  overrides: Partial<RecurringItem> = {}
+): RecurringItem => ({
+  id: "r1",
+  title: "Water plants",
+  frequency: "weekly",
+  dayOfWeek: null,
+  repeatEvery: 1,
+  repeatUnit: "week",
+  repeatDays: [],
+  endsType: "never",
+  endsOn: null,
+  endsAfter: null,
+  note: "",
+  link: "",
+  completedThisWeek: false,
+  lastCompletedAt: null,
+  dueDate: null,
+  showEarlyDays: null,
+  area: "",
+  createdAt: "2026-01-01T00:00:00.000Z",
+  category: "task",
+  ...overrides,
+});
+
+const taskActions = {
+  changeStatus: () => {},
+  update: () => {},
+  trash: () => {},
+};
+
+const recurringActions = {
+  toggle: () => {},
+  remove: () => {},
+  update: () => {},
+};
+
+const renderBoard = (settings: Settings, items: RecurringItem[]) =>
+  render(
+    <BoardTab
+      tasks={[]}
+      taskActions={taskActions}
+      recurringItems={items}
+      recurringActions={recurringActions}
+      settings={settings}
+    />
+  );
+
+describe("BoardTab recurring visibility", () => {
+  test("shows recurring cards on the board by default", () => {
+    const { container } = renderBoard(DEFAULT_SETTINGS, [makeRecurring()]);
+    expect(container.querySelectorAll(".recurring-task-card").length).toBe(1);
+  });
+
+  test("hides recurring cards when hideRecurringOnBoard is on", () => {
+    const { container } = renderBoard(
+      { ...DEFAULT_SETTINGS, hideRecurringOnBoard: true },
+      [makeRecurring()]
+    );
+    expect(container.querySelectorAll(".recurring-task-card").length).toBe(0);
+  });
+
+  test("hides completed recurring cards in the Done column too", () => {
+    const done = makeRecurring({
+      completedThisWeek: true,
+      lastCompletedAt: new Date().toISOString(),
+    });
+    const shown = renderBoard(DEFAULT_SETTINGS, [done]);
+    expect(
+      shown.container.querySelectorAll(".recurring-task-card").length
+    ).toBe(1);
+    shown.unmount();
+
+    const hidden = renderBoard(
+      { ...DEFAULT_SETTINGS, hideRecurringOnBoard: true },
+      [done]
+    );
+    expect(
+      hidden.container.querySelectorAll(".recurring-task-card").length
+    ).toBe(0);
+  });
+});

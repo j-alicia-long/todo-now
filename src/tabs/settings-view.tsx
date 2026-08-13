@@ -1,5 +1,5 @@
-// Settings drawer panel: default board view picker and card-label
-// visibility toggles.
+// Settings drawer panel: board view picker, recurring-card visibility,
+// and card-label visibility toggles.
 
 import {
   type BoardView,
@@ -51,7 +51,7 @@ export const SettingsView = ({
 
   return (
     <div className="settings-view">
-      <h2 className="settings-title">Default Board View</h2>
+      <h2 className="settings-title">Board</h2>
       <p className="settings-desc">Choose which view the Board tab opens in.</p>
       <div className="board-view-toggle settings-view-picker" role="radiogroup">
         {VIEW_OPTIONS.map(({ value, label, icon }) => (
@@ -65,6 +65,23 @@ export const SettingsView = ({
             <Icon name={icon} /> {label}
           </button>
         ))}
+      </div>
+      <div className="settings-list">
+        <label className="settings-toggle">
+          <div className="toggle-info">
+            <span className="toggle-label">Hide recurring tasks</span>
+            <span className="toggle-desc">
+              Don't show recurring task cards on the board. The Recurring tab
+              still shows everything.
+            </span>
+          </div>
+          <div
+            className={`toggle-switch ${settings.hideRecurringOnBoard ? "on" : ""}`}
+            onClick={() => onToggle("hideRecurringOnBoard")}
+          >
+            <div className="toggle-knob" />
+          </div>
+        </label>
       </div>
       <h2 className="settings-title">Card Labels</h2>
       <p className="settings-desc">Choose which labels appear on task cards.</p>
