@@ -1,8 +1,8 @@
 # Todo App (Unstuck Dashboard)
 
-Jennifer's personal task/shopping/grocery manager: a React PWA hosted as a Zo Site.
+Jennifer's personal task/shopping/grocery manager: a React PWA running as a Cloudflare Worker.
 
-- Runtime & package manager: **Bun**. Frontend: React + Vite + SASS. Backend: Hono routes in `server.ts`, JSON file storage.
+- Package manager & tooling: **Bun**. Frontend: React + Vite + SASS. Backend: Hono routes composed in `src/server/app.ts`, Cloudflare D1 storage (Miniflare local simulation in dev).
 - Commands: `bun test src`, `bun run typecheck`, `bun run lint`, `bun run dev`
 
 ## Rules for every task
@@ -11,7 +11,7 @@ Jennifer's personal task/shopping/grocery manager: a React PWA hosted as a Zo Si
 - `data/` is gitignored — never commit personal task data.
 - Binary assets (icons, images) live only in the deployed site, not in the GitHub repo — exception: README screenshots in `docs/` (e.g. `screenshot.png`, `screenshot-reporter.png`).
 - Update `../todo-architecture.md` (product spec) and `README.md` for new features; log notable shipped work in `docs/devlog.md`.
-- **Check open `bug`/`idea` issues on GitHub for user-filed Reports** (filed by the in-app Reporter, sanitized). Raw unsanitized snippets live in the companion files at `../reports/` (`~/Documents/personal-os/02-projects/todo-app/reports/`, Mutagen-synced from Zo — see its AGENTS.md). After fixing one, close its issue (`Closes #N` in the commit/PR, or `gh issue close`).
+- **Check open `bug`/`idea` issues on GitHub for user-filed Reports** (filed by the in-app Reporter, sanitized). Raw unsanitized Report files land in the `todo-reports` R2 bucket (`bunx wrangler r2 object get` — see `docs/DEPLOY.md`); pre-migration ones remain at `../reports/` (`~/Documents/personal-os/02-projects/todo-app/reports/`). After fixing one, close its issue (`Closes #N` in the commit/PR, or `gh issue close`).
 
 ## Deeper docs
 
@@ -24,6 +24,6 @@ Jennifer's personal task/shopping/grocery manager: a React PWA hosted as a Zo Si
 
 ## Live URLs
 
-- Production: https://todo-jlong.zocomputer.io/todo
+- Production: https://todo.jlongx.workers.dev/todo (behind Cloudflare Access)
 - Demo (sample data): https://j-alicia-long.github.io/todo-now/
 - GitHub: <copilot-ref kind="repo" target-id="https://github.com/j-alicia-long/todo-now" label="j-alicia-long/todo-now" />

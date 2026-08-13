@@ -69,7 +69,7 @@ bun run dev
 
 ## Hosting
 
-Migrating from [Zo Computer](https://zo.computer) to Cloudflare Workers. The runtime port is done (this codebase runs as a Worker); account setup, data import, and Cloudflare Access are in progress — plan in [docs/cloudflare-migration/spec.md](docs/cloudflare-migration/spec.md).
+Live on [Cloudflare Workers](https://workers.cloudflare.com) at [todo.jlongx.workers.dev/todo](https://todo.jlongx.workers.dev/todo), behind Cloudflare Access (private instance). Pushing to `main` deploys automatically via `.github/workflows/deploy.yml` (build + `wrangler deploy`); data lives in D1, raw bug reports in R2. Details and manual fallback: [docs/DEPLOY.md](docs/DEPLOY.md); migration history: [docs/cloudflare-migration/spec.md](docs/cloudflare-migration/spec.md).
 
 ### Demo build
 

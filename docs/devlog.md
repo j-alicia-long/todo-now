@@ -13,6 +13,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-13 — Live on Cloudflare Workers: deploy pipeline + Zo retirement (migration Phases 2 & 4)
+
+- The Worker is deployed and live at https://todo.jlongx.workers.dev/todo, with production data imported into the real D1 database (verified byte-identical to the Phase 0 export) and the first production report landed in R2. Cloudflare Access setup is in progress on the dashboard side.
+- New `Deploy to Cloudflare Workers` Action: push to main → build (the vite plugin emits `dist/todo/wrangler.json`) → `wrangler-action` deploy → health check accepting 200 or 302 (Access login redirect). Same `paths-ignore` list as before, so docs-only pushes skip it. `bun.lock` is now tracked for `--frozen-lockfile` CI installs.
+- Zo machinery removed: `deploy-zo.yml` (was already disabled), `redeploy.sh`, `scripts/deploy-zo.sh`, `scripts/free-port.ts`, `zosite.json`, the `free-port` script, and the `zo-site` package name. `docs/DEPLOY.md` rewritten for the Workers world (manual fallback, D1 Time Travel restores, R2 report access, token rotation); the obsolete `handoff-deploy-sync.md` retired. Live URLs updated in AGENTS.md / README.
+
+---
+
 ## 2026-08-13 — Cloudflare Workers runtime port (migration Phase 1)
 
 - The server now runs as a Cloudflare Worker: `server.ts` is the Workers entry (composes adapters from `env` bindings, exports `fetch`); all routes moved into `createApp(deps)` in `src/server/app.ts` behind injected seams. Zo's Bun runtime is dead, so this unblocks the move (`docs/cloudflare-migration/spec.md`, ADR 0002).
@@ -21,6 +29,8 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 - Local dev/preview run the Worker in workerd via `@cloudflare/vite-plugin` with Miniflare's local D1/R2 (`bun run dev`) — no real Cloudflare resources yet; account setup, data import, and Access are Phases 2–3. The GitHub Pages demo build skips the plugin (`VITE_DEMO`) and stays static.
 
 ---
+
+## 2026-08-13 — Slight tint on card hover (#32)
 
 - Board cards now get a very slight tint on hover — purple for task and shopping cards, green for grocery — layered over each card's own background so the base color still reads through.
 - Implemented with a per-variant `--hover-tint` custom property consumed by one `&:hover` rule (avoids a specificity fight between the default purple and grocery's green). Recurring / future / trash cards set the tint to `transparent` so they keep their own look. New `--card-hover-tint` / `--grocery-hover-tint` tokens in `styles.scss` for light + dark.
