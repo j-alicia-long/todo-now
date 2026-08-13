@@ -19,17 +19,17 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 
 ## Architecture
 
-Layered React SPA over a thin Hono API: Controller (`src/tabs/todo-base.tsx`) → Tabs → Components → Stores (client data layer with a swappable transport seam) → shared pure Domain rules → generic Server resource modules → JSON files on disk. Full layer-by-layer breakdown, module map, and API table: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Layered React SPA over a thin Hono API: Controller (`src/tabs/todo-base.tsx`) → Tabs → Components → Stores (client data layer with a swappable transport seam) → shared pure Domain rules → generic Server resource modules → Cloudflare D1 (one JSON blob per list family). Full layer-by-layer breakdown, module map, and API table: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### Stack
 
-- **Runtime**: [Bun](https://bun.sh)
-- **Server**: [Hono](https://hono.dev) (API routes + static serving)
+- **Runtime**: [Cloudflare Workers](https://workers.cloudflare.com) ([Bun](https://bun.sh) for tooling and tests)
+- **Server**: [Hono](https://hono.dev) (API routes; static assets via the Workers assets binding)
 - **Frontend**: React 19 + react-router-dom
 - **Styling**: SASS with CSS custom properties (no Tailwind)
 - **Drag & drop**: [@dnd-kit/core](https://dndkit.com)
-- **Build**: [Vite](https://vite.dev)
-- **Storage**: JSON files on disk — `DATA_DIR` env var if set, else `/home/workspace/todo-data/` when present (Zo production, outside the synced tree), else `./data/` (local dev)
+- **Build**: [Vite](https://vite.dev) + [@cloudflare/vite-plugin](https://developers.cloudflare.com/workers/vite-plugin/)
+- **Storage**: Cloudflare D1 — one `families` table, each list family's data as one JSON blob per row (ADR 0002); raw bug reports in R2. Local dev uses Miniflare's local simulation of both.
 
 ### API
 
@@ -65,16 +65,11 @@ bun install
 bun run dev
 ```
 
-Stale dev servers holding the port (`local_port` in `zosite.json`) are killed automatically before startup by `scripts/free-port.ts`. If a port conflict somehow persists, free it manually:
-
-```bash
-lsof -i :57460 -P -n   # find the PID holding the port
-kill <PID>
-```
+`bun run dev` runs the Worker in workerd (Cloudflare's runtime) inside `vite dev`, with local D1/R2 simulation — no Cloudflare account needed. `bun run build && bun run preview` serves the built Worker.
 
 ## Hosting
 
-Currently hosted on [Zo Computer](https://zo.computer) as a Zo Site.
+Migrating from [Zo Computer](https://zo.computer) to Cloudflare Workers. The runtime port is done (this codebase runs as a Worker); account setup, data import, and Cloudflare Access are in progress — plan in [docs/cloudflare-migration/spec.md](docs/cloudflare-migration/spec.md).
 
 ### Demo build
 

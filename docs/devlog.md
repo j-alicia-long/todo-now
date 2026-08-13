@@ -6,7 +6,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
-## 2026-08-13 — Slight tint on card hover (#32)
+## 2026-08-13 — Cloudflare Workers runtime port (migration Phase 1)
+
+- The server now runs as a Cloudflare Worker: `server.ts` is the Workers entry (composes adapters from `env` bindings, exports `fetch`); all routes moved into `createApp(deps)` in `src/server/app.ts` behind injected seams. Zo's Bun runtime is dead, so this unblocks the move (`docs/cloudflare-migration/spec.md`, ADR 0002).
+- New adapters: `d1.ts` (blob-per-Family — one `families(name, json)` row per list; Settings and the archive are rows too), `r2.ts` (raw Reports, same-minute filename de-collision preserved), and `github.ts` now `fetch`es `POST /repos/{repo}/issues` with a Workers-secret token instead of spawning the `gh` CLI (token absent → no-op, as before).
+- Pure normalize/migrate logic extracted from `files.ts` into storage-agnostic `normalize.ts`; the file adapters stay for tooling and the Phase 2 import. All 235 tests green, domain rules untouched.
+- Local dev/preview run the Worker in workerd via `@cloudflare/vite-plugin` with Miniflare's local D1/R2 (`bun run dev`) — no real Cloudflare resources yet; account setup, data import, and Access are Phases 2–3. The GitHub Pages demo build skips the plugin (`VITE_DEMO`) and stays static.
+
+---
 
 - Board cards now get a very slight tint on hover — purple for task and shopping cards, green for grocery — layered over each card's own background so the base color still reads through.
 - Implemented with a per-variant `--hover-tint` custom property consumed by one `&:hover` rule (avoids a specificity fight between the default purple and grocery's green). Recurring / future / trash cards set the tint to `transparent` so they keep their own look. New `--card-hover-tint` / `--grocery-hover-tint` tokens in `styles.scss` for light + dark.

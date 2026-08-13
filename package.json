@@ -4,13 +4,12 @@
   "scripts": {
     "clear-cache": "rm -rf node_modules/.vite",
     "free-port": "bun run scripts/free-port.ts",
-    "dev": "bun run clear-cache && bun run free-port && NODE_ENV=development bun run --hot server.ts",
+    "dev": "bun run clear-cache && bunx vite dev",
     "test": "bun test src",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && stylelint \"src/**/*.scss\"",
     "build": "bun run clear-cache && bunx vite build",
-    "prod": "bun run build && NODE_ENV=production bun run server.ts",
-    "preview": "bun run vite preview",
+    "preview": "bunx vite preview",
     "prepare": "husky",
     "sync-skills": "cp -R node_modules/@j-alicia-long/web-config/skills/web-conventions .github/skills/",
     "postinstall": "bun run sync-skills"
@@ -42,6 +41,8 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.51.0",
+    "@cloudflare/workers-types": "^5.20260804.1",
     "@eslint/js": "^10.0.1",
     "@happy-dom/global-registrator": "^20.10.6",
     "@j-alicia-long/web-config": "github:j-alicia-long/web-config#v0.1.1",
@@ -60,6 +61,7 @@
     "stylelint": "^17.14.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.64.0",
-    "vite-plugin-pwa": "^1.3.0"
+    "vite-plugin-pwa": "^1.3.0",
+    "wrangler": "^4.119.0"
   }
 }

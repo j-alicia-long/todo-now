@@ -1,17 +1,22 @@
-// File-backed store adapters: the production side of the ListStore
-// seam. Each family persists to one JSON file in data/. Reads own the
-// legacy file-format migrations and — for Tasks and Recurring Items —
-// normalize-on-read: lifecycle rules (due-soon promotion, Trash purge,
-// weekly reset) run on every read and write back when anything changed.
-// This is the app's only scheduler; there is no background job.
+// File-backed store adapters for the ListStore seam. Each family
+// persists to one JSON file in data/. The legacy migrations and
+// normalize-on-read logic are storage-agnostic and live in
+// normalize.ts (shared with the D1 adapter); this module owns only the
+// file I/O and the write-back-on-change plumbing.
 
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
-import { promoteDueSoon, purgeTrash, type Task } from "../domain/task-rules";
-import { resetWeeklyItems, type RecurringItem } from "../domain/recurrence";
+import type { Task } from "../domain/task-rules";
+import type { RecurringItem } from "../domain/recurrence";
 import type { ShoppingItem, GroceryItem } from "../domain/entities";
+import {
+  normalizeTasks,
+  normalizeShopping,
+  normalizeRecurring,
+} from "./normalize";
 import type { ListStore } from "./resource";
 import type { ReportWriter } from "./reports";
+import type { SettingsStore, ArchiveStore } from "./app";
 
 // In production on Zo, data lives OUTSIDE the Mutagen-synced personal-os
 // tree so a broken/re-created file sync can never overwrite the live
@@ -47,71 +52,14 @@ const writeJson = async (path: string, value: unknown): Promise<void> => {
 
 // ── Tasks ──
 
-// Raw task rows from disk may predate the current schema
-type LegacyTaskRecord = Omit<Task, "status"> & {
-  status?: string;
-  done?: boolean;
-  /** Retired 2026-07: replaced by binary Importance (see CONTEXT.md). */
-  priority?: string;
-};
-
 export const readTasks = async (): Promise<Task[]> => {
-  const raw = await readJsonList<LegacyTaskRecord>(TASKS_PATH);
+  const raw = await readJsonList<Task>(TASKS_PATH);
   if (!raw) return [];
-
-  let needsMigration = false;
-  const now = new Date();
-  let tasks = raw.map((t) => {
-    // Legacy file-format migrations only; lifecycle rules live in task-rules.ts
-    if (!t.status) {
-      needsMigration = true;
-      t.status = t.done ? "done" : "this-week";
-    } else if (t.status === "active") {
-      needsMigration = true;
-      t.status = "this-week";
-    }
-    if (t.deletedAt === undefined) {
-      t.deletedAt = null;
-    }
-    if (t.importance === undefined) {
-      t.importance = null;
-    }
-    if (!t.source) {
-      t.source = "board";
-    }
-    if (t.sourceItemId === undefined || t.sourceItemId === null) {
-      t.sourceItemId = null;
-      if (t.source === "shopping" || t.source === "grocery") {
-        needsMigration = true;
-      }
-    }
-    if ("priority" in t) {
-      needsMigration = true;
-      delete t.priority;
-    }
-    return t as Task;
+  const { tasks, changed } = await normalizeTasks(raw, new Date(), {
+    readShopping,
+    readGroceries,
   });
-
-  const normalized = purgeTrash(promoteDueSoon(tasks, now), now);
-  if (normalized !== tasks) {
-    needsMigration = true;
-    tasks = normalized;
-  }
-
-  if (needsMigration) {
-    const shopping = await readShopping();
-    const groceries = await readGroceries();
-    for (const t of tasks) {
-      if (!t.sourceItemId && t.source === "shopping") {
-        const match = shopping.find((s) => s.title === t.title);
-        if (match) t.sourceItemId = match.id;
-      } else if (!t.sourceItemId && t.source === "grocery") {
-        const match = groceries.find((g) => g.title === t.title);
-        if (match) t.sourceItemId = match.id;
-      }
-    }
-    await writeTasks(tasks);
-  }
+  if (changed) await writeTasks(tasks);
   return tasks;
 };
 
@@ -127,12 +75,7 @@ export const tasksStore: ListStore<Task> = {
 export const readShopping = async (): Promise<ShoppingItem[]> => {
   const raw = await readJsonList<ShoppingItem>(SHOPPING_PATH);
   if (!raw) return [];
-  return raw.map((i) => ({
-    ...i,
-    category: i.category || "need",
-    links: Array.isArray(i.links) ? i.links : [],
-    doneAt: i.doneAt ?? null,
-  }));
+  return normalizeShopping(raw);
 };
 
 export const writeShopping = (items: ShoppingItem[]) =>
@@ -157,48 +100,12 @@ export const groceriesStore: ListStore<GroceryItem> = {
 };
 
 // ── Recurring Items ──
-// Legacy file-format migrations only; week & recurrence rules live in
-// src/domain/recurrence.ts
 
 export const readRecurring = async (): Promise<RecurringItem[]> => {
   const raw = await readJsonList<RecurringItem>(RECURRING_PATH);
   if (!raw) return [];
-
-  let needsMigration = false;
-  const migrated = raw.map((i) => {
-    const item: RecurringItem = {
-      id: i.id,
-      title: i.title || "Untitled",
-      frequency: i.frequency === "long-term" ? "long-term" : "weekly",
-      dayOfWeek: i.dayOfWeek ?? null,
-      repeatEvery: i.repeatEvery ?? 1,
-      repeatUnit: i.repeatUnit ?? "week",
-      repeatDays: i.repeatDays ?? (i.dayOfWeek != null ? [i.dayOfWeek] : []),
-      endsType: i.endsType ?? "never",
-      endsOn: i.endsOn ?? null,
-      endsAfter: i.endsAfter ?? null,
-      note: i.note || "",
-      link: i.link || "",
-      completedThisWeek: i.completedThisWeek || false,
-      lastCompletedAt: i.lastCompletedAt ?? null,
-      createdAt: i.createdAt,
-      dueDate: i.dueDate ?? null,
-      showEarlyDays: i.showEarlyDays ?? null,
-      area: i.area || "",
-      category: i.category === "reference" ? "reference" : "task",
-    };
-    if (
-      item.frequency === "long-term" &&
-      item.repeatUnit === "week" &&
-      item.repeatEvery === 1
-    ) {
-      item.repeatUnit = "year";
-      needsMigration = true;
-    }
-    return item;
-  });
-  const items = resetWeeklyItems(migrated, new Date());
-  if (needsMigration || items !== migrated) await writeRecurring(items);
+  const { items, changed } = normalizeRecurring(raw, new Date());
+  if (changed) await writeRecurring(items);
   return items;
 };
 
@@ -246,7 +153,7 @@ export const reportsWriter: ReportWriter = {
 
 // ── Settings ──
 // Not a list family: a single object with GET/PUT, served bespoke in
-// server.ts.
+// the app module.
 
 export const readSettings = async (): Promise<Record<string, unknown>> => {
   try {
@@ -262,3 +169,23 @@ export const readSettings = async (): Promise<Record<string, unknown>> => {
 
 export const writeSettings = (settings: Record<string, unknown>) =>
   writeJson(SETTINGS_PATH, settings);
+
+export const settingsStore: SettingsStore = {
+  read: readSettings,
+  write: writeSettings,
+};
+
+// ── Weekly Archive ──
+// One growing Markdown document next to the JSON files.
+
+const ARCHIVE_PATH = dataDir + "/archive.md";
+
+export const archiveStore: ArchiveStore = {
+  read: async () => {
+    const file = Bun.file(ARCHIVE_PATH);
+    return (await file.exists()) ? await file.text() : null;
+  },
+  write: async (markdown) => {
+    await Bun.write(ARCHIVE_PATH, markdown);
+  },
+};

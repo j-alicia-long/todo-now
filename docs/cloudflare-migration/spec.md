@@ -30,7 +30,15 @@ synced `reports/` folder.
 re-export" also goes through the live API — re-run the same curl loop just
 before import, while the published site still responds.
 
-## Phase 1 — Runtime port (branch `feature/cloudflare-workers`)
+## Phase 1 — Runtime port (branch `feature/cloudflare-workers`) ✅
+
+Shipped 2026-08-13. As planned below, with these shapes: routes compose through
+`createApp(deps)` in `src/server/app.ts` (the Worker entry `server.ts` builds
+deps from `env` bindings); the shared normalize/migrate logic landed in
+`src/server/normalize.ts`; adapters in `src/server/d1.ts` (Settings and the
+archive are each one more row) and `src/server/r2.ts`. Local dev/preview run
+the Worker in workerd via `@cloudflare/vite-plugin` with Miniflare's local
+D1/R2 — no real Cloudflare resources yet (that's Phase 2/3).
 
 - **Wrangler config** (`wrangler.jsonc`): Worker entry, D1 binding, R2 binding,
   assets binding for `dist/` with SPA fallback, `GITHUB_TOKEN` as a secret.
