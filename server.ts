@@ -4,7 +4,7 @@ import { createServer as createViteServer } from "vite";
 import config from "./zosite.json";
 import type { Hono } from "hono";
 import { createApp } from "./src/server/app";
-import { createGhIssueCreator } from "./src/server/github";
+import { createGitHubIssueCreator } from "./src/server/github";
 import {
   tasksStore,
   shoppingStore,
@@ -21,12 +21,13 @@ type Mode = "development" | "production";
 const mode: Mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 
-// Issue filing needs a repo: REPORTS_REPO env overrides; production
-// defaults to the app repo; dev defaults to disabled so local testing
-// doesn't create real issues.
+// Issue filing needs a repo and a token: REPORTS_REPO env overrides;
+// production defaults to the app repo; dev defaults to disabled so
+// local testing doesn't create real issues.
 const reportsRepo =
   process.env.REPORTS_REPO ??
   (mode === "production" ? "j-alicia-long/todo-now" : null);
+const githubToken = process.env.GITHUB_TOKEN ?? null;
 
 // All routes are mounted by the app module; only runtime concerns
 // (static serving, port selection) live here.
@@ -38,7 +39,7 @@ const app = createApp({
   settingsStore,
   archiveStore,
   reportsWriter,
-  issueCreator: createGhIssueCreator(reportsRepo),
+  issueCreator: createGitHubIssueCreator(reportsRepo, githubToken),
 });
 
 // ── Static / SPA serving ──

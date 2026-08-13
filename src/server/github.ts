@@ -1,37 +1,48 @@
-// GitHub adapter for the IssueCreator seam: files report issues via the
-// `gh` CLI, which is already authenticated on Zo (and on dev machines
-// with gh installed) — no token to manage. Filing is enabled by passing
-// a repo; a null repo yields a no-op creator so local dev doesn't spam
-// the real tracker.
+// GitHub adapter for the IssueCreator seam: files report issues via
+// the GitHub REST API (POST /repos/{repo}/issues). Runtime-agnostic —
+// plain fetch, no CLI — so it runs on Cloudflare Workers. Filing is
+// enabled by passing both a repo and a token (on Workers the token
+// arrives through the GITHUB_TOKEN secret binding); a missing repo or
+// token yields a no-op creator so local dev doesn't spam the real
+// tracker.
 
 import type { CreatedIssue, IssueCreator } from "./reports";
 
-export const createGhIssueCreator = (repo: string | null): IssueCreator => ({
+const API_VERSION = "2022-11-28";
+
+/** Narrow fetch seam so tests can inject a fake. */
+export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
+
+export const createGitHubIssueCreator = (
+  repo: string | null,
+  token: string | null,
+  fetchImpl: FetchLike = fetch
+): IssueCreator => ({
   create: async (issue): Promise<CreatedIssue | null> => {
-    if (!repo) return null;
-    const proc = Bun.spawn(
-      [
-        "gh",
-        "api",
-        `repos/${repo}/issues`,
-        "-f",
-        `title=${issue.title}`,
-        "-f",
-        `body=${issue.body}`,
-        ...issue.labels.flatMap((l) => ["-f", `labels[]=${l}`]),
-      ],
-      { stdout: "pipe", stderr: "pipe" }
-    );
-    const [out, err, code] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-      proc.exited,
-    ]);
-    if (code !== 0) {
-      console.error(`gh issue create failed (${code}): ${err.trim()}`);
+    if (!repo || !token) return null;
+    const res = await fetchImpl(`https://api.github.com/repos/${repo}/issues`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+        "X-GitHub-Api-Version": API_VERSION,
+        // GitHub rejects requests without a User-Agent.
+        "User-Agent": "todo-now-reporter",
+      },
+      body: JSON.stringify({
+        title: issue.title,
+        body: issue.body,
+        labels: issue.labels,
+      }),
+    });
+    if (!res.ok) {
+      console.error(
+        `GitHub issue create failed (${res.status}): ${(await res.text()).slice(0, 500)}`
+      );
       return null;
     }
-    const data = JSON.parse(out) as { number: number; html_url: string };
+    const data = (await res.json()) as { number: number; html_url: string };
     return { number: data.number, url: data.html_url };
   },
 });
