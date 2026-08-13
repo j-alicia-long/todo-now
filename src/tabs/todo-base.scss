@@ -765,6 +765,11 @@
 
 // ── Card ──
 .task-card {
+  // Hover tint (report #32): purple by default; each variant below can
+  // override or clear it. Consumed by the &:hover rule as a layer over the
+  // card's own background, so the base color still shows through.
+  --hover-tint: var(--card-hover-tint);
+
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -775,9 +780,11 @@
   touch-action: none;
   transition:
     box-shadow var(--transition),
+    background-color var(--transition),
     opacity var(--transition);
 
   &:hover {
+    background-image: linear-gradient(var(--hover-tint), var(--hover-tint));
     box-shadow: var(--shadow);
   }
 
@@ -789,6 +796,8 @@
   &.trash-card {
     cursor: default;
     touch-action: auto;
+    // Not interactive board cards — no hover tint.
+    --hover-tint: transparent;
   }
 
   &.recurring-task-card {
@@ -796,6 +805,8 @@
     border-color: var(--recurring-card-border);
     cursor: default;
     touch-action: auto;
+    // Keeps its own amber theme rather than a purple wash.
+    --hover-tint: transparent;
   }
 
   &.source-shopping {
@@ -806,6 +817,7 @@
   &.source-grocery {
     background: var(--grocery-card-bg);
     border-color: var(--grocery-card-border);
+    --hover-tint: var(--grocery-hover-tint);
   }
 }
 

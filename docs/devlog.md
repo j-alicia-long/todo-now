@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-13 — Slight tint on card hover (#32)
+
+- Board cards now get a very slight tint on hover — purple for task and shopping cards, green for grocery — layered over each card's own background so the base color still reads through.
+- Implemented with a per-variant `--hover-tint` custom property consumed by one `&:hover` rule (avoids a specificity fight between the default purple and grocery's green). Recurring / future / trash cards set the tint to `transparent` so they keep their own look. New `--card-hover-tint` / `--grocery-hover-tint` tokens in `styles.scss` for light + dark.
+
+---
+
 ## 2026-08-13 — Reporter highlights: track the visual viewport under zoom (#34)
 
 - On iOS the page pans + scales the *visual* viewport (pinch, or auto-zoom when focusing a small-font input), but `position: fixed` highlight boxes were placed straight from `getBoundingClientRect()` (layout-viewport coords) with no correction, so they drifted off their targets when zoomed.
