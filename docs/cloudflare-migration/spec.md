@@ -59,7 +59,12 @@ D1/R2 — no real Cloudflare resources yet (that's Phase 2/3).
 - **Tests**: domain and route tests stay on `bun test src` (seams take
   in-memory fakes). Adapter smoke-testing happens against `wrangler dev`.
 
-## Phase 2 — Data import
+## Phase 2 — Data import ✅
+
+Done 2026-08-13: real D1 database created (`todo`, id in `wrangler.jsonc`),
+production data imported and verified byte-identical to the Phase 0 export
+(tasks 120 / shopping 22 / groceries 5 / recurring 14 / settings). The
+`todo-reports` R2 bucket exists and has received its first production report.
 
 One-off script: read the Phase 0 export, write each Family as one row via
 `wrangler d1 execute`. Verify counts through the deployed API before cutover.
@@ -76,7 +81,16 @@ One-off script: read the Phase 0 export, write each Family as one row via
   fetch will get a login redirect instead of JSON — verify the offline
   transport treats that as "offline", not data).
 
-## Phase 4 — Deploy pipeline
+## Phase 4 — Deploy pipeline ✅
+
+Done 2026-08-13. The Worker deployed and went live at
+https://todo.jlongx.workers.dev/todo the same day (account subdomain
+`jlongx.workers.dev`). As built: `.github/workflows/deploy.yml` builds and
+deploys with `wrangler-action` against the vite-plugin-emitted
+`dist/todo/wrangler.json`; the health check accepts 200 or 302 (Access login
+redirect). `bun.lock` is now tracked so CI installs are frozen. The Zo
+machinery below is deleted (the workflow had already been disabled);
+revoking the `ZO_TOKEN` secret stays with Jennifer.
 
 - New GitHub Action: `wrangler-action` deploy on push to main, keeping the
   existing `paths-ignore` list. Repo secret: `CLOUDFLARE_API_TOKEN`.
@@ -84,6 +98,9 @@ One-off script: read the Phase 0 export, write each Family as one row via
   secret, and `zosite.json`.
 
 ## Phase 5 — Cutover & decommission
+
+Repo-side docs sync (item 3) done 2026-08-13 alongside Phase 4; the
+usage cutover and Zo unpublish remain.
 
 1. Final re-export + import (catch writes since Phase 2), then switch usage to
    the new URL and re-install the PWA on the phone.
