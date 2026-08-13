@@ -1,9 +1,8 @@
 {
-  "name": "zo-site",
+  "name": "todo",
   "type": "module",
   "scripts": {
     "clear-cache": "rm -rf node_modules/.vite",
-    "free-port": "bun run scripts/free-port.ts",
     "dev": "bun run clear-cache && bunx vite dev",
     "test": "bun test src",
     "typecheck": "tsc --noEmit",
