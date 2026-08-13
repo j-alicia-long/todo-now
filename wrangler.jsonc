@@ -20,9 +20,9 @@
     {
       "binding": "DB",
       "database_name": "todo",
-      // Placeholder: local dev uses Miniflare's local D1; the real
-      // database is created in Phase 2/3 and its id pasted here.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // The production database (Phase 2 import lives here). Local dev
+      // still uses Miniflare's local D1 simulation, not this database.
+      "database_id": "edc47bcd-5772-454f-9b62-61942c627f0c",
     },
   ],
   "r2_buckets": [
