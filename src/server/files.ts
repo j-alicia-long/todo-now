@@ -16,6 +16,7 @@ import {
 } from "./normalize";
 import type { ListStore } from "./resource";
 import type { ReportWriter } from "./reports";
+import type { SettingsStore, ArchiveStore } from "./app";
 
 // In production on Zo, data lives OUTSIDE the Mutagen-synced personal-os
 // tree so a broken/re-created file sync can never overwrite the live
@@ -152,7 +153,7 @@ export const reportsWriter: ReportWriter = {
 
 // ── Settings ──
 // Not a list family: a single object with GET/PUT, served bespoke in
-// server.ts.
+// the app module.
 
 export const readSettings = async (): Promise<Record<string, unknown>> => {
   try {
@@ -168,3 +169,23 @@ export const readSettings = async (): Promise<Record<string, unknown>> => {
 
 export const writeSettings = (settings: Record<string, unknown>) =>
   writeJson(SETTINGS_PATH, settings);
+
+export const settingsStore: SettingsStore = {
+  read: readSettings,
+  write: writeSettings,
+};
+
+// ── Weekly Archive ──
+// One growing Markdown document next to the JSON files.
+
+const ARCHIVE_PATH = dataDir + "/archive.md";
+
+export const archiveStore: ArchiveStore = {
+  read: async () => {
+    const file = Bun.file(ARCHIVE_PATH);
+    return (await file.exists()) ? await file.text() : null;
+  },
+  write: async (markdown) => {
+    await Bun.write(ARCHIVE_PATH, markdown);
+  },
+};

@@ -2,178 +2,44 @@ import { serveStatic } from "hono/bun";
 import type { ViteDevServer } from "vite";
 import { createServer as createViteServer } from "vite";
 import config from "./zosite.json";
-import { Hono } from "hono";
-import { createResourceRoutes } from "./src/server/resource";
-import { createReportRoutes } from "./src/server/reports";
+import type { Hono } from "hono";
+import { createApp } from "./src/server/app";
 import { createGhIssueCreator } from "./src/server/github";
 import {
-  tasksFamily,
-  shoppingFamily,
-  groceriesFamily,
-  recurringFamily,
-} from "./src/server/families";
-import {
-  dataDir,
   tasksStore,
   shoppingStore,
   groceriesStore,
   recurringStore,
-  readTasks,
-  writeTasks,
-  readShopping,
-  writeShopping,
-  readGroceries,
-  writeGroceries,
-  readSettings,
-  writeSettings,
+  settingsStore,
+  archiveStore,
   reportsWriter,
 } from "./src/server/files";
 
 // AI agents: read README.md for navigation and contribution guidance.
 type Mode = "development" | "production";
-const app = new Hono();
 
 const mode: Mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
 
-// ── API Routes ──
-// List families are served by the generic resource module; per-family
-// rules live in src/server/families.ts, persistence in src/server/files.ts.
-
-app.get("/api/settings", async (c) => {
-  const settings = await readSettings();
-  return c.json(settings);
-});
-
-app.put("/api/settings", async (c) => {
-  const body = await c.req.json();
-  const current = await readSettings();
-  const merged = { ...current, ...body };
-  await writeSettings(merged);
-  return c.json(merged);
-});
-
-createResourceRoutes(app, "/api/tasks", tasksFamily, tasksStore);
-createResourceRoutes(app, "/api/shopping", shoppingFamily, shoppingStore);
-
-// Collection-level op; registered before the groceries /:id routes so
-// "clear-bought" isn't captured as an id.
-app.delete("/api/groceries/clear-bought", async (c) => {
-  const items = await readGroceries();
-  const remaining = items.filter((i) => !i.done);
-  await writeGroceries(remaining);
-  return c.json({ cleared: items.length - remaining.length });
-});
-
-createResourceRoutes(app, "/api/groceries", groceriesFamily, groceriesStore);
-createResourceRoutes(app, "/api/recurring", recurringFamily, recurringStore);
-
-// Reporter submissions: write-only. Each Report is saved as full
-// Markdown in the reports folder AND filed as a sanitized GitHub issue
-// (the tracker; see src/server/reports.ts). Issue filing needs a repo:
-// REPORTS_REPO env overrides; production defaults to the app repo; dev
-// defaults to disabled so local testing doesn't create real issues.
+// Issue filing needs a repo: REPORTS_REPO env overrides; production
+// defaults to the app repo; dev defaults to disabled so local testing
+// doesn't create real issues.
 const reportsRepo =
   process.env.REPORTS_REPO ??
   (mode === "production" ? "j-alicia-long/todo-now" : null);
-createReportRoutes(
-  app,
-  "/api/reports",
+
+// All routes are mounted by the app module; only runtime concerns
+// (static serving, port selection) live here.
+const app = createApp({
+  tasksStore,
+  shoppingStore,
+  groceriesStore,
+  recurringStore,
+  settingsStore,
+  archiveStore,
   reportsWriter,
-  createGhIssueCreator(reportsRepo)
-);
-
-// ── Weekly Archive ──
-
-const ARCHIVE_PATH = dataDir + "/archive.md";
-const FOUR_WEEKS_MS = 4 * 7 * 24 * 60 * 60 * 1000;
-
-app.post("/api/archive", async (c) => {
-  const now = Date.now();
-
-  const tasks = await readTasks();
-  const oldDone = tasks.filter(
-    (t) =>
-      t.status === "done" &&
-      t.completedAt &&
-      now - new Date(t.completedAt).getTime() > FOUR_WEEKS_MS
-  );
-
-  const shopping = await readShopping();
-  const oldBought = shopping.filter(
-    (i) =>
-      i.done && i.doneAt && now - new Date(i.doneAt).getTime() > FOUR_WEEKS_MS
-  );
-
-  if (oldDone.length === 0 && oldBought.length === 0) {
-    return c.json({ archived: 0, message: "Nothing old enough to archive" });
-  }
-
-  const weekOf = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-  const lines: string[] = [`## Week of ${weekOf}\n`];
-
-  if (oldDone.length > 0) {
-    lines.push("### Completed Tasks");
-    for (const t of oldDone) {
-      const date = t.completedAt
-        ? new Date(t.completedAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          })
-        : "";
-      lines.push(`- ${t.title}${date ? ` (completed ${date})` : ""}`);
-    }
-    lines.push("");
-  }
-
-  if (oldBought.length > 0) {
-    lines.push("### Items Bought");
-    for (const i of oldBought) {
-      const date = i.doneAt
-        ? new Date(i.doneAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          })
-        : "";
-      lines.push(`- ${i.title}${date ? ` (bought ${date})` : ""}`);
-    }
-    lines.push("");
-  }
-
-  lines.push("---\n");
-  const section = lines.join("\n");
-
-  const archiveFile = Bun.file(ARCHIVE_PATH);
-  const existing = (await archiveFile.exists())
-    ? await archiveFile.text()
-    : "# Todo Archive\n\n";
-  await Bun.write(ARCHIVE_PATH, existing + section);
-
-  const remainingTasks = tasks.filter(
-    (t) => !oldDone.some((d) => d.id === t.id)
-  );
-  await writeTasks(remainingTasks);
-
-  const remainingShopping = shopping.filter(
-    (i) => !oldBought.some((b) => b.id === i.id)
-  );
-  await writeShopping(remainingShopping);
-
-  return c.json({
-    archived: oldDone.length + oldBought.length,
-    tasks: oldDone.length,
-    shopping: oldBought.length,
-  });
+  issueCreator: createGhIssueCreator(reportsRepo),
 });
-
-// ── Root redirect ──
-// The SPA router is based at "/todo", so the bare root renders nothing.
-// Send it to the app. Registered before the static/SPA catch-all below.
-app.get("/", (c) => c.redirect("/todo", 302));
 
 // ── Static / SPA serving ──
 // (configured at the bottom of this file, after the helpers are defined)
