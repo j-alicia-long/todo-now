@@ -140,10 +140,14 @@ export const BoardTab = ({
   const recurringTasks = recurringItems.filter((i) => i.category === "task");
   const weeklyTasks = recurringTasks.filter(isWeeklyRecurring);
   const longTermTasks = recurringTasks.filter((i) => !isWeeklyRecurring(i));
-  const allBoardRecurring = [
-    ...boardWeeklyItems(weeklyTasks, new Date()),
-    ...upcomingLongTermItems(longTermTasks, new Date()),
-  ];
+  // Board visibility only — recurring generation and the Recurring tab
+  // are untouched by the hide setting.
+  const allBoardRecurring = settings.hideRecurringOnBoard
+    ? []
+    : [
+        ...boardWeeklyItems(weeklyTasks, new Date()),
+        ...upcomingLongTermItems(longTermTasks, new Date()),
+      ];
   const boardRecurringTasks = allBoardRecurring.filter(
     (i) => !i.completedThisWeek
   );

@@ -9,7 +9,7 @@ A warm, cozy, mobile-friendly todo app built as a React PWA. Designed to reduce 
 ## Features
 
 - **Task board**: organize tasks by time horizon — This Week → This Month → Done — with drag-and-drop, a Future tab for parking ideas, and inline editing of due dates and labels right on each card
-- **Recurring tasks**: weekly habits and long-term chores that resurface on the board when due
+- **Recurring tasks**: weekly habits and long-term chores that resurface on the board when due — or hide them all from the board with a Settings toggle
 - **Shopping & grocery lists**: lightweight checklists, each with its own pastel theme
 - **Desktop & mobile**: responsive PWA — full web app on desktop, installable touch-first app on phones; works fully offline (cached lists, queued edits that sync on reconnect)
 - **Theming**: warm cream (light) / deep cocoa (dark) themes

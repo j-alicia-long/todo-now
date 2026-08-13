@@ -195,6 +195,8 @@ export type BoardView = "columns" | "matrix";
 export type Settings = {
   showArea: boolean;
   defaultBoardView: BoardView;
+  /** Hide recurring task cards on the Board (the Recurring tab is unaffected). */
+  hideRecurringOnBoard: boolean;
   /** Shake the phone to open the Reporter (Report Mode). */
   shakeToReport: boolean;
   /** Show the floating bug-report button. Report Mode is still reachable via
@@ -207,6 +209,7 @@ export type Settings = {
 export const DEFAULT_SETTINGS: Settings = {
   showArea: true,
   defaultBoardView: "columns",
+  hideRecurringOnBoard: false,
   shakeToReport: true,
   showReportButton: true,
   walletCards: [...CARD_KEYS],

@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-13 — Board setting to hide recurring cards (#38)
+
+- New Settings toggle "Hide recurring tasks" (Board section): hides all recurring task cards from the Board's columns view, including completed ones in Done. Recurring generation and the Recurring tab are untouched — this is purely board visibility.
+- Follows the existing settings pattern: `hideRecurringOnBoard` on the `Settings` type, default `false` in `DEFAULT_SETTINGS` (so existing users whose stored settings lack the key keep seeing recurring cards), synced via `/api/settings`. Board gating is one conditional in `BoardTab`; covered by new component tests (`board-tab.test.tsx`).
+
+---
+
 ## 2026-08-13 — Cloudflare Workers runtime port (migration Phase 1)
 
 - The server now runs as a Cloudflare Worker: `server.ts` is the Workers entry (composes adapters from `env` bindings, exports `fetch`); all routes moved into `createApp(deps)` in `src/server/app.ts` behind injected seams. Zo's Bun runtime is dead, so this unblocks the move (`docs/cloudflare-migration/spec.md`, ADR 0002).
