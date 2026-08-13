@@ -31,7 +31,8 @@ type CapturedTarget = {
   el: Element;
 };
 
-type TargetRect = { id: string; rect: DOMRect };
+type Box = { top: number; left: number; width: number; height: number };
+type TargetRect = { id: string; rect: Box };
 
 const MOVE_TOLERANCE = 10;
 
@@ -338,10 +339,30 @@ export const Reporter = ({
     }
     let frame = 0;
     const measure = () => {
+      // getBoundingClientRect is in layout-viewport CSS px. On iOS the page
+      // can be pinch- or auto-zoomed (e.g. focusing a small-font input), which
+      // pans + scales the visual viewport that `position: fixed` highlights are
+      // pinned to. Convert layout coords → visual-viewport coords so the box
+      // lands on the element. Identity when unzoomed (scale 1, offset 0).
+      const vv = window.visualViewport;
+      const ox = vv ? vv.offsetLeft : 0;
+      const oy = vv ? vv.offsetTop : 0;
+      const scale = vv ? vv.scale : 1;
       setRects(
         targets
           .filter((t) => t.el.isConnected)
-          .map((t) => ({ id: t.id, rect: t.el.getBoundingClientRect() }))
+          .map((t) => {
+            const r = t.el.getBoundingClientRect();
+            return {
+              id: t.id,
+              rect: {
+                left: (r.left - ox) * scale,
+                top: (r.top - oy) * scale,
+                width: r.width * scale,
+                height: r.height * scale,
+              },
+            };
+          })
       );
     };
     const schedule = () => {
@@ -354,10 +375,16 @@ export const Reporter = ({
       passive: true,
     });
     window.addEventListener("resize", schedule);
+    // iOS reports pinch/auto-zoom pan + scale on visualViewport, not on
+    // window scroll/resize — subscribe so highlights track a zoom in real time.
+    window.visualViewport?.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("scroll", schedule);
     return () => {
       cancelAnimationFrame(frame);
       document.removeEventListener("scroll", schedule, true);
       window.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("scroll", schedule);
     };
   }, [phase, targets]);
 

@@ -6,6 +6,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-13 — Reporter highlights: track the visual viewport under zoom (#34)
+
+- On iOS the page pans + scales the *visual* viewport (pinch, or auto-zoom when focusing a small-font input), but `position: fixed` highlight boxes were placed straight from `getBoundingClientRect()` (layout-viewport coords) with no correction, so they drifted off their targets when zoomed.
+- The measure loop also only listened to `document` scroll and `window` resize — iOS reports zoom pan/scale on `window.visualViewport`, so the boxes never re-measured mid-zoom.
+- Fix: subscribe to `visualViewport` `resize`/`scroll`, and convert each rect to visual-viewport space (`(coord − offset) × scale`). The transform is an identity when unzoomed, so desktop/unzoomed behavior is unchanged. Needs an on-device iOS check to confirm alignment.
+
+---
+
 ## 2026-08-13 — Recurrence number inputs: allow empty while typing (#33)
 
 - The "Repeat every" input snapped back to `1` on every keystroke — `Math.max(1, parseInt(e.target.value) || 1)` ran in `onChange`, so clearing the field to retype a single digit immediately refilled it. The "After N occurrences" input had the same defect.
