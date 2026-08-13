@@ -4,6 +4,7 @@ Planned and deferred work. Shipped work is logged in `devlog.md`.
 
 ## Planned
 
+- **Cloudflare Workers migration** — Zo free tier retired; rehost on Workers + D1 + R2 behind Cloudflare Access. Plan: `cloudflare-migration/spec.md`, decision: `adr/0002-cloudflare-workers-blob-per-family-d1.md`. **Phase 0 (export live data off Zo) is time-sensitive.**
 - **Weekly momentum view** — encouraging progress tracking
 - **Service worker + offline support** — app currently requires internet
 - **STR feedback loop** — speak text, submit directly to agent or issues to Github. (Partially addressed 2026-08-09: the Reporter ships visual element-highlight reports; 2026-08-11: each report now also files as a sanitized GitHub issue. Speech input and direct agent submission remain.)
