@@ -29,7 +29,16 @@ export const RecurringModal = ({
   const [note, setNote] = useState(item?.note ?? "");
   const [area, setArea] = useState(item?.area ?? "");
   const [dueDate, setDueDate] = useState(item?.dueDate ?? "");
-  const [repeatEvery, setRepeatEvery] = useState(item?.repeatEvery ?? 1);
+  // Number inputs are string-backed so the field can go momentarily empty
+  // while typing (clearing to retype a single digit). The numeric value is
+  // derived + clamped for submit/pluralization; onBlur normalizes the text.
+  const [repeatEveryInput, setRepeatEveryInput] = useState(
+    String(item?.repeatEvery ?? 1)
+  );
+  const repeatEvery = Math.max(
+    1,
+    Math.min(99, parseInt(repeatEveryInput) || 1)
+  );
   const [repeatUnit, setRepeatUnit] = useState<
     "day" | "week" | "month" | "year"
   >(item?.repeatUnit ?? "week");
@@ -40,7 +49,10 @@ export const RecurringModal = ({
     item?.endsType ?? "never"
   );
   const [endsOn, setEndsOn] = useState(item?.endsOn ?? "");
-  const [endsAfter, setEndsAfter] = useState(item?.endsAfter ?? 13);
+  const [endsAfterInput, setEndsAfterInput] = useState(
+    String(item?.endsAfter ?? 13)
+  );
+  const endsAfter = Math.max(1, parseInt(endsAfterInput) || 1);
   const [showEarly, setShowEarly] = useState(
     item?.showEarlyDays != null ? String(item.showEarlyDays) : ""
   );
@@ -170,10 +182,9 @@ export const RecurringModal = ({
                     type="number"
                     min={1}
                     max={99}
-                    value={repeatEvery}
-                    onChange={(e) =>
-                      setRepeatEvery(Math.max(1, parseInt(e.target.value) || 1))
-                    }
+                    value={repeatEveryInput}
+                    onChange={(e) => setRepeatEveryInput(e.target.value)}
+                    onBlur={() => setRepeatEveryInput(String(repeatEvery))}
                   />
                   <select
                     className="recurrence-unit-select"
@@ -261,13 +272,12 @@ export const RecurringModal = ({
                       type="number"
                       className="recurrence-occurrence-input"
                       min={1}
-                      value={endsAfter}
+                      value={endsAfterInput}
                       onChange={(e) => {
-                        setEndsAfter(
-                          Math.max(1, parseInt(e.target.value) || 1)
-                        );
+                        setEndsAfterInput(e.target.value);
                         setEndsType("after");
                       }}
+                      onBlur={() => setEndsAfterInput(String(endsAfter))}
                       disabled={endsType !== "after"}
                     />
                     <span className="recurrence-occurrence-label">

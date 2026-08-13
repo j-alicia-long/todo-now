@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-13 — Recurrence number inputs: allow empty while typing (#33)
+
+- The "Repeat every" input snapped back to `1` on every keystroke — `Math.max(1, parseInt(e.target.value) || 1)` ran in `onChange`, so clearing the field to retype a single digit immediately refilled it. The "After N occurrences" input had the same defect.
+- Switched both to string-backed state (`repeatEveryInput` / `endsAfterInput`) so the field can go momentarily empty; the clamped numeric value is derived for submit + pluralization, and `onBlur` normalizes the text back to a valid number. Mirrors the existing `showEarly` pattern.
+
+---
+
 ## 2026-08-12 — Pin card pills to one height (constant, bottom-aligned rows)
 
 - Follow-up to `2befb56`: shrinking the Move-mode buttons removed the *reserved* extra space, but the label pills still read as bottom-padded. Root cause was two things the earlier fix didn't touch — (1) `.card-tag` variants had no fixed height, so each font size / border combination measured differently (area 20.8px vs. due 22.8px vs. Done subtext 18.3px), and (2) `.card-row` was `align-items: center`, so a shorter pill floated mid-row with visible slack beneath it
