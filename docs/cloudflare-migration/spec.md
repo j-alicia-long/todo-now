@@ -11,15 +11,24 @@ What deliberately does **not** change: `server.ts` route structure, the
 normalize-on-read (it runs per-request, so no cron is needed), the Vite + React
 frontend, and `bun test src`.
 
-## Phase 0 — Safeguard the data (time-sensitive, do before anything else)
+## Phase 0 — Safeguard the data ✅ (done Aug 13, 2026)
 
-Live data exists **only** on Zo at `/home/workspace/todo-data/` and is not in
-git or the Mutagen sync. If Zo access lapses, the data is gone.
+Live data existed **only** on Zo at `/home/workspace/todo-data/` and was not in
+git or the Mutagen sync.
 
-1. Copy `todo-data/*.json` (tasks, shopping, groceries, recurring, settings)
-   from Zo to the Mac while the Zo MCP `bash` channel still works.
-2. Verify each file parses and item counts match the live app.
-3. Raw Reports already sync to the Mac (`../../reports/`) — nothing to do.
+**How it actually went:** Zo compute access was already cut ("trial_ended" —
+the MCP bash channel is dead), but the published site still served, so the
+data was rescued through the app's own API (`GET /api/tasks` etc.). All five
+Families exported, JSON-validated, and checksummed to
+`../../../backups/zo-export-2026-08-13/` (outside git): 120 tasks, 22 shopping,
+5 groceries, 14 recurring, settings. `archive.md` was confirmed to have never
+existed (archiving never ran — done tasks from the app's first week are still
+in tasks.json; nothing lost). Raw Reports were already on the Mac via the
+synced `reports/` folder.
+
+**Cutover note:** the MCP channel being dead means the Phase 5 "final
+re-export" also goes through the live API — re-run the same curl loop just
+before import, while the published site still responds.
 
 ## Phase 1 — Runtime port (branch `feature/cloudflare-workers`)
 
