@@ -184,8 +184,9 @@ export const createApp = (deps: AppDeps): Hono => {
   // ── Root redirect ──
   // The SPA router is based at "/todo", so the bare root renders
   // nothing. Send it to the app. Static/SPA serving is handled by the
-  // runtime entry (Workers assets binding / Bun serveStatic).
+  // runtime entry (the Workers assets binding).
   app.get("/", (c) => c.redirect("/todo", 302));
+  app.get("/favicon.ico", (c) => c.redirect("/favicon.svg", 302));
 
   return app;
 };

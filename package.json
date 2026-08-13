@@ -4,13 +4,12 @@
   "scripts": {
     "clear-cache": "rm -rf node_modules/.vite",
     "free-port": "bun run scripts/free-port.ts",
-    "dev": "bun run clear-cache && bun run free-port && NODE_ENV=development bun run --hot server.ts",
+    "dev": "bun run clear-cache && bunx vite dev",
     "test": "bun test src",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && stylelint \"src/**/*.scss\"",
     "build": "bun run clear-cache && bunx vite build",
-    "prod": "bun run build && NODE_ENV=production bun run server.ts",
-    "preview": "bun run vite preview",
+    "preview": "bunx vite preview",
     "prepare": "husky",
     "sync-skills": "cp -R node_modules/@j-alicia-long/web-config/skills/web-conventions .github/skills/",
     "postinstall": "bun run sync-skills"

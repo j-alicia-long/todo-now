@@ -1,0 +1,37 @@
+// Cloudflare Workers configuration (see docs/cloudflare-migration/spec.md).
+// Local dev runs through @cloudflare/vite-plugin with Miniflare's local
+// D1/R2 simulation — no Cloudflare account needed. The GITHUB_TOKEN
+// secret is NOT set here: `wrangler secret put GITHUB_TOKEN` in
+// production, absent locally so issue filing stays a no-op in dev.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "todo",
+  "main": "./server.ts",
+  "compatibility_date": "2026-08-01",
+  "assets": {
+    // Built frontend (dist/) with SPA fallback so /todo deep links
+    // resolve to index.html. The Worker runs first for the API and for
+    // "/" (the root→/todo redirect) and /favicon.ico (redirects to the
+    // SVG); everything else is served straight from assets.
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/", "/favicon.ico"],
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "todo",
+      // Placeholder: local dev uses Miniflare's local D1; the real
+      // database is created in Phase 2/3 and its id pasted here.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "REPORTS",
+      "bucket_name": "todo-reports",
+    },
+  ],
+  "vars": {
+    "REPORTS_REPO": "j-alicia-long/todo-now",
+  },
+}

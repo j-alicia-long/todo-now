@@ -1,7 +1,13 @@
 import path from "path";
+import { cloudflare } from "@cloudflare/vite-plugin";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+
+// The demo build (VITE_DEMO, GitHub Pages) is a pure static client
+// build with the in-memory transport — no Worker — so the Cloudflare
+// plugin must stay out of it.
+const isDemo = !!process.env.VITE_DEMO;
 
 export default defineConfig({
   plugins: [
@@ -24,6 +30,10 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
       },
     }),
+    // Runs the Worker (server.ts, per wrangler.jsonc) inside vite dev
+    // with Miniflare-simulated local D1/R2, and emits the deployable
+    // Worker bundle on build.
+    !isDemo && cloudflare(),
   ],
   resolve: {
     alias: {
