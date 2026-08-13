@@ -1,0 +1,50 @@
+# Deploys the Worker to Cloudflare on every push to main: build (the
+# @cloudflare/vite-plugin emits the deployable config at
+# dist/todo/wrangler.json), `wrangler deploy` against it, then health-check
+# the live URL. Needs the CLOUDFLARE_API_TOKEN repo secret.
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches: [main]
+    # Pushes that can't affect the built site skip the deploy: docs, plus
+    # git/lint/format/hook configs, workflow files, and Mac-side tooling in
+    # scripts/. A push mixing code + ignored files still deploys.
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".gitignore"
+      - ".github/**"
+      - ".husky/**"
+      - ".lintstagedrc"
+      - ".prettierrc"
+      - ".prettierignore"
+      - "eslint.config.js"
+      - "stylelint.config.js"
+      - "scripts/**"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy -c dist/todo/wrangler.json
+      - name: Health check
+        run: |
+          code="$(curl -s -o /dev/null -w '%{http_code}' https://todo.jlongx.workers.dev/todo)"
+          echo "Live site returned HTTP $code"
+          # 200 = page served; 302 = Cloudflare Access login redirect (the
+          # app sits behind Access, so an unauthenticated curl may only reach
+          # the login redirect — that still proves the Worker route is live).
+          [ "$code" = "200" ] || [ "$code" = "302" ]
