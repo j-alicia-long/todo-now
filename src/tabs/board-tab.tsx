@@ -20,6 +20,7 @@ import { triageStack, applySkip } from "../domain/triage-rules";
 import {
   boardWeeklyItems,
   isWeeklyRecurring,
+  recurringBoardColumn,
   upcomingLongTermItems,
   type RecurringItem,
 } from "../domain/recurrence";
@@ -151,6 +152,14 @@ export const BoardTab = ({
   const boardRecurringTasks = allBoardRecurring.filter(
     (i) => !i.completedThisWeek
   );
+  // Route active recurring cards into This Week / This Month by due date,
+  // rather than dumping them all into This Week.
+  const boardRecurringThisWeek = boardRecurringTasks.filter(
+    (i) => recurringBoardColumn(i, new Date()) === "this-week"
+  );
+  const boardRecurringThisMonth = boardRecurringTasks.filter(
+    (i) => recurringBoardColumn(i, new Date()) === "this-month"
+  );
   const boardRecurringDone = allBoardRecurring.filter(
     (i) => i.completedThisWeek
   );
@@ -230,10 +239,15 @@ export const BoardTab = ({
               moveMode={moveMode}
               recurring={
                 col.id === "this-week"
-                  ? { items: boardRecurringTasks, actions: recurringActions }
-                  : col.id === "done"
-                    ? { items: boardRecurringDone, actions: recurringActions }
-                    : undefined
+                  ? { items: boardRecurringThisWeek, actions: recurringActions }
+                  : col.id === "this-month"
+                    ? {
+                        items: boardRecurringThisMonth,
+                        actions: recurringActions,
+                      }
+                    : col.id === "done"
+                      ? { items: boardRecurringDone, actions: recurringActions }
+                      : undefined
               }
             />
           ))}

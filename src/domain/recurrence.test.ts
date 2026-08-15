@@ -6,6 +6,7 @@ import {
   deriveFirstDueDate,
   getWeekStart,
   isWeeklyRecurring,
+  recurringBoardColumn,
   resetWeeklyItems,
   toLocalDateKey,
   upcomingLongTermItems,
@@ -278,6 +279,37 @@ describe("upcomingLongTermItems", () => {
     ];
     const result = upcomingLongTermItems(items, wednesday);
     expect(result.map((i) => i.id)).toEqual(["wide"]);
+  });
+});
+
+describe("recurringBoardColumn", () => {
+  // wednesday = 2026-07-22; its week is Mon 07-20..Sun 07-26, so the next
+  // week starts Mon 07-27.
+  test("no due date defaults to This Week", () => {
+    expect(recurringBoardColumn(makeItem({ dueDate: null }), wednesday)).toBe(
+      "this-week"
+    );
+  });
+
+  test("due later this week lands in This Week", () => {
+    expect(
+      recurringBoardColumn(makeItem({ dueDate: "2026-07-26" }), wednesday)
+    ).toBe("this-week");
+  });
+
+  test("overdue still lands in This Week", () => {
+    expect(
+      recurringBoardColumn(makeItem({ dueDate: "2026-07-20" }), wednesday)
+    ).toBe("this-week");
+  });
+
+  test("due next week or later lands in This Month", () => {
+    expect(
+      recurringBoardColumn(makeItem({ dueDate: "2026-07-27" }), wednesday)
+    ).toBe("this-month");
+    expect(
+      recurringBoardColumn(makeItem({ dueDate: "2026-08-05" }), wednesday)
+    ).toBe("this-month");
   });
 });
 

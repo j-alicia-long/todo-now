@@ -6,6 +6,13 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-15 — Recurring board cards sorted by due date (#44)
+
+- Board recurring cards used to all land in **This Week** regardless of due date; long-term items showing up to 14 days early appeared there even when due next week. Now each active recurring card is routed to **This Week** or **This Month** by its due date.
+- New pure helper `recurringBoardColumn(item, now)` in `recurrence.ts`: no due date (weekly cadence) or due before next Monday → This Week; due next week or later → This Month. `BoardTab` splits `boardRecurringTasks` into the two columns; Done placement is unchanged. Covered by unit tests (`recurrence.test.ts`) and a board component test (`board-tab.test.tsx`).
+
+---
+
 ## 2026-08-13 — Board setting to hide recurring cards (#38)
 
 - New Settings toggle "Hide recurring tasks" (Board section): hides all recurring task cards from the Board's columns view, including completed ones in Done. Recurring generation and the Recurring tab are untouched — this is purely board visibility.

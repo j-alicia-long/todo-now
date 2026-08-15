@@ -171,6 +171,23 @@ export const upcomingLongTermItems = (
     return delta <= effectiveShowEarlyDays(i) * DAY_MS && delta > -DAY_MS;
   });
 
+/**
+ * Which Board column a recurring card belongs in, chosen by due date:
+ * items due within the current week (or with no due date — weekly cadence
+ * items) sit in This Week; items due next week or later, but still inside
+ * their Board-visibility window, sit in This Month.
+ */
+export const recurringBoardColumn = (
+  item: RecurringItem,
+  now: Date
+): "this-week" | "this-month" => {
+  if (!item.dueDate) return "this-week";
+  const nextWeekStart = getWeekStart(now) + 7 * DAY_MS;
+  return new Date(item.dueDate + "T00:00:00").getTime() < nextWeekStart
+    ? "this-week"
+    : "this-month";
+};
+
 // ── Due-date advancement ──
 
 const addInterval = (

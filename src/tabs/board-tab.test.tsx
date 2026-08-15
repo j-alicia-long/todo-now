@@ -4,8 +4,14 @@
 import { describe, expect, test } from "bun:test";
 import { render } from "@testing-library/react";
 import { DEFAULT_SETTINGS, type Settings } from "@/stores/hooks";
-import type { RecurringItem } from "@/domain/recurrence";
+import { toLocalDateKey, type RecurringItem } from "@/domain/recurrence";
 import { BoardTab } from "./board-tab";
+
+const daysFromNow = (n: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return toLocalDateKey(d);
+};
 
 const makeRecurring = (
   overrides: Partial<RecurringItem> = {}
@@ -87,5 +93,24 @@ describe("BoardTab recurring visibility", () => {
     expect(
       hidden.container.querySelectorAll(".recurring-task-card").length
     ).toBe(0);
+  });
+
+  test("routes recurring cards to This Week / This Month by due date", () => {
+    const thisWeek = makeRecurring({ id: "weekly", dueDate: null });
+    const thisMonth = makeRecurring({
+      id: "later",
+      frequency: "long-term",
+      repeatUnit: "month",
+      dueDate: daysFromNow(10),
+    });
+    const { container } = renderBoard(DEFAULT_SETTINGS, [thisWeek, thisMonth]);
+    const weekCol = container.querySelector(
+      ".board-column:nth-of-type(1) .column-cards"
+    );
+    const monthCol = container.querySelector(
+      ".board-column:nth-of-type(2) .column-cards"
+    );
+    expect(weekCol?.querySelectorAll(".recurring-task-card").length).toBe(1);
+    expect(monthCol?.querySelectorAll(".recurring-task-card").length).toBe(1);
   });
 });
