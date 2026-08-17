@@ -7,6 +7,7 @@ import {
   getWeekStart,
   isWeeklyRecurring,
   recurringBoardColumn,
+  recurringColumnMoveDate,
   resetWeeklyItems,
   toLocalDateKey,
   upcomingLongTermItems,
@@ -310,6 +311,26 @@ describe("recurringBoardColumn", () => {
     expect(
       recurringBoardColumn(makeItem({ dueDate: "2026-08-05" }), wednesday)
     ).toBe("this-month");
+  });
+});
+
+describe("recurringColumnMoveDate", () => {
+  // wednesday = 2026-07-22; next week starts Mon 2026-07-27.
+  test("This Week move targets today", () => {
+    expect(recurringColumnMoveDate("this-week", wednesday)).toBe("2026-07-22");
+  });
+
+  test("This Month move targets next Monday", () => {
+    expect(recurringColumnMoveDate("this-month", wednesday)).toBe("2026-07-27");
+  });
+
+  test("the move date lands the card in the column it targets", () => {
+    for (const target of ["this-week", "this-month"] as const) {
+      const dueDate = recurringColumnMoveDate(target, wednesday);
+      expect(recurringBoardColumn(makeItem({ dueDate }), wednesday)).toBe(
+        target
+      );
+    }
   });
 });
 

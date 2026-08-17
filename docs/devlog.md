@@ -6,6 +6,14 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-17 — Move buttons on recurring board cards (#35)
+
+- Move mode showed the arrow buttons on regular task cards but not on recurring cards, so on mobile (where drag is disabled) a recurring card couldn't be repositioned between This Week / This Month without tapping into its due-date picker. `RecurringBoardCard` now renders the same move button in Move mode.
+- A recurring card's column is derived from its due date, so "moving" it reschedules: new pure helper `recurringColumnMoveDate(target, now)` in `recurrence.ts` (today for This Week, next Monday for This Month — both stay inside the long-term visibility window). Only dated (long-term) cards get a button; weekly no-due cards have no due date to shift. Covered by unit tests (`recurrence.test.ts`) and a board component test (`board-tab.test.tsx`).
+- Groceries/shopping cards on the Board already render as regular `TaskCard`s and get move buttons from their status — verified, no change needed.
+
+---
+
 ## 2026-08-15 — Recurring board cards sorted by due date (#44)
 
 - Board recurring cards used to all land in **This Week** regardless of due date; long-term items showing up to 14 days early appeared there even when due next week. Now each active recurring card is routed to **This Week** or **This Month** by its due date.

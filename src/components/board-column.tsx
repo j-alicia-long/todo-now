@@ -4,10 +4,14 @@
 import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { type Task, type TaskStatus } from "../domain/task-rules";
-import { type RecurringItem } from "../domain/recurrence";
+import {
+  recurringColumnMoveDate,
+  type RecurringItem,
+} from "../domain/recurrence";
 import { type Settings } from "../stores/hooks";
 import { Icon } from "./kit/icon";
 import { DatePickerModal } from "./kit/date-picker";
+import { MoveActionButton } from "./kit/move-action-button";
 import { TaskCard, type TaskActions } from "./task-card";
 import {
   dueUrgencyClass,
@@ -29,12 +33,25 @@ const RecurringBoardCard = ({
   item,
   done,
   actions,
+  moveMode,
+  column,
 }: {
   item: RecurringItem;
   done: boolean;
   actions: RecurringCardActions;
+  moveMode?: boolean;
+  column?: "this-week" | "this-month";
 }) => {
   const [editingDate, setEditingDate] = useState(false);
+
+  // A recurring card's column is derived from its due date, so Move mode
+  // relocates it by rescheduling (same lever as tapping the due tag). Only
+  // dated items can move — weekly-cadence cards have no due date to shift.
+  const canMove = !done && moveMode && item.dueDate;
+  const moveTo = (target: "this-week" | "this-month") =>
+    actions.update(item.id, {
+      dueDate: recurringColumnMoveDate(target, new Date()),
+    });
 
   return (
     <div className="task-card recurring-task-card">
@@ -105,7 +122,24 @@ const RecurringBoardCard = ({
             </>
           )}
         </div>
-        {done && <div className="card-actions"></div>}
+        <div className="card-actions">
+          {canMove && column === "this-week" && (
+            <MoveActionButton
+              variant="move-right"
+              icon="chevron_right"
+              title="Move to This Month"
+              onClick={() => moveTo("this-month")}
+            />
+          )}
+          {canMove && column === "this-month" && (
+            <MoveActionButton
+              variant="move-left"
+              icon="chevron_left"
+              title="Move to This Week"
+              onClick={() => moveTo("this-week")}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -159,6 +193,8 @@ export const BoardColumn = ({
               item={ri}
               done={false}
               actions={recurring.actions}
+              moveMode={moveMode}
+              column={id as "this-week" | "this-month"}
             />
           ))}
         {displayTasks.length === 0 && recurringItems.length === 0 ? (

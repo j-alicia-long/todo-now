@@ -2,7 +2,7 @@
 // setting. Recurring generation and the Recurring tab are out of scope here.
 
 import { describe, expect, test } from "bun:test";
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { DEFAULT_SETTINGS, type Settings } from "@/stores/hooks";
 import { toLocalDateKey, type RecurringItem } from "@/domain/recurrence";
 import { BoardTab } from "./board-tab";
@@ -93,6 +93,32 @@ describe("BoardTab recurring visibility", () => {
     expect(
       hidden.container.querySelectorAll(".recurring-task-card").length
     ).toBe(0);
+  });
+
+  test("Move mode adds a move button to a dated recurring card, not a weekly one", () => {
+    const weekly = makeRecurring({ id: "weekly", dueDate: null });
+    const dated = makeRecurring({
+      id: "later",
+      frequency: "long-term",
+      repeatUnit: "month",
+      dueDate: daysFromNow(10),
+    });
+    const { container } = renderBoard(DEFAULT_SETTINGS, [weekly, dated]);
+
+    // No move buttons until Move mode is on.
+    expect(container.querySelectorAll(".card-action-btn").length).toBe(0);
+    fireEvent.click(container.querySelector(".move-mode-btn")!);
+
+    // Only the dated card (This Month) gets a move button; the weekly
+    // no-due card in This Week stays button-less.
+    const weekCol = container.querySelector(
+      ".board-column:nth-of-type(1) .column-cards"
+    );
+    const monthCol = container.querySelector(
+      ".board-column:nth-of-type(2) .column-cards"
+    );
+    expect(weekCol?.querySelectorAll(".card-action-btn").length).toBe(0);
+    expect(monthCol?.querySelectorAll(".card-action-btn").length).toBe(1);
   });
 
   test("routes recurring cards to This Week / This Month by due date", () => {

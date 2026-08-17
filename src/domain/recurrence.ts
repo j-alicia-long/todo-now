@@ -188,6 +188,21 @@ export const recurringBoardColumn = (
     : "this-month";
 };
 
+/**
+ * The dueDate that relocates a dated recurring card to the given Board
+ * column via Move mode: today for This Week, next Monday for This Month.
+ * Both land inside the default long-term visibility window, so the card
+ * stays on the Board after the move. Mirrors what a manual due-date edit
+ * would do — only meaningful for items that carry a dueDate.
+ */
+export const recurringColumnMoveDate = (
+  target: "this-week" | "this-month",
+  now: Date
+): string =>
+  target === "this-week"
+    ? toLocalDateKey(now)
+    : toLocalDateKey(new Date(getWeekStart(now) + 7 * DAY_MS));
+
 // ── Due-date advancement ──
 
 const addInterval = (
