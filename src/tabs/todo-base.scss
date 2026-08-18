@@ -267,9 +267,28 @@
 }
 
 .done-group {
+  border: 1px dashed transparent;
+  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: background var(--transition);
+}
+
+// Only rendered mid-drag: a day in the Done window with nothing on it yet,
+// so a completion can be re-dated onto any day, not just occupied ones.
+.done-group-slot {
+  border-color: var(--border);
+  min-height: 52px;
+
+  .done-group-label {
+    opacity: 0.45;
+  }
+}
+
+.done-group-over {
+  background: var(--accent-soft);
+  border-color: var(--accent);
 }
 
 .done-group-label {

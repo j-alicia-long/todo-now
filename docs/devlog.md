@@ -6,6 +6,18 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-18 — Re-date a completion by dragging in the Done column (#48)
+
+- Done cards could be dragged out of the Done column but never *within* it, so there was no way to correct a completion date — a task finished on Sunday and ticked off on Tuesday was stuck reading Tuesday.
+- Each day group in the Done column is now its own droppable (`done-date:<dateKey>`). New pure rule `applyCompletionDateChange(task, dateKey, now)` in `task-rules.ts` does the re-dating, carrying the original time-of-day across so a move doesn't reshuffle a day's cards or land on midnight (where a DST shift could push the task onto the neighbouring day). Dropping a not-yet-done task on a day completes it as of that day.
+- **Empty days are drop targets too, but only mid-drag.** Otherwise you could only re-date onto a day that already had something on it. `doneDateSlots(now)` returns the whole 7-day window; `BoardColumn` renders the unoccupied ones as dashed slots while a card is in flight, and the column looks exactly as before at rest.
+- Custom collision detection (`preferDayGroup`): day groups nest inside the Done column, so a pointer over one hits both droppables and the larger column would win by area. The day group is the more specific target and takes precedence. Detection also moved from the default rect-intersection to pointer-first, so a drop lands where the cursor is.
+- **Server change needed too.** `completedAt` isn't in the tasks `writable` whitelist and `applyUpdate` re-derived it from `applyStatusChange`, so a re-date would have applied optimistically and then silently reverted on the next fetch. `tasksFamily.applyUpdate` now accepts an explicit `completedAt`, guarded: only on a Task that's done after the status change is applied, and only when it parses. The client computes the instant because the day a card belongs to is a local-timezone judgment the server can't make.
+- Covered by unit tests (`task-rules.test.ts`, `families.test.ts`), component tests for the slot rendering (`board-column.test.tsx`, new), and collision-precedence tests (`board-tab.test.tsx`).
+- Desktop only, like the rest of board drag — the pointer sensor is disabled on touch. Mobile needs a Move-mode-style affordance, not filed yet.
+
+---
+
 ## 2026-08-18 — Travel insurance marking on the cards page (#47)
 
 - The `/cards` per-card details were carrying two jobs badly: they repeated rates and caps the table already computes, and they said nothing about trip protections — the one card fact that decides which card a trip goes on.

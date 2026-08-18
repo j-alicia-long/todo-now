@@ -5,12 +5,16 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import {
+  applyCompletionDateChange,
   isRecentlyDone,
   type Task,
   type TaskStatus,
@@ -31,6 +35,7 @@ import { TriageModal } from "../components/triage-modal";
 import { Icon } from "../components/kit/icon";
 import {
   BoardColumn,
+  DONE_DATE_DROP_PREFIX,
   type RecurringCardActions,
 } from "../components/board-column";
 
@@ -54,6 +59,31 @@ const BOARD_COLUMNS: {
   },
   { id: "done", title: "Done", icon: "check_circle", colorClass: "col-green" },
 ];
+
+/**
+ * Day groups are nested inside the Done column, so a pointer over one hits
+ * both droppables and the larger column would otherwise win. The day group
+ * is the more specific target, so it takes precedence; everything else is
+ * left in whatever order the detection algorithm produced.
+ */
+export const preferDayGroup = <T extends { id: string | number }>(
+  collisions: T[]
+): T[] => {
+  const dayGroup = collisions.find((c) =>
+    String(c.id).startsWith(DONE_DATE_DROP_PREFIX)
+  );
+  return dayGroup ? [dayGroup] : collisions;
+};
+
+// Pointer-based first, so a drop lands where the cursor actually is; rect
+// intersection is the fallback for when the pointer is outside every
+// droppable (e.g. dragging past the edge of a column).
+const collisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  return preferDayGroup(
+    pointerCollisions.length > 0 ? pointerCollisions : rectIntersection(args)
+  );
+};
 
 export const BoardTab = ({
   tasks,
@@ -109,7 +139,16 @@ export const BoardTab = ({
       if (changes) taskActions.update(taskId, changes);
       return;
     }
-    const targetColumn = over.id as TaskStatus;
+    const overId = over.id as string;
+    // A drop on a day group inside Done re-dates the completion (and
+    // completes the task first, if it wasn't done yet).
+    if (overId.startsWith(DONE_DATE_DROP_PREFIX)) {
+      const dateKey = overId.slice(DONE_DATE_DROP_PREFIX.length);
+      const changes = applyCompletionDateChange(task, dateKey, new Date());
+      if (changes) taskActions.update(taskId, changes);
+      return;
+    }
+    const targetColumn = overId as TaskStatus;
     if (task.status === targetColumn) return;
     taskActions.changeStatus(taskId, targetColumn);
   };
@@ -167,8 +206,10 @@ export const BoardTab = ({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveTask(null)}
     >
       <div className="board-toolbar">
         <div className="board-view-toggle" role="tablist">
@@ -237,6 +278,7 @@ export const BoardTab = ({
               taskActions={taskActions}
               settings={settings}
               moveMode={moveMode}
+              showAllDoneDays={activeTask !== null}
               recurring={
                 col.id === "this-week"
                   ? { items: boardRecurringThisWeek, actions: recurringActions }

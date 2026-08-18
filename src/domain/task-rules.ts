@@ -121,6 +121,43 @@ export const isRecentlyDone = (task: Task, now: Date): boolean => {
 };
 
 /**
+ * Re-date a Task's completion to a target local day (a `YYYY-MM-DD` key),
+ * for dragging a done card into a different day group in the Done column.
+ *
+ * Time-of-day is carried over from the existing completedAt so re-dating
+ * doesn't reshuffle a day's cards or land on midnight (where a DST shift
+ * could push the task onto the neighbouring day). A Task that isn't done
+ * yet is completed as of the target day, using the current time-of-day.
+ *
+ * Returns the fields to write, or null when the change is a no-op or the
+ * target isn't a real day ("unknown", the Earlier bucket).
+ */
+export const applyCompletionDateChange = (
+  task: Task,
+  targetDateKey: string,
+  now: Date
+): (StatusChange & { completedAt: string }) | null => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDateKey)) return null;
+
+  const timeSource = task.completedAt ? new Date(task.completedAt) : now;
+  const [year, month, day] = targetDateKey.split("-").map(Number);
+  const stamped = new Date(
+    year,
+    month - 1,
+    day,
+    timeSource.getHours(),
+    timeSource.getMinutes(),
+    timeSource.getSeconds(),
+    timeSource.getMilliseconds()
+  ).toISOString();
+
+  if (task.done && task.status === "done" && task.completedAt === stamped) {
+    return null;
+  }
+  return { done: true, status: "done", completedAt: stamped };
+};
+
+/**
  * Trashed Tasks older than 30 days are dropped.
  * Returns the same array instance when nothing changed.
  */

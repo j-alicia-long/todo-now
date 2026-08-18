@@ -1,7 +1,7 @@
 // Presentation helpers shared across components: display labels, date
 // formatting, and card grouping/ordering. No data fetching, no mutation.
 
-import { type Task } from "../domain/task-rules";
+import { DONE_VISIBLE_MS, type Task } from "../domain/task-rules";
 import { toLocalDateKey, type RecurringItem } from "../domain/recurrence";
 
 // ── Area labels ──
@@ -125,6 +125,26 @@ const formatDateLabel = (dateKey: string, todayStr: string): string => {
     weekday: "short",
     month: "short",
     day: "numeric",
+  });
+};
+
+/**
+ * Every day in the Done column's visibility window, newest first — the drop
+ * targets offered while a card is being dragged. Days with no completions
+ * aren't rendered normally (they'd be dead headers), but they have to exist
+ * during a drag or you could only re-date onto a day that already has
+ * something on it.
+ */
+export const doneDateSlots = (
+  now: Date
+): { dateKey: string; label: string }[] => {
+  const todayStr = toLocalDateKey(now);
+  const days = Math.floor(DONE_VISIBLE_MS / (24 * 60 * 60 * 1000));
+  return Array.from({ length: days + 1 }, (_, i) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateKey = toLocalDateKey(d);
+    return { dateKey, label: formatDateLabel(dateKey, todayStr) };
   });
 };
 

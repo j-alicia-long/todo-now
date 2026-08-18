@@ -14,6 +14,7 @@ import { DatePickerModal } from "./kit/date-picker";
 import { MoveActionButton } from "./kit/move-action-button";
 import { TaskCard, type TaskActions } from "./task-card";
 import {
+  doneDateSlots,
   dueUrgencyClass,
   formatDueDate,
   formatDueDateFull,
@@ -21,6 +22,36 @@ import {
   groupRecurringDoneByDate,
   sortTasks,
 } from "../lib/presentation";
+
+/** Droppable id prefix for a day group inside the Done column. */
+export const DONE_DATE_DROP_PREFIX = "done-date:";
+
+// A day group in the Done column. Its own droppable, so dropping a card on
+// it re-dates the completion rather than just landing in the column.
+const DoneGroup = ({
+  dateKey,
+  label,
+  empty,
+  children,
+}: {
+  dateKey: string;
+  label: string;
+  empty?: boolean;
+  children?: React.ReactNode;
+}) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${DONE_DATE_DROP_PREFIX}${dateKey}`,
+  });
+  return (
+    <div
+      className={`done-group ${empty ? "done-group-slot" : ""} ${isOver ? "done-group-over" : ""}`}
+      ref={setNodeRef}
+    >
+      <div className="done-group-label">{label}</div>
+      {children}
+    </div>
+  );
+};
 
 /** The subset of recurring actions a board card needs (no edit-modal). */
 export type RecurringCardActions = {
@@ -155,6 +186,7 @@ export const BoardColumn = ({
   settings,
   moveMode,
   recurring,
+  showAllDoneDays,
 }: {
   id: TaskStatus;
   title: string;
@@ -165,6 +197,9 @@ export const BoardColumn = ({
   settings: Settings;
   moveMode?: boolean;
   recurring?: { items: RecurringItem[]; actions: RecurringCardActions };
+  /** A card is mid-drag: the Done column opens up every day in its window
+   * as a drop target, not just the days that already have completions. */
+  showAllDoneDays?: boolean;
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -197,7 +232,9 @@ export const BoardColumn = ({
               column={id as "this-week" | "this-month"}
             />
           ))}
-        {displayTasks.length === 0 && recurringItems.length === 0 ? (
+        {displayTasks.length === 0 &&
+        recurringItems.length === 0 &&
+        !(doneGroups && showAllDoneDays) ? (
           <div className="column-empty">
             {id === "done"
               ? "Nothing completed yet"
@@ -212,6 +249,12 @@ export const BoardColumn = ({
                 ? groupRecurringDoneByDate(recurringItems)
                 : [];
             const dateKeyMap = new Map<string, string>();
+            // Empty day slots go in first so a day that does have cards
+            // keeps its own (identical) label and ordering is unaffected.
+            if (showAllDoneDays) {
+              for (const slot of doneDateSlots(new Date()))
+                dateKeyMap.set(slot.dateKey, slot.label);
+            }
             for (const g of doneGroups) dateKeyMap.set(g.dateKey, g.label);
             for (const g of recurringDoneGroups)
               dateKeyMap.set(g.dateKey, g.label);
@@ -226,9 +269,15 @@ export const BoardColumn = ({
               const recurringGroup = recurringDoneGroups.find(
                 (g) => g.dateKey === key
               );
+              const isEmpty =
+                !taskGroup?.tasks.length && !recurringGroup?.items.length;
               return (
-                <div key={label} className="done-group">
-                  <div className="done-group-label">{label}</div>
+                <DoneGroup
+                  key={label}
+                  dateKey={key}
+                  label={label}
+                  empty={isEmpty}
+                >
                   {recurringGroup &&
                     recurring &&
                     recurringGroup.items.map((ri) => (
@@ -248,7 +297,7 @@ export const BoardColumn = ({
                       moveMode={moveMode}
                     />
                   ))}
-                </div>
+                </DoneGroup>
               );
             });
           })()
