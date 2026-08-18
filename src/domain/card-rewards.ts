@@ -16,6 +16,14 @@ export const CARD_KEYS: CardKey[] = [
   "autograph",
 ];
 
+// Trip-protection coverage, coarse on purpose: the useful question when
+// booking is "does paying with this card protect the trip?", not the exact
+// dollar caps (which move, and live in each issuer's Guide to Benefits).
+// "verify" is a real state, not a placeholder — some no-AF cards' coverage
+// depends on the underlying Visa/Mastercard network tier, which public
+// sources disagree about.
+export type TravelInsuranceTier = "full" | "rental-only" | "none" | "verify";
+
 export type Card = {
   key: CardKey;
   name: string;
@@ -23,6 +31,10 @@ export type Card = {
   ftf: boolean;
   /** Points can move to airline/hotel partners for better rewards. */
   transferable: boolean;
+  /** Trip protections when the trip is paid for with this card. */
+  travelInsurance: TravelInsuranceTier;
+  /** What the tier covers — shown in the card's details, always caveated. */
+  travelInsuranceNote: string;
 };
 
 export const CARDS: Record<CardKey, Card> = {
@@ -31,36 +43,54 @@ export const CARDS: Record<CardKey, Card> = {
     name: "USBAR",
     ftf: false,
     transferable: false,
+    travelInsurance: "full",
+    travelInsuranceNote:
+      "Trip cancellation/interruption, trip delay, lost/delayed baggage, and primary rental car CDW. Travel Center bookings count.",
   },
   amex: {
     key: "amex",
     name: "Amex Platinum",
     ftf: false,
     transferable: true,
+    travelInsurance: "full",
+    travelInsuranceNote:
+      "Trip cancellation/interruption, trip delay, and baggage insurance. Car rental loss & damage is opt-in per rental, not automatic.",
   },
   savorone: {
     key: "savorone",
     name: "SavorOne",
     ftf: false,
     transferable: false,
+    travelInsurance: "verify",
+    travelInsuranceNote:
+      "Rental car CDW (secondary) and travel accident insurance. Whether trip cancellation applies depends on the card's Mastercard tier — check your Guide to Benefits before relying on it.",
   },
   bofa: {
     key: "bofa",
     name: "BofA CCR",
     ftf: true,
     transferable: false,
+    travelInsurance: "none",
+    travelInsuranceNote:
+      "No trip protections worth planning around — and it charges FTF, so it shouldn't be the travel card anyway.",
   },
   freedom: {
     key: "freedom",
     name: "Freedom Unlimited",
     ftf: true,
     transferable: false,
+    travelInsurance: "rental-only",
+    travelInsuranceNote:
+      "Secondary rental car CDW only — no trip cancellation/interruption or delay coverage (those live on the Sapphire cards).",
   },
   autograph: {
     key: "autograph",
     name: "Autograph",
     ftf: false,
     transferable: false,
+    travelInsurance: "rental-only",
+    travelInsuranceNote:
+      "Secondary rental car CDW and travel accident coverage only — no trip cancellation/interruption or delay. (That's the Autograph Journey, a different card.)",
   },
 };
 

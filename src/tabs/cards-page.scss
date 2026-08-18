@@ -278,6 +278,15 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-bottom: 16px;
+}
+
+// Sits between the details list and the page bottom, carrying the bottom
+// spacing the list used to own.
+.cards-footnote {
+  color: var(--text-tertiary);
+  font-size: 0.76rem;
+  line-height: 1.5;
   margin-bottom: 48px;
 }
 
@@ -340,8 +349,39 @@
 
 .card-detail-chevron {
   color: var(--text-tertiary);
-  margin-left: auto;
   transition: transform var(--transition);
+}
+
+// Pushed to the right edge of the summary row, so the chevron trails it.
+.travel-badge {
+  align-items: center;
+  background: var(--bg-hover);
+  border-radius: 8px;
+  color: var(--text-tertiary);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  gap: 3px;
+  margin-left: auto;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+// Only the trip-protecting cards get colour — the badge exists to answer
+// "which card do I book the trip on?", so those two should pop.
+.travel-badge-full {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.travel-badge-icon {
+  font-size: 0.85rem;
+}
+
+.card-detail-travel strong {
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 @media (width <= 640px) {
@@ -358,6 +398,15 @@
       flex-basis: 100%;
       order: 1;
       padding-left: 34px;
+    }
+
+    // Card names are long enough that sharing row one with the badge
+    // squeezes both, so the badge drops below the tagline (which takes a
+    // full row) and lines up with it.
+    .travel-badge {
+      align-self: flex-start;
+      margin-left: 34px;
+      order: 2;
     }
   }
 }

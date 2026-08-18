@@ -6,6 +6,16 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-18 — Travel insurance marking on the cards page (#47)
+
+- The `/cards` per-card details were carrying two jobs badly: they repeated rates and caps the table already computes, and they said nothing about trip protections — the one card fact that decides which card a trip goes on.
+- `Card` gains `travelInsurance` (a coarse `full` / `rental-only` / `none` / `verify` tier) and `travelInsuranceNote`. Deliberately coarse: the useful question when booking is "does paying with this card protect the trip?", not the exact dollar caps, which move and live in each issuer's Guide to Benefits. Rendered as a badge in each card's summary row plus a leading bullet inside; only the `full` tier gets colour, so the two cards that actually protect a trip are the ones that pop.
+- `verify` is a real state, not a placeholder. SavorOne's trip-cancellation coverage depends on the underlying Mastercard tier and public sources disagree, so it's marked "check coverage" rather than guessed at. A footnote under the list points at the Guide to Benefits for caps and exclusions.
+- Trimmed the details bullets back to playbook context only — anything derivable from an Earn Rate (USBAR's 3x/$5k cap, SavorOne's 3% categories, BofA's rates, Amex's 5x flights, Autograph's phone protection) came out, since the table is the source of truth for those. Added what was missing: USBAR's $400 AF and the renewal math, and BofA's Platinum Honors 5.25%/3.5% tier.
+- No engine or test changes — this is static data plus presentation, matching the card-recommendations spec's testing decisions.
+
+---
+
 ## 2026-08-17 — Move buttons on recurring board cards (#35)
 
 - Move mode showed the arrow buttons on regular task cards but not on recurring cards, so on mobile (where drag is disabled) a recurring card couldn't be repositioned between This Week / This Month without tapping into its due-date picker. `RecurringBoardCard` now renders the same move button in Move mode.

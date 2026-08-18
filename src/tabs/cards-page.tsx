@@ -6,7 +6,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "../components/kit/icon";
 import { everythingElse, recommendAll } from "../domain/card-recommendations";
-import type { CardKey, EarnRate, SpendCategory } from "../domain/card-rewards";
+import type {
+  CardKey,
+  EarnRate,
+  SpendCategory,
+  TravelInsuranceTier,
+} from "../domain/card-rewards";
 import { CARDS, CARD_KEYS } from "../domain/card-rewards";
 import { useSettings } from "../stores/hooks";
 import "./cards-page.scss";
@@ -72,6 +77,33 @@ const PickCell = ({
   );
 };
 
+// Travel-insurance badge. Only "full" gets colour — the point of the badge
+// is to answer "which card do I put the trip on?" at a glance, so the two
+// cards that actually protect a trip should be the ones that stand out.
+const TRAVEL_INSURANCE_BADGES: Record<
+  TravelInsuranceTier,
+  { label: string; icon: string }
+> = {
+  full: { label: "trip protected", icon: "verified_user" },
+  "rental-only": { label: "rental car only", icon: "directions_car" },
+  none: { label: "no trip cover", icon: "shield" },
+  verify: { label: "check coverage", icon: "help" },
+};
+
+const TravelInsuranceBadge = ({ card }: { card: CardKey }) => {
+  const tier = CARDS[card].travelInsurance;
+  const { label, icon } = TRAVEL_INSURANCE_BADGES[tier];
+  return (
+    <span
+      className={`travel-badge travel-badge-${tier}`}
+      title={CARDS[card].travelInsuranceNote}
+    >
+      <Icon name={icon} className="travel-badge-icon" />
+      {label}
+    </span>
+  );
+};
+
 type CardDetail = {
   cardKey: CardKey;
   name: string;
@@ -79,18 +111,19 @@ type CardDetail = {
   points: string[];
 };
 
+// Playbook context only — rates, caps, and category picks are the table's
+// job, so anything derivable from an Earn Rate is deliberately absent here.
+// Travel protections come from the card data, not these bullets.
 const CARD_DETAILS: CardDetail[] = [
   {
     cardKey: "usbar",
     name: "USBAR (U.S. Bank Altitude Reserve)",
     tagline: "The catch-all (post-nerf)",
     points: [
-      "3x on mobile wallet (Apple/Google/Samsung Pay), capped at $5,000/billing cycle, then 1x.",
-      "Points worth 1¢ everywhere post-nerf → mobile wallet = flat 3%. 5% discount on gift card redemptions.",
-      "Use the US Bank Travel Center only to burn the $325 credit — ideally on a flight (5x portal). Book hotels/cars direct for loyalty perks.",
-      "$325 credit only triggers on Travel Center bookings.",
-      "Decide at renewal: keep only if you'll use the portal credit, otherwise downgrade to a no-AF US Bank card.",
-      "Travel protections when paying with the card: trip cancellation/interruption, trip delay, baggage, primary rental CDW.",
+      "Points redeem at 1¢ everywhere post-nerf, plus a 5% discount on gift card redemptions.",
+      "Use the US Bank Travel Center only to burn the $325 credit — it won't trigger on anything else. A flight is the best thing to spend it on (5x in the portal); book hotels/cars direct for loyalty perks.",
+      "$400 annual fee, which makes this borderline: a capped 3% catch-all plus Priority Pass for $400. Decide at renewal — keep only if you'll run ≥$325/yr through the portal, otherwise downgrade to a no-AF US Bank card.",
+      "Downgrading loses the grandfathered mobile-wallet earn, but at 3% capped it's no longer sacred.",
     ],
   },
   {
@@ -98,8 +131,7 @@ const CARD_DETAILS: CardDetail[] = [
     name: "Amex Platinum",
     tagline: "The credits card, not a spend card",
     points: [
-      "Spend only flights (5x) on it. Everything else is 1x — never daily-drive it.",
-      "Cell phone protection: $800/claim if you pay the bill with it — beats Autograph's $600, but you trade 3x for 1x.",
+      "Never daily-drive it — everything outside flights earns 1x.",
       "Justify the fee with credits: airline incidental, Uber, digital entertainment, Saks, Clear, hotel credits (FHR/THC), lounge access.",
       "MR transfer partners: Delta direct, or Virgin Atlantic for cheaper Delta awards. Hold MR for awards — don't cash out at 0.6¢.",
     ],
@@ -109,8 +141,7 @@ const CARD_DETAILS: CardDetail[] = [
     name: "Capital One SavorOne",
     tagline: "Dining / grocery / entertainment backup",
     points: [
-      "3% dining, groceries, entertainment, streaming. No annual fee.",
-      "Keep it active — helps future Capital One approvals (e.g. Venture X, which would make these points transferable).",
+      "No annual fee — keep it active regardless, since it helps future Capital One approvals (e.g. Venture X, which would make these points transferable).",
     ],
   },
   {
@@ -118,8 +149,8 @@ const CARD_DETAILS: CardDetail[] = [
     name: "BofA Customized Cash Rewards",
     tagline: "Online shopping specialist",
     points: [
-      "Set the 3% choice category deliberately — Online Shopping is usually best since dining/gas are covered elsewhere.",
-      "3% choice + 2% grocery/wholesale, capped at $2,500 combined spend/quarter.",
+      "Set the 3% choice category deliberately — Online Shopping is usually best, since dining and gas are covered elsewhere.",
+      "With ≥$100k at BofA/Merrill (Platinum Honors) the rates jump to 5.25% / 3.5%, which would beat USBAR for online shopping. Worth consolidating assets to hit a tier.",
       "3% foreign transaction fee — don't use abroad.",
     ],
   },
@@ -128,8 +159,8 @@ const CARD_DETAILS: CardDetail[] = [
     name: "Chase Freedom Unlimited",
     tagline: "The physical-card catch-all",
     points: [
-      "1.5% flat on everything — no activation, no rotating categories, no cap. Best option when you can't pay by mobile wallet (Apple Pay etc).",
-      "3% on dining and drugstores; 5% on Chase Travel bookings (prefer direct bookings, so mostly ignore).",
+      "No activation, no rotating categories, no cap — the fallback whenever a merchant won't take tap-to-pay.",
+      "5% on Chase Travel bookings, but you prefer booking direct, so mostly ignore it.",
       "Points (Ultimate Rewards) are cash-only for now — with a Sapphire Reserve you could pool CFU points and transfer to partners (Virgin Atlantic → Delta, Hyatt).",
       "3% foreign transaction fee — don't use abroad.",
     ],
@@ -139,7 +170,7 @@ const CARD_DETAILS: CardDetail[] = [
     name: "WF Autograph",
     tagline: "Demoted to niche duty",
     points: [
-      "Keep for: cell phone bill (3x + $600/claim phone protection), and 3x categories abroad where BofA/Freedom would charge FTF.",
+      "Keep it for 3x categories abroad, where BofA and Freedom would both charge FTF.",
       "No annual fee — keep open for credit age, just stop daily-driving it.",
     ],
   },
@@ -287,9 +318,14 @@ export const CardsPage = () => {
               <MiniCard card={card.cardKey} />
               <span className="card-detail-name">{card.name}</span>
               <span className="card-detail-tagline">{card.tagline}</span>
+              <TravelInsuranceBadge card={card.cardKey} />
               <Icon name="expand_more" className="card-detail-chevron" />
             </summary>
             <ul>
+              <li className="card-detail-travel">
+                <strong>Travel insurance:</strong>{" "}
+                {CARDS[card.cardKey].travelInsuranceNote}
+              </li>
               {card.points.map((point) => (
                 <li key={point}>{point}</li>
               ))}
@@ -297,6 +333,12 @@ export const CardsPage = () => {
           </details>
         ))}
       </div>
+
+      <p className="cards-footnote">
+        Coverage summaries are directional — dollar caps and exclusions change,
+        so check the issuer's Guide to Benefits before you rely on one for a
+        real trip.
+      </p>
     </div>
   );
 };
