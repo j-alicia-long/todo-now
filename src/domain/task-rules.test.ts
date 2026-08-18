@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  applyCompletionDateChange,
   applyStatusChange,
   isRecentlyDone,
   promoteDueSoon,
@@ -223,5 +224,70 @@ describe("isRecentlyDone — Done column visibility", () => {
 
   test("done task without a completedAt stamp is kept", () => {
     expect(isRecentlyDone(makeTask({ completedAt: null }), NOW)).toBe(true);
+  });
+});
+
+describe("applyCompletionDateChange — re-dating a completion", () => {
+  // Local-time construction, since the day a card sits under in the Done
+  // column is a local date key, not a UTC one.
+  const localIso = (y: number, m: number, d: number, hh = 0, mm = 0, ss = 0) =>
+    new Date(y, m - 1, d, hh, mm, ss).toISOString();
+
+  test("moves the completion to the target day", () => {
+    const task = makeTask({
+      done: true,
+      status: "done",
+      completedAt: localIso(2026, 7, 20, 9, 30),
+    });
+    const changes = applyCompletionDateChange(task, "2026-07-18", NOW);
+    expect(changes).toEqual({
+      done: true,
+      status: "done",
+      completedAt: localIso(2026, 7, 18, 9, 30),
+    });
+  });
+
+  test("keeps the original time of day", () => {
+    const task = makeTask({
+      done: true,
+      status: "done",
+      completedAt: localIso(2026, 7, 20, 23, 45, 15),
+    });
+    const changes = applyCompletionDateChange(task, "2026-07-15", NOW);
+    const moved = new Date(changes!.completedAt);
+    expect(moved.getHours()).toBe(23);
+    expect(moved.getMinutes()).toBe(45);
+    expect(moved.getSeconds()).toBe(15);
+  });
+
+  test("completes a task that wasn't done yet, dated to the target day", () => {
+    const task = makeTask({ status: "this-week", done: false });
+    const changes = applyCompletionDateChange(task, "2026-07-19", NOW);
+    expect(changes?.done).toBe(true);
+    expect(changes?.status).toBe("done");
+    expect(new Date(changes!.completedAt).getDate()).toBe(19);
+  });
+
+  test("a done task with no stamp gets the current time of day", () => {
+    const task = makeTask({ done: true, status: "done", completedAt: null });
+    const changes = applyCompletionDateChange(task, "2026-07-19", NOW);
+    const moved = new Date(changes!.completedAt);
+    expect(moved.getHours()).toBe(NOW.getHours());
+    expect(moved.getDate()).toBe(19);
+  });
+
+  test("dropping on the day it already sits under is a no-op", () => {
+    const completedAt = localIso(2026, 7, 20, 9, 30);
+    const task = makeTask({ done: true, status: "done", completedAt });
+    expect(applyCompletionDateChange(task, "2026-07-20", NOW)).toBeNull();
+  });
+
+  test("the Earlier bucket is not a real day, so it's rejected", () => {
+    const task = makeTask({
+      done: true,
+      status: "done",
+      completedAt: localIso(2026, 7, 20, 9, 30),
+    });
+    expect(applyCompletionDateChange(task, "unknown", NOW)).toBeNull();
   });
 });

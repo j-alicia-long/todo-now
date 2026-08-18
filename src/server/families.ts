@@ -29,6 +29,12 @@ import type { FamilyConfig } from "./resource";
 // task-rules; a PUT can request a status/done change but cannot write
 // the stamps directly. Deletes are soft — Tasks go to the Trash unless
 // ?permanent=true.
+//
+// The one exception is re-dating a completion (dragging a done card to a
+// different day in the Done column): completedAt is accepted, but only on a
+// Task that is done once the status change has been applied, and only when
+// it parses. Note the client computes the instant, since the day a card
+// belongs to is a local-timezone judgment the server can't make.
 
 export const tasksFamily: FamilyConfig<Task> = {
   writable: [
@@ -43,19 +49,28 @@ export const tasksFamily: FamilyConfig<Task> = {
   ],
   construct: constructTask,
   applyUpdate: (prev, merged, body, now) => {
-    if (body.status === undefined && body.done === undefined) return merged;
-    const lifecycle = applyStatusChange(
-      prev,
-      { status: body.status as TaskStatus, done: body.done as boolean },
-      now
-    );
-    return {
-      ...merged,
-      status: lifecycle.status,
-      done: lifecycle.done,
-      completedAt: lifecycle.completedAt,
-      deletedAt: lifecycle.deletedAt,
-    };
+    let next = merged;
+    if (body.status !== undefined || body.done !== undefined) {
+      const lifecycle = applyStatusChange(
+        prev,
+        { status: body.status as TaskStatus, done: body.done as boolean },
+        now
+      );
+      next = {
+        ...merged,
+        status: lifecycle.status,
+        done: lifecycle.done,
+        completedAt: lifecycle.completedAt,
+        deletedAt: lifecycle.deletedAt,
+      };
+    }
+    if (typeof body.completedAt === "string" && next.done) {
+      const when = new Date(body.completedAt);
+      if (!Number.isNaN(when.getTime())) {
+        return { ...next, completedAt: when.toISOString() };
+      }
+    }
+    return next;
   },
   applyRemove: (prev, { permanent }, now) =>
     permanent ? null : applyStatusChange(prev, { status: "trashed" }, now),

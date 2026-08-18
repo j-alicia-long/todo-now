@@ -105,6 +105,78 @@ describe("tasksFamily", () => {
     expect(updated).toEqual(merged);
   });
 
+  test("applyUpdate re-dates a done task's completion", () => {
+    const prev = makeTask({
+      done: true,
+      status: "done",
+      completedAt: "2026-07-22T09:00:00.000Z",
+    });
+    const updated = tasksFamily.applyUpdate!(
+      prev,
+      prev,
+      { done: true, status: "done", completedAt: "2026-07-19T09:00:00.000Z" },
+      NOW
+    );
+    expect(updated.completedAt).toBe("2026-07-19T09:00:00.000Z");
+    expect(updated.done).toBe(true);
+    expect(updated.status).toBe("done");
+  });
+
+  test("applyUpdate completes and dates a task in one request", () => {
+    const prev = makeTask();
+    const updated = tasksFamily.applyUpdate!(
+      prev,
+      prev,
+      { done: true, status: "done", completedAt: "2026-07-19T09:00:00.000Z" },
+      NOW
+    );
+    expect(updated.status).toBe("done");
+    expect(updated.completedAt).toBe("2026-07-19T09:00:00.000Z");
+  });
+
+  test("applyUpdate ignores completedAt on a task that isn't done", () => {
+    const prev = makeTask();
+    const updated = tasksFamily.applyUpdate!(
+      prev,
+      prev,
+      { completedAt: "2026-07-19T09:00:00.000Z" },
+      NOW
+    );
+    expect(updated.completedAt).toBeNull();
+    expect(updated.done).toBe(false);
+  });
+
+  test("applyUpdate ignores an unparseable completedAt", () => {
+    const prev = makeTask({
+      done: true,
+      status: "done",
+      completedAt: "2026-07-22T09:00:00.000Z",
+    });
+    const updated = tasksFamily.applyUpdate!(
+      prev,
+      prev,
+      { done: true, status: "done", completedAt: "not a date" },
+      NOW
+    );
+    expect(updated.completedAt).toBe("2026-07-22T09:00:00.000Z");
+  });
+
+  test("un-completing a task still clears the stamp", () => {
+    const prev = makeTask({
+      done: true,
+      status: "done",
+      completedAt: "2026-07-22T09:00:00.000Z",
+    });
+    const updated = tasksFamily.applyUpdate!(
+      prev,
+      prev,
+      { status: "this-week" },
+      NOW
+    );
+    expect(updated.completedAt).toBeNull();
+    expect(updated.done).toBe(false);
+  });
+
   test("applyRemove soft-deletes to the Trash by default", () => {
     const removed = tasksFamily.applyRemove!(
       makeTask(),

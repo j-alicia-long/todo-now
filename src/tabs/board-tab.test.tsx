@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { fireEvent, render } from "@testing-library/react";
 import { DEFAULT_SETTINGS, type Settings } from "@/stores/hooks";
 import { toLocalDateKey, type RecurringItem } from "@/domain/recurrence";
-import { BoardTab } from "./board-tab";
+import { BoardTab, preferDayGroup } from "./board-tab";
 
 const daysFromNow = (n: number): string => {
   const d = new Date();
@@ -138,5 +138,37 @@ describe("BoardTab recurring visibility", () => {
     );
     expect(weekCol?.querySelectorAll(".recurring-task-card").length).toBe(1);
     expect(monthCol?.querySelectorAll(".recurring-task-card").length).toBe(1);
+  });
+});
+
+describe("preferDayGroup — nested droppables in the Done column", () => {
+  test("a day group beats the column that contains it", () => {
+    const result = preferDayGroup([
+      { id: "done" },
+      { id: "done-date:2026-08-16" },
+    ]);
+    expect(result).toEqual([{ id: "done-date:2026-08-16" }]);
+  });
+
+  test("order doesn't matter — the day group still wins", () => {
+    const result = preferDayGroup([
+      { id: "done-date:2026-08-16" },
+      { id: "done" },
+    ]);
+    expect(result).toEqual([{ id: "done-date:2026-08-16" }]);
+  });
+
+  test("column drops are left alone", () => {
+    const collisions = [{ id: "this-week" }, { id: "this-month" }];
+    expect(preferDayGroup(collisions)).toEqual(collisions);
+  });
+
+  test("matrix quadrant drops are left alone", () => {
+    const collisions = [{ id: "important-urgent" }];
+    expect(preferDayGroup(collisions)).toEqual(collisions);
+  });
+
+  test("no collisions stays empty", () => {
+    expect(preferDayGroup([])).toEqual([]);
   });
 });
