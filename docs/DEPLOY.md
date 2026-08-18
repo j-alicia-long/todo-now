@@ -63,6 +63,11 @@ manual deploy from a dirty tree can silently ship unpushed changes.
   set with `bunx wrangler secret put GITHUB_TOKEN`. Until it's set, issue
   filing is a no-op and reports only land in R2 — the report file always
   survives.
+- **`ANTHROPIC_API_KEY`** (repo secret, used by the issue-triage workflow):
+  `gh secret set ANTHROPIC_API_KEY --repo j-alicia-long/todo-now`. Until it's
+  set, `.github/workflows/triage.yml` fails on every new issue — the issue
+  itself is unaffected, it just arrives untriaged. The Actions-provided
+  `GITHUB_TOKEN` covers the labelling and commenting; nothing to set for that.
 
 ## Debug
 
