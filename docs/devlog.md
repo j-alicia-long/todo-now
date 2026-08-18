@@ -6,6 +6,17 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-08-18 — Auto-triage new issues via GitHub Actions (#42)
+
+- Reports arrived unlabelled and waited up to 24 hours for the daily triage run to give them a priority or scope. `.github/workflows/triage.yml` now labels them on `issues: opened`, with a nightly 08:00 UTC sweep as the safety net (scheduled runs get delayed under load and are disabled after 60 days of repo inactivity, so the open-event trigger is the primary path).
+- `scripts/triage-issue.ts` classifies with the Anthropic SDK (structured output via `zodOutputFormat`, so the label comes back validated rather than parsed out of prose) and reads the key definitions from `docs/TRIAGE.md` at runtime — editing the doc changes the behaviour, and the two can't drift.
+- **Only ever adds a label to an issue carrying none of the six**, which is what makes the sweep safe to re-run: a hand-set label always wins, and `blocked`/`tech-debt` issues are skipped entirely. The allowed set is narrowed by the issue's own `bug`/`idea` label, so a bug can't come back Medium.
+- Also flags likely duplicates against the open list, as a comment rather than a label — a wrong duplicate call should be cheap to ignore.
+- The two decisions that could do damage if they regressed (what the sweep touches, what labels are allowed) are pure and unit-tested; the workflow runs `bun test scripts` before it writes anything. They sit outside `bun test src`, so the workflow is what exercises them.
+- Needs the `ANTHROPIC_API_KEY` repo secret — documented in `docs/DEPLOY.md`. Until it's set the workflow fails and issues just arrive untriaged, same as today.
+
+---
+
 ## 2026-08-18 — Travel insurance marking on the cards page (#47)
 
 - The `/cards` per-card details were carrying two jobs badly: they repeated rates and caps the table already computes, and they said nothing about trip protections — the one card fact that decides which card a trip goes on.
