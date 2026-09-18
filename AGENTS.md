@@ -11,6 +11,7 @@ Jennifer's personal dashboard and task manager: a React PWA running as a Cloudfl
 - `data/` is gitignored — never commit personal task data.
 - Binary assets (icons, images) live only in the deployed site, not in the GitHub repo — exception: README screenshots in `docs/` (e.g. `screenshot.png`, `screenshot-reporter.png`).
 - Update file docstrings, `../todo-architecture.md` (product spec), `README.md` for new features; log notable shipped work in `docs/devlog.md`.
+- **On every commit, set `LAST_COMMIT_DATE` in `src/build-info.ts` to the current ISO timestamp** (with timezone offset, e.g. `2026-09-18T16:55:00-04:00`). It's shown as "Last updated" in the Settings footer.
 
 ## Deeper docs
 

@@ -1,6 +1,7 @@
 // Settings drawer panel: board view picker, recurring-card visibility,
-// and card-label visibility toggles.
+// card-label visibility toggles, and a footer with the last-commit timestamp.
 
+import { LAST_COMMIT_DATE } from "../build-info";
 import {
   type BoardView,
   type BooleanSettingKey,
@@ -27,6 +28,11 @@ const SHORTCUTS: { keys: string; label: string }[] = [
   { keys: "1", label: "Matrix triage: sort the card (keys 1–4 = quadrants)" },
   { keys: "S", label: "Matrix triage: skip the card" },
 ];
+
+const lastCommitLabel = new Date(LAST_COMMIT_DATE).toLocaleString(undefined, {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
 
 export const SettingsView = ({
   settings,
@@ -147,6 +153,7 @@ export const SettingsView = ({
           </div>
         ))}
       </div>
+      <p className="settings-footer">Last updated {lastCommitLabel}</p>
     </div>
   );
 };

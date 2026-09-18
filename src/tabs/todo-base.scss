@@ -1602,7 +1602,19 @@
 
 // ── Settings ──
 .settings-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
   padding: 8px 0;
+}
+
+// Pinned to the bottom of the panel when content is shorter than the drawer.
+.settings-footer {
+  color: var(--text-tertiary);
+  font-size: 0.72rem;
+  margin-top: auto;
+  padding-top: 24px;
+  text-align: center;
 }
 
 // Default-view picker reuses the board pill toggle; add section spacing.
