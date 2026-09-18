@@ -1,4 +1,8 @@
-// Build metadata shown in the Settings footer. LAST_COMMIT_DATE is maintained
-// by hand: set it to the current date/time in every commit (see AGENTS.md).
+// Build metadata shown in the Settings footer. The date is the committer
+// date of HEAD, injected at build time via Vite `define` (see vite.config.ts).
+// Outside Vite (bun test) the global is absent, so fall back to "now".
 
-export const LAST_COMMIT_DATE = "2026-09-18T16:55:00-04:00";
+export const LAST_COMMIT_DATE: string =
+  typeof __LAST_COMMIT_DATE__ !== "undefined"
+    ? __LAST_COMMIT_DATE__
+    : new Date().toISOString();

@@ -1,3 +1,4 @@
+import { execSync } from "child_process";
 import path from "path";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import react from "@vitejs/plugin-react";
@@ -9,7 +10,24 @@ import { VitePWA } from "vite-plugin-pwa";
 // plugin must stay out of it.
 const isDemo = !!process.env.VITE_DEMO;
 
+// Committer date of HEAD, baked into the bundle for the Settings footer.
+// Falls back to build time when git isn't available (e.g. a tarball build).
+const lastCommitDate = (() => {
+  try {
+    return execSync("git log -1 --format=%cI", {
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .toString()
+      .trim();
+  } catch {
+    return new Date().toISOString();
+  }
+})();
+
 export default defineConfig({
+  define: {
+    __LAST_COMMIT_DATE__: JSON.stringify(lastCommitDate),
+  },
   plugins: [
     // React Compiler auto-memoizes components: skip hand-written useMemo/useCallback.
     react({
