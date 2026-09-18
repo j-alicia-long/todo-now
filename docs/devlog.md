@@ -6,7 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
-## 2026-08-18 — Travel insurance marking on the cards page (#47)
+## 2026-09-18 — Idempotent creates: no more duplicate ids from offline replay
+
+- Live data had one Task stored twice under the same id (one copy per column). Cards are keyed by id, so dragging either moved both, and a PUT only ever updated the first copy — it read as "sync is broken" for that card. Cause: the offline queue replayed a `POST` the server had already applied (client-generated ids mean the replay carries the same id).
+- `POST /api/<family>` is now idempotent on `id` (`resource.ts`): if an item with the posted id already exists, the route returns 200 with the stored item instead of appending. Covered in `resource.test.ts`. The duplicate row was removed from D1 by hand (`UPDATE families … WHERE name = 'tasks'`).
+
+---
 
 - The `/cards` per-card details were carrying two jobs badly: they repeated rates and caps the table already computes, and they said nothing about trip protections — the one card fact that decides which card a trip goes on.
 - `Card` gains `travelInsurance` (a coarse `full` / `rental-only` / `none` / `verify` tier) and `travelInsuranceNote`. Deliberately coarse: the useful question when booking is "does paying with this card protect the trip?", not the exact dollar caps, which move and live in each issuer's Guide to Benefits. Rendered as a badge in each card's summary row plus a leading bullet inside; only the `full` tier gets colour, so the two cards that actually protect a trip are the ones that pop.

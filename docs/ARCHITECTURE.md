@@ -35,7 +35,7 @@ The four list families (`tasks`, `shopping`, `groceries`, `recurring`) share the
 | Method | Endpoint            | Description                                                          |
 | ------ | ------------------- | -------------------------------------------------------------------- |
 | GET    | `/api/<family>`     | List all items                                                       |
-| POST   | `/api/<family>`     | Create an item                                                       |
+| POST   | `/api/<family>`     | Create an item (idempotent on `id`: an existing id returns 200 + the stored item) |
 | PUT    | `/api/<family>/:id` | Update an item (whitelisted fields only)                             |
 | DELETE | `/api/<family>/:id` | Delete an item (Tasks soft-delete; `?permanent=true` to hard-delete) |
 

@@ -80,6 +80,12 @@ export const createResourceRoutes = <T extends { id: string }>(
     const body = (await c.req.json()) as Record<string, unknown>;
     const items = await store.read();
     const item = config.construct(body, new Date());
+    // Idempotent on id: the client sends the id it generated, and the
+    // offline queue may replay a create the server already applied (e.g.
+    // the response was lost). Return the existing item instead of
+    // appending a duplicate.
+    const existing = items.find((i) => i.id === item.id);
+    if (existing) return c.json(existing, 200);
     items.push(item);
     await store.write(items);
     return c.json(item, 201);

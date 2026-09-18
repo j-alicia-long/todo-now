@@ -87,6 +87,17 @@ describe("POST", () => {
     expect(store.data).toHaveLength(2);
     expect(store.data[1]).toEqual(created);
   });
+
+  test("replaying a create with an existing id returns the stored item without duplicating", async () => {
+    const { app, store } = mount(baseFamily, [widget({ id: "fixed-id" })]);
+    const res = await app.request(
+      "/api/widgets",
+      json("POST", { title: "Replayed" })
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(widget({ id: "fixed-id" }));
+    expect(store.data).toHaveLength(1);
+  });
 });
 
 describe("PUT", () => {
