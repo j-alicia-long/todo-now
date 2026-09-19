@@ -8,7 +8,7 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ## 2026-09-19 — Unify the app icon (#57)
 
-- The Todo header and browser favicon now reuse the existing sprout PWA icon. The legacy `/favicon.ico` redirect points to that same artwork, and the header respects the demo's base path.
+- Unified the Todo header, browser favicon, and mobile app icons around a single green sprout motif.
 
 ---
 

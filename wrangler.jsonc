@@ -12,7 +12,7 @@
     // Built frontend (dist/) with SPA fallback so /todo deep links
     // resolve to index.html. The Worker runs first for the API and for
     // "/" (the root→/todo redirect) and /favicon.ico (redirects to the
-    // PWA icon); everything else is served straight from assets.
+    // sprout icon); everything else is served straight from assets.
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*", "/", "/favicon.ico"],
   },

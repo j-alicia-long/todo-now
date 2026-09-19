@@ -69,8 +69,8 @@
 }
 
 .header-app-icon {
-  border-radius: 6px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .theme-toggle {

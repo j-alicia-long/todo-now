@@ -186,7 +186,7 @@ export const createApp = (deps: AppDeps): Hono => {
   // nothing. Send it to the app. Static/SPA serving is handled by the
   // runtime entry (the Workers assets binding).
   app.get("/", (c) => c.redirect("/todo", 302));
-  app.get("/favicon.ico", (c) => c.redirect("/sprout-icon-192.png", 302));
+  app.get("/favicon.ico", (c) => c.redirect("/sprout.png", 302));
 
   return app;
 };

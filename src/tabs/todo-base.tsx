@@ -80,7 +80,7 @@ const TodoHeader = ({
     <h1>
       <img
         className="header-app-icon"
-        src={`${import.meta.env.BASE_URL}sprout-icon-192.png`}
+        src={`${import.meta.env.BASE_URL}sprout.png`}
         alt=""
         width={28}
         height={28}

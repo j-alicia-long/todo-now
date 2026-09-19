@@ -5,12 +5,18 @@ Jennifer's personal dashboard and task manager: a React PWA running as a Cloudfl
 - Package manager & tooling: **Bun**. Frontend: React + Vite + SASS. Backend: Hono routes composed in `src/server/app.ts`, Cloudflare D1 storage (Miniflare local simulation in dev).
 - Commands: `bun test src`, `bun run typecheck`, `bun run lint`, `bun run dev`
 
-## Rules for every task
+## To do before each commit:
 
-- Push each feature as its own commit to GitHub. Don't batch unrelated changes.
+- Verify that all new features are covered by tests.
 - `data/` is gitignored — never commit personal task data.
-- Binary assets (icons, images) live only in the deployed site, not in the GitHub repo — exception: README screenshots in `docs/` (e.g. `screenshot.png`, `screenshot-reporter.png`).
-- Update file docstrings, `../todo-architecture.md` (product spec), `README.md` for new features; log notable shipped work in `docs/devlog.md`.
+- Push each feature as its own commit to GitHub. Don't batch unrelated changes.
+- Ensure that all relevant documentation is updated (`README.md`, `../todo-architecture.md`, `docs/devlog.md`).
+- Check for and remove any unused files related to the current work. Keep cleanup scoped to the current task.
+- Run `bun test src`, `bun run typecheck`, and `bun run lint` to catch errors early.
+
+## Rules for updating documentation
+
+- Keep copy succinct - 1-2 sentences per docstring, devlog entry, bullet point.
 
 ## Deeper docs
 
