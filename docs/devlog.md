@@ -6,6 +6,12 @@ Running log of development on the todo app (Unstuck dashboard). Newest entries f
 
 ---
 
+## 2026-09-19 — Unify the app icon (#57)
+
+- The Todo header and browser favicon now reuse the existing sprout PWA icon. The legacy `/favicon.ico` redirect points to that same artwork, and the header respects the demo's base path.
+
+---
+
 ## 2026-09-18 — Idempotent creates: no more duplicate ids from offline replay
 
 - Live data had one Task stored twice under the same id (one copy per column). Cards are keyed by id, so dragging either moved both, and a PUT only ever updated the first copy — it read as "sync is broken" for that card. Cause: the offline queue replayed a `POST` the server had already applied (client-generated ids mean the replay carries the same id).

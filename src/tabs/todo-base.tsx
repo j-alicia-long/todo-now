@@ -78,7 +78,14 @@ const TodoHeader = ({
 }: TodoHeaderProps) => (
   <header className="todo-header">
     <h1>
-      <Icon name="eco" /> {formatHeadingDate()}
+      <img
+        className="header-app-icon"
+        src={`${import.meta.env.BASE_URL}sprout-icon-192.png`}
+        alt=""
+        width={28}
+        height={28}
+      />
+      {formatHeadingDate()}
     </h1>
     <div className="header-actions">
       <button

@@ -68,6 +68,11 @@
   gap: 8px;
 }
 
+.header-app-icon {
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
 .theme-toggle {
   align-items: center;
   border-radius: var(--radius);
